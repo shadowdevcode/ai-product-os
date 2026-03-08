@@ -1,0 +1,55 @@
+# Product Lessons
+
+This file stores durable product and process rules extracted from postmortems.
+
+The Learning Agent appends to this file after every completed pipeline cycle.
+
+Agents must read this file before generating product specs, exploration reports, or planning outputs.
+
+---
+
+# Format
+
+Each lesson follows this structure:
+
+---
+date: YYYY-MM-DD
+project: <project_name>
+issue: <one-line description>
+root_cause: <why it happened>
+rule: <generalizable rule that prevents recurrence>
+improvement: <what to change in product or planning agents>
+---
+
+---
+
+# Lessons
+
+<!-- Learning Agent appends below this line -->
+
+---
+date: 2026-03-07
+project: Gmail Summary to WhatsApp Notifier (issue-002)
+issue: Metric plan was executed as a final pre-deploy step, meaning all telemetry was bolted on after feature completion rather than built in during development
+root_cause: The pipeline placed /metric-plan at stage 9, after all code was written and reviewed. This made analytics an afterthought rather than part of the initial implementation contract.
+rule: Analytics and telemetry event definitions must be reviewed immediately after /create-plan, before any code is written. The metric plan does not need to be formally executed yet, but the events to track must be listed in the implementation spec so engineers instrument them during feature development.
+improvement: Product Agent must include a required Instrumentation section in every plan that lists the minimum viable events to track (e.g., signup, core_action_completed, error_occurred). Execute Plan agent must implement these events as part of the feature build, not as a separate later task.
+---
+
+---
+date: 2026-03-07
+project: Gmail Summary to WhatsApp Notifier (issue-002)
+issue: "Feature complete" was declared and QA was initiated before telemetry was validated, creating a false sense of readiness
+root_cause: The definition of done for execute-plan did not include telemetry instrumentation. There was no quality gate checking that at least the minimum required events were implemented before advancing to review.
+rule: A feature is not complete until the minimum instrumentation events are implemented. Telemetry is part of the definition of done, not a post-launch addition.
+improvement: Code Review agent must include a telemetry verification step — confirming that events specified in the plan's Instrumentation section are present in the implementation — before approving the review gate.
+---
+
+---
+date: 2026-03-07
+project: Gmail Summary to WhatsApp Notifier (issue-002)
+issue: Spammy fallback alerts were sent continuously to users during simulated AI service outages
+root_cause: The system defaulted to a generic fallback WhatsApp alert when the Gemini API was unreachable, but failed to impose a frequency cap. A prolonged outage would result in the user being repeatedly messaged every cron cycle, deteriorating trust.
+rule: Any automated fallback user communication or generic functional alert sent during a service degradation must incorporate strict frequency caps or a silent-fail threshold to prevent user spamming.
+improvement: Product Agent must explicitly define maximum engagement frequency and specific backoff constraints for fallback/error paths in all product specifications involving user notifications.
+---
