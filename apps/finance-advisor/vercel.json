@@ -1,0 +1,12 @@
+{
+    "crons": [
+        {
+            "path": "/api/cron/daily-nudge",
+            "schedule": "0 14 * * *"
+        },
+        {
+            "path": "/api/cron/weekly-summary",
+            "schedule": "0 14 * * 0"
+        }
+    ]
+}
