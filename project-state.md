@@ -1,11 +1,11 @@
 # Project State
 
 ## Active Project
-- name: Gmail Summary to WhatsApp Notifier
-- repo_path: experiments/
+- name: AI Personal Finance Advisor
+- repo_path: apps/finance-advisor
 - owner: Vijay
-- started_on: 2026-03-05
-- goal (1 sentence): Build an AI service that reads a user's Gmail, generates a prioritized AI summary, and delivers it to WhatsApp on a schedule.
+- started_on: 2026-03-08
+- goal (1 sentence): Build an AI Personal Finance Advisor that leverages WhatsApp for daily financial nudges and weekly summaries.
 
 ## Current Stage
 - stage: learning
@@ -51,8 +51,9 @@
 - 2026-03-07: Re-ran `/deploy-check` validation. Production NextJS compilation successful with Database and Telemetries properly bundled. Finalized deployments and advanced to `/postmortem`.
 - 2026-03-07: Executed `/postmortem`. Analyzed infinite loops, telemetry failures, and single-point-of-failure deployment architecture. Outlined overarching system rules on Async Fan-outs and upfront PostHog integrations. MVP marked completed. Result saved to `experiments/results/postmortem.md`.
 - 2026-03-07: Executed `/learning`. Extracted 6 engineering rules and 3 product rules from postmortem and result files. Written to knowledge/engineering-lessons.md, knowledge/product-lessons.md, and knowledge/prompt-library.md. Full pipeline cycle for issue-002 complete.
+- 2026-03-08: AI Personal Finance Advisor (issue-003) — Completed postmortem and learning execution. Extracted rules on serverless promise suspension, cron query batching, and UX fallbacks for media/0-spend. Full pipeline cycle for issue-003 complete.
 
 ## Links
 - linear_project:
-- docs_home: experiments/plans/gmail-whatsapp-summarizer.md
+- docs_home: experiments/plans/plan-003.md
 - analytics_dashboard:

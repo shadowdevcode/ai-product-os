@@ -10,7 +10,7 @@ This file tracks all projects executed through the AI Product OS.
 |-------|--------------|---------------|--------|
 | issue-001 | AI PM Portfolio Generator | create-issue | archived |
 | issue-002 | Gmail WhatsApp Summarizer | postmortem | completed |
-| issue-003 | AI Personal Finance Advisor | metric-plan | active |
+| issue-003 | AI Personal Finance Advisor | learning | completed |
 
 ---
 

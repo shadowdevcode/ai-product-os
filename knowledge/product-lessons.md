@@ -53,3 +53,12 @@ root_cause: The system defaulted to a generic fallback WhatsApp alert when the G
 rule: Any automated fallback user communication or generic functional alert sent during a service degradation must incorporate strict frequency caps or a silent-fail threshold to prevent user spamming.
 improvement: Product Agent must explicitly define maximum engagement frequency and specific backoff constraints for fallback/error paths in all product specifications involving user notifications.
 ---
+
+---
+date: 2026-03-08
+project: AI Personal Finance Advisor (issue-003)
+issue: The conversational UX failed when users sent non-text messages (like images) or 0-spend reports, triggering error paths instead of contextual guidance.
+root_cause: Narrow "Happy Path" testing and planning that assumed unstructured conversational interfaces behave like strict HTML forms.
+rule: Every webhook or conversational interface that accepts unstructured user input must implement explicit handlers for 1) Unrecognized Media Types (image, audio, document) and 2) Boundary Values (zero, negatives).
+improvement: Product Agent must clearly define the fallback UX for explicit edge cases (non-text payload, zero values) in the core specification. Peer Review Agent must actively challenge the design by generating an explicit "Adversarial Edge Case List".
+---

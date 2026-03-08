@@ -86,3 +86,15 @@ system improvement:
 - Database schema existence must be verified in deploy-check before any build validation begins
 - Data pipelines must implement dead-letter tracking or failure limits per item to prevent poison-pill infinite loops
 - Automated fallback/error notifications to users must include strict frequency caps to prevent spam during outages
+
+---
+
+## 2026-03-08 — issue-003: AI Personal Finance Advisor
+
+issue: Serverless API terminations, Thundering Herd cron patterns, and fragile conversational UX.
+root cause: Execution failed to account for Vercel's immediate suspension of unawaited background tasks, cron loops defaulted to sequential DB queries instead of concurrent bulk handling, and the conversational webhook failed to handle media payloads or 'zero' amounts.
+system improvement:
+- Serverless API routes must explicitly `await` external async calls (like WhatsApp dispatches) before completing the HTTP response.
+- Cron jobs must implement Batch fetching (`IN` statements) and concurrent mapping (`Promise.allSettled`) to avoid N+1 query structures.
+- Webhooks dealing with unstructured messages must explicitly implement logic blocks for unexpected media types (images/audio) and boundary text values (zero/negatives).
+- Peer Review Agent must proactively generate an "Adversarial Edge Case List" detailing non-standard inputs for all user-facing systems.

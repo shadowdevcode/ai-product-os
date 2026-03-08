@@ -80,3 +80,21 @@ root_cause: The pipeline correctly skipped marking emails as processed on AI fai
 rule: Data processing queues that iterate over specific external entities must implement a dead-letter queue (DLQ) or a permanent skip/failure counter per item to prevent infinite retry loops on unprocessable structures.
 improvement: Backend Engineer agent must implement per-item retry limits and failure tracking for any automated processing pipeline that operates on external payloads.
 ---
+
+---
+date: 2026-03-08
+project: AI Personal Finance Advisor (issue-003)
+issue: WhatsApp replies were terminating abruptly because the `sendWhatsAppMessage` promise was fired off synchronously inside the serverless webhook before the Next.js API returned 200.
+root_cause: Serverless environments (like Vercel) suspend background execution immediately after the HTTP response is sent, silently killing unawaited network requests.
+rule: Every async API call or Background operation made inside a serverless API route or edge function must be explicitly `await`ed or resolved using `waitUntil` before returning the HTTP response. Do not use fire-and-forget patterns.
+improvement: Code Review Agent must enforce explicit `await` on all external sdk/fetch calls inside API routes, especially for notification services.
+---
+
+---
+date: 2026-03-08
+project: AI Personal Finance Advisor (issue-003)
+issue: The cron endpoints executed N+1 database queries, iterating users one-by-one and awaiting individual sequential queries and API calls inside loops.
+root_cause: Defaulting to single-user CRUD operations resulting in extreme execution duration, violating serverless timeout limits.
+rule: Cron jobs that process collections of entities MUST batch database reads and utilize concurrent Promise arrays (e.g. `Promise.allSettled`) for external dispatches to compress execution time.
+improvement: Backend Architect Agent must explicitly mandate batching patterns (like `IN` queries) and concurrent processing for cron jobs dealing with varying user numbers. Code Review Agent must reject `await` statements wrapped inside simple loops interacting with databases or 3rd party APIs.
+---
