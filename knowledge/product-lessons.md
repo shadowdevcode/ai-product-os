@@ -62,3 +62,11 @@ root_cause: Narrow "Happy Path" testing and planning that assumed unstructured c
 rule: Every webhook or conversational interface that accepts unstructured user input must implement explicit handlers for 1) Unrecognized Media Types (image, audio, document) and 2) Boundary Values (zero, negatives).
 improvement: Product Agent must clearly define the fallback UX for explicit edge cases (non-text payload, zero values) in the core specification. Peer Review Agent must actively challenge the design by generating an explicit "Adversarial Edge Case List".
 ---
+
+---
+date: 2026-03-11
+project: Project Clarity (issue-004)
+issue: Synchronous AI API failures resulted in complete data loss of user inputs (thoughts).
+root_cause: The application lacked a resilient fallback strategy for when the primary AI categorization service timed out or returned an error.
+rule: User input must never be lost due to third-party service failures. AI-driven products must implement strict fallback states (e.g. assigning a default "Uncategorized" label and saving raw text) to prioritize zero data loss.
+improvement: Product Agent must define a "Graceful Degradation" or "Fallback State" spec for any feature relying on synchronous external AI processing.

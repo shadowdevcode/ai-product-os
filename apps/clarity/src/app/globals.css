@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@theme {
+  --color-unblock: #ef4444; 
+  --color-strategy: #8b5cf6;
+  --color-stakeholders: #0ea5e9;
+  --color-ops: #10b981;
+}
+
+/* Custom utilities */
+@layer utilities {
+  .glass-panel {
+    @apply bg-neutral-900/60 backdrop-blur-xl border border-neutral-800 rounded-xl shadow-2xl;
+  }
+}
+
+body {
+  background-color: #0a0a0a;
+  color: #ededed;
+}

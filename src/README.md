@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# /src Directory
 
-## Getting Started
+## Purpose
 
-First, run the development server:
+This directory contains a standalone Next.js project that was part of the early AI Product OS development. It appears to be experimental/reference code from the initial system setup.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Status
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Legacy / Archived**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+This directory is not actively used in the current AI Product OS workflow. Active projects are stored in `/apps` with project-specific subdirectories:
+- `/apps/clarity` - Project Clarity (PM To-Do List MVP)
+- `/apps/finance-advisor` - AI Personal Finance Advisor
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Contents
 
-## Learn More
+- Full Next.js project structure with dependencies
+- Basic React components and TypeScript configuration
+- Appears to pre-date the formalized 12-step workflow
 
-To learn more about Next.js, take a look at the following resources:
+## Recommendation
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**Option 1: Archive**
+If this code is no longer needed, consider moving it to an `archive/` directory or removing it entirely to reduce repository clutter.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Option 2: Document**
+If this serves as a reference implementation or starter template, add specific documentation explaining its purpose and how it relates to the current system.
 
-## Deploy on Vercel
+## Migration Path
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+If you need to reference patterns from this code:
+1. Extract reusable patterns into `/knowledge` documents
+2. Create project-specific implementations in `/apps/[new-project]`
+3. Follow the standard 12-step workflow starting with `/create-issue`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+*Last Updated: 2026-03-13*
+*Status: Pending decision on archive vs. document*

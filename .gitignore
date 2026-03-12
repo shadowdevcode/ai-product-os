@@ -1,0 +1,83 @@
+# AI Product OS - Global .gitignore
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+
+# Next.js
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# TypeScript
+*.tsbuildinfo
+
+# Build outputs
+.vercel
+.turbo
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+.coverage
+
+# Misc
+*.pem
+.cache/
+.temp/
+tmp/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Supabase
+.supabase/
+
+# PostHog (if self-hosted)
+posthog/
+
+# Backup files
+*.bak
+*.backup
+
+# Secrets (paranoid mode - never commit these)
+*secret*
+*SECRET*
+*credentials*
+*CREDENTIALS*
+*.key
+*.pem
+*.p12
+*.pfx

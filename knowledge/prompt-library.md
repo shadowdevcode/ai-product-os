@@ -98,3 +98,16 @@ system improvement:
 - Cron jobs must implement Batch fetching (`IN` statements) and concurrent mapping (`Promise.allSettled`) to avoid N+1 query structures.
 - Webhooks dealing with unstructured messages must explicitly implement logic blocks for unexpected media types (images/audio) and boundary text values (zero/negatives).
 - Peer Review Agent must proactively generate an "Adversarial Edge Case List" detailing non-standard inputs for all user-facing systems.
+
+---
+
+## 2026-03-11 — issue-004: Project Clarity (PM To-Do List MVP)
+
+issue: Brittle AI parsing, unbounded list queries, optimistic UI without backend persistence, and data loss on AI timeouts.
+root cause: Naive trust in AI response formatting, MVP shortcutting on database limits and state persistence, and absent fallback design for synchronous external calls.
+system improvement:
+- Always strip/sanitize markdown codeblocks from AI responses before running `JSON.parse()`.
+- Enforce `.limit()` clauses on every database list query.
+- Never ship an optimistic UI change without an implemented and tested backend persistence (`PUT`/`PATCH`/`DELETE`) endpoint.
+- Provide a "Fallback State" (save raw input with default labels) to guarantee zero data loss if downstream AI processing fails or times out.
+- Ensure Telemetry SDKs are implemented alongside feature development, not added after QA testing.

@@ -1,16 +1,16 @@
 # Project State
 
 ## Active Project
-- name: AI Personal Finance Advisor
-- repo_path: apps/finance-advisor
+- name: Clarity (PM To-Do List MVP)
+- repo_path: apps/clarity
 - owner: Vijay
-- started_on: 2026-03-08
-- goal (1 sentence): Build an AI Personal Finance Advisor that leverages WhatsApp for daily financial nudges and weekly summaries.
+- started_on: 2026-03-11
+- goal (1 sentence): Reduce PM cognitive load by instantly organizing raw thoughts into a structured, PM-focused workflow.
 
 ## Current Stage
 - stage: learning
 - last_command_run: /learning
-- status: cycle-complete
+- status: complete
 
 ## Active Work
 - active_branch: main
@@ -19,13 +19,13 @@
 - environments: local
 
 ## Quality Gates
-- review: approved (round 3)
-- peer_review: approved (must-fix resolved)
-- qa_test: approved
-- deploy_check: approved
+- review: approved (round 1)
+- peer_review: approved (round 1)
+- qa_test: approved (round 1)
+- deploy_check: approved (round 1)
 
 ## Pending Queue
-- None
+- None (Pipeline Complete)
 
 ## Blockers
 - none
@@ -52,6 +52,13 @@
 - 2026-03-07: Executed `/postmortem`. Analyzed infinite loops, telemetry failures, and single-point-of-failure deployment architecture. Outlined overarching system rules on Async Fan-outs and upfront PostHog integrations. MVP marked completed. Result saved to `experiments/results/postmortem.md`.
 - 2026-03-07: Executed `/learning`. Extracted 6 engineering rules and 3 product rules from postmortem and result files. Written to knowledge/engineering-lessons.md, knowledge/product-lessons.md, and knowledge/prompt-library.md. Full pipeline cycle for issue-002 complete.
 - 2026-03-08: AI Personal Finance Advisor (issue-003) — Completed postmortem and learning execution. Extracted rules on serverless promise suspension, cron query batching, and UX fallbacks for media/0-spend. Full pipeline cycle for issue-003 complete.
+- 2026-03-11: Project Clarity (PM To-Do List MVP, issue-004) set as active project.
+- 2026-03-11: Completed `/review` for Clarity MVP. Applied critical limits (taskText max 500 chars, GET limit 100) and graceful UI error fallbacks to prevent abuse and handle Gemini potential failures.
+- 2026-03-11: Completed `/peer-review` for Clarity MVP. Implemented MUST-FIX items: added `PUT` endpoint for persistent state, and added fallback AI parsing to prevent data loss if Gemini returns invalid JSON.
+- 2026-03-11: Completed `/qa-test` for Clarity MVP. Validated system reliability against missing payloads, network drops, empty strings, and long initial load times. Results logged to `experiments/results/qa-test-004.md`.
+- 2026-03-11: Completed `/metric-plan` for Clarity MVP. Defined "Tasks Categorized per User" as North Star. Outlined PostHog integration linking frontend submission funnels with backend `ai_latency_ms` and fallback alerts. Results logged to `experiments/results/metric-plan-004.md`.
+- 2026-03-11: Completed `/deploy-check`. Verified Next.js production builds via `npm run build` and integrated PostHog telemetry across frontend (`posthog-js`) and backend (`posthog-node`). Approved for deployment.
+- 2026-03-11: Completed `/learning`. Extracted 4 engineering rules and 1 product rule. Full pipeline cycle for Project Clarity (issue-004) complete.
 
 ## Links
 - linear_project:

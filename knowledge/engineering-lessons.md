@@ -98,3 +98,38 @@ root_cause: Defaulting to single-user CRUD operations resulting in extreme execu
 rule: Cron jobs that process collections of entities MUST batch database reads and utilize concurrent Promise arrays (e.g. `Promise.allSettled`) for external dispatches to compress execution time.
 improvement: Backend Architect Agent must explicitly mandate batching patterns (like `IN` queries) and concurrent processing for cron jobs dealing with varying user numbers. Code Review Agent must reject `await` statements wrapped inside simple loops interacting with databases or 3rd party APIs.
 ---
+
+---
+date: 2026-03-11
+project: Project Clarity (issue-004)
+issue: Gemini JSON output was wrapped in Markdown codeblocks, crashing JSON.parse() and causing task save failures.
+root_cause: Code assumed AI structured outputs were raw stringified JSON, ignoring common LLM behaviors where responses are wrapped in markdown formatting.
+rule: All JSON parsing from unstructured or semi-structured LLM outputs must be preceded by a sanitization/stripping step (e.g. regex replace of ```json markdown blocks).
+improvement: Code Review Agent must reject naive `JSON.parse(ai_response.text)` without a preceding regex clean or try/catch fallback block.
+---
+
+---
+date: 2026-03-11
+project: Project Clarity (issue-004)
+issue: Unbounded database queries (SELECT * FROM tasks without LIMIT) created a risk of infinitely growing initial load payloads.
+root_cause: Convenience of MVP implementation omitted basic database pagination and limits for list queries.
+rule: Every GET or list query on a database MUST enforce a hard `.limit()` or pagination strategy, even if the dataset is currently small.
+improvement: Backend Architect and Code Review Agents must actively check for `.limit()` or pagination clauses on any list-fetching endpoint.
+---
+
+---
+date: 2026-03-11
+project: Project Clarity (issue-004)
+issue: Missing state persistence for marked 'done' tasks - frontend updated optimistically but reloads brought tasks back.
+root_cause: MVP scope prioritized creation flow and skipped the mutation API endpoint, leading to a broken core loop.
+rule: No optimistic UI mutation can be shipped without a corresponding backend persistence endpoint hooked up and tested.
+improvement: Peer Review and QA Agents must explicitly verify that any state changes represented visually in the UI are persisted successfully to the database.
+---
+
+---
+date: 2026-03-11
+project: Project Clarity (issue-004)
+issue: Telemetry events defined in the Metric Plan were absent in the codebase during Deploy Check.
+root_cause: The pipeline executed `/metric-plan` *after* all implementation and QA stages, disconnecting analytics definition from the build cycle.
+rule: Telemetry instrumentation (e.g. PostHog client) must be bundled into the feature implementation phase rather than treated as a post-QA checklist item.
+improvement: Execute Plan agent must mandate integration of telemetry trackers during the build. Metric Plan should ideally shift left conceptually.
