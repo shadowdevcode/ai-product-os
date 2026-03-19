@@ -71,5 +71,59 @@ CREATE TABLE logs (
 );
 ```
 
+## 🔌 API
+
+### `GET /api/webhook/whatsapp`
+
+WhatsApp webhook verification endpoint. Called by Meta to verify the callback URL.
+
+**Query params**: `hub.mode`, `hub.verify_token`, `hub.challenge`
+
+**Returns**: `200 challenge` on success, `403` if token mismatch.
+
 ---
+
+### `POST /api/webhook/whatsapp`
+
+Receives incoming WhatsApp messages from users.
+
+**Body**: Meta WhatsApp Cloud API webhook payload
+
+**Behavior**:
+- Parses the first integer found in the message as the spend amount
+- Creates user if they don't exist (default `weekly_goal: 10000`)
+- Logs the amount to the `logs` table
+- Replies with a confirmation message
+- Handles non-text payloads (images, audio) with a graceful fallback reply
+
+**Returns**: `200 EVENT_RECEIVED`
+
+**Local testing**: Use ngrok to expose port 3000, then set your Meta Callback URL to `https://your-ngrok-url/api/webhook/whatsapp`.
+
+---
+
+### `GET /api/cron/daily-nudge`
+
+Sends a daily spending reminder to all active users at 8:00 PM.
+
+**Triggered by**: Vercel Cron (see `vercel.json`)
+
+**Behavior**: Fetches all active users, fires `Promise.allSettled` to dispatch WhatsApp nudges concurrently (fan-out pattern).
+
+**Returns**: `200` with count of users triggered.
+
+---
+
+### `GET /api/cron/weekly-summary`
+
+Sends a weekly behavioral report card to all active users on Sunday.
+
+**Triggered by**: Vercel Cron (see `vercel.json`)
+
+**Behavior**: Aggregates last 7 days of `logs` per user, compares vs `weekly_goal`, sends summary message.
+
+**Returns**: `200` with count of users triggered.
+
+---
+
 Built with ❤️ by the AI Product Operating System.

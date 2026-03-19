@@ -133,3 +133,38 @@ issue: Telemetry events defined in the Metric Plan were absent in the codebase d
 root_cause: The pipeline executed `/metric-plan` *after* all implementation and QA stages, disconnecting analytics definition from the build cycle.
 rule: Telemetry instrumentation (e.g. PostHog client) must be bundled into the feature implementation phase rather than treated as a post-QA checklist item.
 improvement: Execute Plan agent must mandate integration of telemetry trackers during the build. Metric Plan should ideally shift left conceptually.
+
+---
+date: 2026-03-19
+project: SMB Feature Bundling Engine (issue-005)
+issue: Rate limiting on unauthenticated endpoint calling Gemini was deferred until /peer-review (3 stages late)
+root_cause: backend-architect-agent had no prompt instruction requiring a rate limiting strategy for unauthenticated endpoints calling paid external APIs. The Anti-Sycophancy 10x traffic check does not surface cost-abuse (bot requests ≠ load spikes).
+rule: Any architecture spec that includes an unauthenticated endpoint calling a paid external API must include a rate limiting strategy. This is a blocking architecture requirement, not a post-review improvement.
+improvement: backend-architect-agent Mandatory Pre-Approval Checklist now requires specifying rate limiting for all unauthenticated paid-API endpoints before outputting the spec.
+---
+
+---
+date: 2026-03-19
+project: SMB Feature Bundling Engine (issue-005)
+issue: SessionId was derived from DB return value, causing it to equal "unknown" on DB failure — poisoning PostHog analytics and causing 400 errors on PATCH endpoint
+root_cause: Architecture spec defined the sessionId field but gave no ordering constraint. Engineer naturally generated the ID after the DB insert returned.
+rule: When a sessionId or correlation ID is used across analytics, API routes, and DB, the architecture spec must state: "Generate sessionId (crypto.randomUUID()) before all downstream operations so it is stable regardless of DB or service failures."
+improvement: backend-architect-agent Mandatory Pre-Approval Checklist now requires explicit sessionId ordering constraint whenever a session ID spans analytics + API + DB.
+---
+
+---
+date: 2026-03-19
+project: SMB Feature Bundling Engine (issue-005)
+issue: No Gemini timeout specified — Vercel hard-kills functions at 10s returning HTML, which the client parsed as JSON and threw as "Network error"
+root_cause: backend-architect-agent mentioned "API latency" as a risk but did not mandate a concrete timeout. Vercel's 10s limit returns an HTML error page, not JSON, causing misleading client errors.
+rule: All architecture specs with external AI API calls on Vercel must include: "Wrap in Promise.race with AbortController at ≤ 9s. Return JSON 504 on timeout — never let Vercel's HTML error page reach the client."
+improvement: backend-architect-agent Mandatory Pre-Approval Checklist now requires specifying AbortController timeout for every API route that calls an external AI model.
+---
+
+---
+date: 2026-03-19
+project: SMB Feature Bundling Engine (issue-005)
+issue: Clipboard copy failure was silent — empty catch block gave PM zero feedback during a live sales call
+root_cause: No frontend standard required a fallback + error state for clipboard operations. Engineer implemented the happy path only.
+rule: Any clipboard copy interaction must implement: (1) navigator.clipboard.writeText() primary, (2) document.execCommand('copy') fallback, (3) visible inline error state if both fail. Silent catch blocks on user-facing copy actions are never acceptable.
+improvement: coding-standards.md now includes a Clipboard Operations section mandating fallback + inline error state for all copy-to-clipboard interactions.

@@ -96,6 +96,31 @@ feature flags available
 
 ---
 
+## 6 README Quality Gate
+
+Verify the app README meets the standard in `knowledge/readme-template.md`.
+
+Check all of the following are present in `apps/<project-name>/README.md`:
+
+- One-liner describing what the app does and who it's for
+- Numbered user journey (What it does)
+- Stack table covering all layers
+- All environment variables listed by name
+- Schema apply step (what tables are created, where to run)
+- `npm run dev` command + what success looks like on first run
+- Every HTTP endpoint documented (method, body, response shape)
+- Analytics events table (if PostHog is used)
+- Key design decisions section
+
+Also verify:
+
+- `.env.local.example` file exists in the app root
+- README does not contain the default Next.js boilerplate
+
+Block deployment if README is missing or is the default Next.js template.
+
+---
+
 # Output Format
 
 Return output using this structure.
@@ -111,6 +136,8 @@ Infrastructure Readiness
 Monitoring Status
 
 Rollback Plan
+
+README Quality Gate
 
 Deployment Decision
 

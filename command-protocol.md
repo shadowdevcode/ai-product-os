@@ -50,6 +50,7 @@ knowledge/analytics-framework.md
 knowledge/prompt-library.md
 knowledge/engineering-lessons.md
 knowledge/product-lessons.md
+knowledge/ai-model-guide.md
 
 These files define system behavior.
 
@@ -92,6 +93,11 @@ learning
 
 Commands must be executed sequentially unless the product manager overrides.
 
+Utility Commands (run anytime, outside the sequential pipeline):
+
+docs — Generate AI-native CODEBASE-CONTEXT.md for the active app
+explain — Targeted PM learning session via 80/20 rule
+
 ---
 
 # Context Resolution
@@ -115,6 +121,12 @@ The system then loads:
 
 experiments/exploration/exploration-002.md
 experiments/plans/plan-002.md
+
+For engineering commands (execute-plan, deslop, review, peer-review, qa-test, docs):
+
+Load app context if available:
+
+apps/<project_name>/CODEBASE-CONTEXT.md
 
 Agents must use this file as the primary source of truth for the problem definition.
 
@@ -201,6 +213,15 @@ After /learning:
 - Update project-registry.md: set stage to learning, status to completed
 - Append a note to Decisions Log confirming knowledge files were updated
 
+After /docs:
+- Does not update pipeline stage
+- Writes apps/<project_name>/CODEBASE-CONTEXT.md
+- No state change required
+
+After /explain:
+- Does not update pipeline stage
+- No state change required
+
 ## New project rule
 
 When /create-issue is run with a new idea that differs from the current active project:
@@ -255,6 +276,7 @@ knowledge/analytics-framework.md
 knowledge/prompt-library.md
 knowledge/engineering-lessons.md
 knowledge/product-lessons.md
+knowledge/ai-model-guide.md
 
 before generating outputs.
 

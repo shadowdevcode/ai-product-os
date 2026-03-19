@@ -111,6 +111,23 @@ Known Issues
 
 ---
 
+## 6 Telemetry Completeness Requirement
+
+For every API route calling an external AI service, implement PostHog events in ALL branches:
+
+- Success path: event with `latency_ms` + key response properties
+- Timeout branch: event with `timeout_ms` property
+- Parse/AI failure branch: event with `error_type` property
+- Rate limit branch: event (no PII)
+
+An API route with partial telemetry is equivalent to no telemetry for funnel analysis. The metric plan verifies event schema — it does not define which events exist.
+
+For pageview tracking: if `capture_pageview: false` is set on the PostHog provider, add an explicit `posthog.capture('page_viewed')` call in a `useEffect` on the root page component.
+
+# Added: 2026-03-19 — SMB Feature Bundling Engine
+
+---
+
 # Rules
 
 Follow architecture defined earlier.

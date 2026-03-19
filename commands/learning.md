@@ -120,6 +120,63 @@ Under the relevant section:
 
 ---
 
+## Step 6 — Apply Prompt Autopsy to Agent Files
+
+Read the Prompt Autopsy section from the postmortem.
+
+For each agent identified as underperforming:
+
+1. Read the agent file: `agents/<agent-name>.md`
+2. Locate the relevant section (Rules, Process, or Responsibilities)
+3. Append the proposed fix as a new rule or instruction
+4. Mark the change with a comment: `# Added: YYYY-MM-DD — <project_name>`
+
+This step is not optional. Agent files must improve after every cycle.
+
+If the postmortem Prompt Autopsy section is empty or missing, raise a flag: "Prompt Autopsy was not completed. Run /postmortem again and complete Section 6 before /learning can close the cycle."
+
+---
+
+## Step 7 — Generate CODEBASE-CONTEXT.md
+
+After all lessons are written, generate a `CODEBASE-CONTEXT.md` file inside the app directory (`apps/<project_name>/CODEBASE-CONTEXT.md`).
+
+This file is for future AI agent sessions — it gives any new agent instant context about the codebase without requiring manual re-explanation.
+
+Structure:
+
+```
+# Codebase Context: <project_name>
+Last updated: YYYY-MM-DD
+
+## What This App Does
+One paragraph: the user problem, the core feature, and the primary user flow.
+
+## Architecture Overview
+- Frontend: <tech, key files>
+- Backend: <API routes, key files>
+- Database: <schema summary, key tables>
+- AI Integration: <model used, what it does>
+- Analytics: <PostHog events tracked>
+
+## Key Files
+List the 5-8 most important files and what each does.
+
+## Data Model
+Brief description of tables and relationships.
+
+## API Endpoints
+List each endpoint with method, path, and purpose.
+
+## Things NOT to Change Without Reading First
+List any fragile patterns, non-obvious decisions, or traps for future agents.
+
+## Known Limitations
+List any known issues, TODOs, or future improvements noted in postmortem.
+```
+
+---
+
 # Output Format
 
 Return a structured summary:
@@ -138,9 +195,12 @@ Date: YYYY-MM-DD
 ### Prompt Library Updates
 - List each update appended to prompt-library.md
 
-### Agent Updates Recommended
-- List any agent files that should be updated based on the findings
-- These are recommendations only — the PM decides whether to apply them
+### Agent Files Updated
+- List each agent file modified and what was added
+- If Prompt Autopsy was empty: flag this explicitly
+
+### CODEBASE-CONTEXT.md
+- Confirm file was written to apps/<project_name>/CODEBASE-CONTEXT.md
 
 ---
 
@@ -149,6 +209,8 @@ Date: YYYY-MM-DD
 knowledge/engineering-lessons.md
 knowledge/product-lessons.md
 knowledge/prompt-library.md
+agents/<agent-name>.md (one or more, based on Prompt Autopsy)
+apps/<project_name>/CODEBASE-CONTEXT.md
 
 ---
 
@@ -159,6 +221,8 @@ Every rule written must be generalizable — it must apply to future projects, n
 Do not write one-time fixes. Write system guardrails.
 
 If the same root cause appears in multiple issues, write one consolidated rule.
+
+Agent files must be updated based on Prompt Autopsy findings — not just recommended. This is the mechanism by which the system improves itself.
 
 Mark state update: after /learning, set stage to learning and status to completed in project-state.md.
 

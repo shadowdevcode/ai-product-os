@@ -111,3 +111,17 @@ system improvement:
 - Never ship an optimistic UI change without an implemented and tested backend persistence (`PUT`/`PATCH`/`DELETE`) endpoint.
 - Provide a "Fallback State" (save raw input with default labels) to guarantee zero data loss if downstream AI processing fails or times out.
 - Ensure Telemetry SDKs are implemented alongside feature development, not added after QA testing.
+
+---
+
+## 2026-03-19 — issue-005: SMB Feature Bundling Engine
+
+issue: Architecture under-specification propagated 5 systemic issues downstream — rate limiting, sessionId ordering, Gemini timeout, clipboard fallback, and error-path telemetry all caught at review or later.
+root cause: backend-architect-agent lacked a mandatory checklist for serverless + paid-API constraints. peer-review-agent Prompt Autopsy produced directional suggestions instead of exact file/section/text changes. execute-plan command only required success-path telemetry implicitly.
+system improvement:
+- All architecture specs with unauthenticated paid-API endpoints must include a rate limiting strategy before outputting (blocking requirement).
+- All architecture specs using a sessionId across analytics + API + DB must specify: generate sessionId before all downstream operations.
+- All architecture specs with external AI calls on Vercel must specify: AbortController ≤ 9s, return JSON 504 on timeout.
+- All clipboard copy interactions must implement: navigator.clipboard primary → document.execCommand fallback → visible inline error if both fail.
+- execute-plan must wire PostHog events on ALL API route branches (success, timeout, parse failure, rate limit) — not just success paths.
+- Peer Review Prompt Autopsy must produce exact file + section + text additions, not directional suggestions.
