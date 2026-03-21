@@ -125,3 +125,18 @@ system improvement:
 - All clipboard copy interactions must implement: navigator.clipboard primary → document.execCommand fallback → visible inline error if both fail.
 - execute-plan must wire PostHog events on ALL API route branches (success, timeout, parse failure, rate limit) — not just success paths.
 - Peer Review Prompt Autopsy must produce exact file + section + text additions, not directional suggestions.
+
+---
+
+## 2026-03-21 — issue-006: Ozi Reorder Experiment
+
+issue: 7 systemic issues — unprotected worker, double event emission, URL ID fidelity, simulation idempotency, PostHog worker resilience, recurring README gap, recurring error-path telemetry gap.
+root cause: Architecture under-specification continued from prior cycles (auth, URL lookup, simulation idempotency). Two recurring failures (README, error-path telemetry) persisted despite prior cycle fixes because upstream instructions lacked sufficient specificity.
+system improvement:
+- All API routes that write to experiment tables must specify auth mechanism by name in the architecture spec. "Internal" is not an auth mechanism.
+- Each PostHog event has exactly one canonical emission point — server OR client, never both. North Star events fired server-side must not be re-fired client-side.
+- URL entity ID parameters must be used as the primary DB lookup key. Architecture spec must define exact query (table + WHERE clause) for every entity ID URL.
+- Simulation tools that fire write-once PostHog events must be idempotent across page refreshes — require both localStorage keying and DB ON CONFLICT DO NOTHING.
+- PostHog calls in workers must use Promise.allSettled with per-call .catch(). Telemetry failure must never cause worker HTTP 500.
+- README.md and .env.local.example are execute-plan deliverables, not deploy-check fixes. Env vars added in fix cycles must update .env.local.example in the same commit.
+- Error-path telemetry (per-user failure event, cron_run_completed, experiment lifecycle events) is a blocking execute-plan requirement — not a production-only enhancement.

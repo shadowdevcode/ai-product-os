@@ -178,7 +178,26 @@ Before finalizing the architecture, answer all of the following. Any gap must be
 3. **SessionId / correlation ID ordering**: Is there a sessionId used across analytics, API routes, and DB?
    → If yes: specify "Generate sessionId (crypto.randomUUID()) before all downstream operations. Never derive it from DB return values."
 
+4. **Worker endpoint auth**: Does any route write to experiment data tables (cohorts, events, reminders, cron state)?
+   → If yes: specify the auth mechanism by name (e.g., `CRON_SECRET`, `DEMO_SECRET`, `x-worker-key` header check).
+   → "Internal" is not an auth mechanism. All POST routes must be treated as externally reachable.
+   → Listing a route without an auth mechanism is a blocking omission.
+
+5. **URL ID → DB lookup fidelity**: Does any URL contain an entity ID parameter (orderId, reminderId, sessionId)?
+   → If yes: specify the exact DB query: table name, WHERE clause, and the column used.
+   → Example: `SELECT * FROM mock_orders WHERE order_id = $orderId`.
+   → Fallback-to-owner lookups (querying by userId when the URL contains orderId) corrupt experiment attribution and are never acceptable.
+
+6. **Simulation tool idempotency**: Does the dashboard include a tool that fires write-once PostHog events (e.g., ControlGroupSimulator)?
+   → If yes: specify (a) UI deduplication — localStorage key pattern checked on mount, and (b) DB deduplication — ON CONFLICT DO NOTHING or equivalent.
+   → React component state alone is insufficient — the tool must survive full page reload.
+
+7. **North Star comparison display**: Does any dashboard stat measure a North Star comparison (test vs. control)?
+   → If yes: specify that the stat must display BOTH sides as separate values.
+   → A single aggregate count filtered to one cohort is not a valid North Star metric display.
+
 # Added: 2026-03-19 — SMB Feature Bundling Engine
+# Updated: 2026-03-21 — Ozi Reorder Experiment (items 4–7)
 
 ---
 

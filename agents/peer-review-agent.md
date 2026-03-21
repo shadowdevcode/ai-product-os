@@ -101,6 +101,28 @@ Example:
 
 Does the implementation actually solve the user problem?
 
+**Demo simulation tool idempotency check** (required for experiment dashboards):
+
+For any demo simulation component that fires write-once PostHog events (e.g., ControlGroupSimulator, control_order_placed emitters):
+
+1. Verify idempotency across **full page reload** — not just within the React lifecycle.
+2. Check: does it read localStorage on mount and disable itself if the key exists?
+3. Check: does the corresponding DB write use ON CONFLICT DO NOTHING or an equivalent uniqueness constraint?
+4. Component state alone (`useState`) is insufficient — it resets on every page load.
+5. Apply the same deduplication pattern used for other one-time events in the same codebase.
+
+If a simulation tool does not survive page reload, its PostHog events can be fired multiple times — corrupting the North Star comparison.
+
+**Experiment deep link URL ID fidelity check**:
+
+For any experiment deep link that contains an entity ID parameter (orderId, reminderId):
+
+1. Verify the page fetches the specific entity by that exact ID.
+2. Flag any implementation that uses the URL ID only for display while querying by a different key (e.g., userId fallback).
+3. A fallback-to-owner lookup in an experiment flow is a blocking finding.
+
+# Added: 2026-03-21 — Ozi Reorder Experiment
+
 ---
 
 # Output Format

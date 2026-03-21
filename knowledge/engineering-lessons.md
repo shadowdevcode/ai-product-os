@@ -168,3 +168,59 @@ issue: Clipboard copy failure was silent — empty catch block gave PM zero feed
 root_cause: No frontend standard required a fallback + error state for clipboard operations. Engineer implemented the happy path only.
 rule: Any clipboard copy interaction must implement: (1) navigator.clipboard.writeText() primary, (2) document.execCommand('copy') fallback, (3) visible inline error state if both fail. Silent catch blocks on user-facing copy actions are never acceptable.
 improvement: coding-standards.md now includes a Clipboard Operations section mandating fallback + inline error state for all copy-to-clipboard interactions.
+
+---
+date: 2026-03-21
+project: Ozi Reorder Experiment (issue-006)
+issue: Internal worker endpoint accepted unauthenticated POST requests — experiment data could be corrupted by any caller
+root_cause: Architecture spec described the fan-out worker pattern but did not mandate an auth mechanism. "Internal" was treated as an implicit trust boundary. No checklist item required auth on worker-style routes.
+rule: Any API route that writes to experiment tables (cohorts, reminders, events, cron state) must specify its auth mechanism by name in the architecture spec. "Internal" is not an auth mechanism. All POST routes must be treated as externally reachable regardless of their intended caller.
+improvement: backend-architect-agent Mandatory Pre-Approval Checklist now requires specifying auth mechanism for every route that writes to experiment data tables. commands/execute-plan.md requires confirming auth header requirement before wiring any POST route.
+
+---
+date: 2026-03-21
+project: Ozi Reorder Experiment (issue-006)
+issue: order_placed PostHog event fired from two sources (server API + client useEffect) — North Star double-counted on every reorder
+root_cause: Architecture plan defined the event but not its canonical emission point. No rule existed prohibiting dual-emission for a single PostHog event. Engineer wired both API-side and page-side tracking independently.
+rule: Each PostHog event that contributes to the North Star metric must have exactly one authoritative emission point — either client OR server, never both. If the server fires the event on API confirmation, all client-side re-firings of the same event name must be removed. Document the single source in an inline comment.
+improvement: commands/execute-plan.md Single Emission Source Rule added. code-review-agent.md now checks for PostHog event name appearing in both server-side routes and client-side components.
+
+---
+date: 2026-03-21
+project: Ozi Reorder Experiment (issue-006)
+issue: orderId in deep link was decorative — reorder page fetched last-essential by userId, showing wrong product if user had a newer order
+root_cause: Architecture spec defined orderId as the URL parameter but did not specify the exact DB query. Engineer defaulted to the already-available getLastEssentialByUserId() helper, which was semantically wrong for an experiment attribution flow.
+rule: When a URL parameter names a specific entity (orderId, reminderId, sessionId), the page or API handler must fetch that exact entity by that ID. Fallback-to-owner lookups (e.g., fetching by userId when orderId is in the URL) corrupt experiment attribution and are never acceptable for experiment-instrumented flows.
+improvement: backend-architect-agent now requires specifying exact DB query (table, WHERE clause, column) for every URL containing an entity ID parameter. peer-review-agent now verifies URL ID → DB lookup fidelity on experiment deep links.
+
+---
+date: 2026-03-21
+project: Ozi Reorder Experiment (issue-006)
+issue: ControlGroupSimulator reset to idle on page refresh — control conversions could be fired multiple times, corrupting North Star comparison
+root_cause: Simulator was implemented with React component state only. Full page reload reinstantiates the component as idle. The localStorage deduplication pattern used elsewhere in the same codebase was not applied to the new component.
+rule: Any simulation or conversion tool that fires write-once PostHog events must be idempotent across page refreshes. React component state is insufficient. Apply localStorage keying (check on mount → disable if key exists) AND a DB uniqueness constraint (ON CONFLICT DO NOTHING) for every write-once event emitter.
+improvement: peer-review-agent Step 5 now includes a demo simulation tool idempotency check. backend-architect-agent Dashboard & Reporting section now requires specifying both localStorage key and DB deduplication for any simulation tool.
+
+---
+date: 2026-03-21
+project: Ozi Reorder Experiment (issue-006)
+issue: PostHog Promise.all in worker threw on PostHog failure — worker returned 500, trigger undercounted remindersSent even though DB state was correct
+root_cause: PostHog calls were passed to Promise.all without individual try/catch. A PostHog SDK exception propagated to the route handler. The pattern from issue-003 established concurrent processing but did not require per-call telemetry isolation.
+rule: All PostHog server-side calls in worker routes must be individually wrapped in try/catch before being passed to Promise.allSettled. A PostHog failure must never cause a worker to return 500. Worker HTTP status must reflect DB write state, not telemetry write state. Pattern: Promise.allSettled([trackA(data).catch(e => console.error(e)), trackB(data).catch(e => console.error(e))]).
+improvement: commands/execute-plan.md Telemetry Resilience Requirement updated to require Promise.allSettled with per-call .catch() for all PostHog worker calls. qa-agent now includes a Telemetry Unavailability test in Failure Simulation.
+
+---
+date: 2026-03-21
+project: Ozi Reorder Experiment (issue-006)
+issue: README.md and .env.local.example were missing at deploy-check — third consecutive cycle with this blocker (issue-004, issue-005, issue-006)
+root_cause: execute-plan command listed README creation as implied but not as an explicit deliverable. Environment variables added during fix cycles were not tracked against .env.local.example. The blocker was caught twice before but no upstream instruction was hardened enough to prevent recurrence.
+rule: README.md and .env.local.example are mandatory deliverables of /execute-plan, not polish for /deploy-check. Every env var introduced at any pipeline stage (including peer-review fix cycles) must be added to .env.local.example in the same commit that introduces it. A /deploy-check README failure is always an execute-plan prompt failure.
+improvement: commands/execute-plan.md now has an explicit final checklist requiring README.md with 9 sections and .env.local.example listing every process.env.* reference before execute-plan can be marked complete.
+
+---
+date: 2026-03-21
+project: Ozi Reorder Experiment (issue-006)
+issue: Error-path telemetry events absent for third consecutive cycle — per-user failure, cron_run_completed, and experiment_ended events not wired
+root_cause: The Telemetry Completeness Requirement added after issue-005 covered success-path and AI-branch events but did not explicitly require error-path events in catch blocks or lifecycle events at guard evaluations.
+rule: Telemetry completeness means happy-path AND error-path events. For every cron worker: (1) wire a per-user failure event in the catch block, (2) wire a cron_run_completed event after Promise.allSettled, (3) wire experiment lifecycle events at every guard evaluation (EXPERIMENT_END_DATE, opt-out threshold). These are blocking requirements, not production-only enhancements.
+improvement: commands/execute-plan.md Telemetry Completeness Requirement expanded to explicitly require error-path and lifecycle events. qa-agent now includes a failure telemetry verification test in Failure Simulation.
