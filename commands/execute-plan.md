@@ -111,6 +111,70 @@ Known Issues
 
 ---
 
+## 6 Telemetry Completeness Requirement
+
+For every API route calling an external AI service, implement PostHog events in ALL branches:
+
+- Success path: event with `latency_ms` + key response properties
+- Timeout branch: event with `timeout_ms` property
+- Parse/AI failure branch: event with `error_type` property
+- Rate limit branch: event (no PII)
+
+For every cron worker route, implement:
+
+- Per-user failure event inside the catch block (e.g., `reminder_trigger_failed`)
+- Aggregate `cron_run_completed` event after `Promise.allSettled` resolves
+- Experiment lifecycle events at every guard evaluation (`EXPERIMENT_END_DATE` check, opt-out threshold check)
+
+**A worker catch block with no telemetry event is incomplete.** Error-path events are blocking requirements, not production-only enhancements.
+
+An API route with partial telemetry is equivalent to no telemetry for funnel analysis. The metric plan verifies event schema — it does not define which events exist.
+
+For pageview tracking: if `capture_pageview: false` is set on the PostHog provider, add an explicit `posthog.capture('page_viewed')` call in a `useEffect` on the root page component.
+
+# Added: 2026-03-19 — SMB Feature Bundling Engine
+# Updated: 2026-03-21 — Ozi Reorder Experiment (error-path + lifecycle events)
+
+---
+
+## 7 Single Emission Source Rule
+
+Each PostHog event has exactly one authoritative emission point.
+
+- If an event is fired server-side on API confirmation, it must **not** also be fired client-side via `useEffect` or user interaction handlers.
+- If an event is fired client-side, no API route should fire the same event name on the same user action.
+- North Star metric events fired server-side must not be re-fired client-side. Dual-emission of a North Star event is a **critical violation**.
+- Document the canonical emission point in an inline comment: `// Single emission source: server-side in /api/[route]`
+
+Before wiring any POST route, confirm its auth header requirement from the architecture spec. Worker routes without a named auth mechanism are a blocking violation.
+
+# Added: 2026-03-21 — Ozi Reorder Experiment
+
+---
+
+## 8 Execute-Plan Completion Checklist
+
+Before marking execute-plan complete, verify:
+
+1. **README.md** exists in `apps/[project]/` and contains:
+   - One-liner (what it does + who it's for)
+   - Numbered user journey
+   - Stack table (all layers)
+   - All env vars listed by name
+   - Schema apply step (tables, where to run)
+   - `npm run dev` instructions and what success looks like
+   - Every HTTP endpoint documented (method, path, body, response)
+   - PostHog analytics events table (event name, trigger, properties)
+   - Key design decisions
+
+2. **`.env.local.example`** lists every `process.env.*` reference in the codebase — including any variables added during peer-review or fix cycles.
+
+If either is missing, execute-plan is **not complete**. A deploy-check README failure that originates here is an execute-plan prompt failure — flag it in the postmortem.
+
+# Added: 2026-03-21 — Ozi Reorder Experiment
+
+---
+
 # Rules
 
 Follow architecture defined earlier.

@@ -79,6 +79,28 @@ AI service timeout
 database failure
 network interruption
 
+**Telemetry Unavailability Test** (required for all projects with cron workers):
+
+Simulate PostHog unavailability (missing `POSTHOG_KEY`, invalid host, or mocked SDK rejection).
+
+Verify:
+1. All worker routes return 200 (not 500) when PostHog is down.
+2. DB state is correct and complete — all rows were written as expected.
+3. Cron run counters (`reminders_sent`, `errors`) reflect actual DB writes, not PostHog call success.
+
+If any worker returns 500 on PostHog failure, this is a **blocking QA finding**.
+
+**Failure Telemetry Verification** (required for all cron workers):
+
+Trigger a controlled worker failure (e.g., invalid DB record, missing required field).
+
+Verify:
+1. A failure telemetry event fires from the catch block (e.g., `reminder_trigger_failed`).
+2. The trigger's aggregate counter correctly counts this worker as failed.
+3. If no failure event fires, this is a **blocking QA finding** — the worker has incomplete telemetry.
+
+# Added: 2026-03-21 — Ozi Reorder Experiment
+
 ---
 
 ## 4 Performance Testing

@@ -81,6 +81,18 @@ injection risks
 missing validation
 unsafe API usage
 
+**PostHog dual-emission check** (required for every review):
+
+Verify that no PostHog event name appears in BOTH a server-side API route AND a client-side component.
+
+- Search for every `posthog.capture('event_name')` call in the codebase.
+- For each event, confirm it has exactly one emission point.
+- Dual-emission of any North Star metric event is a **critical violation** — it corrupts funnel counts and makes the metric unmeasurable.
+
+If found: block approval and require removal of the client-side re-fire (server-side is the authoritative source when the API confirms the action).
+
+# Added: 2026-03-21 — Ozi Reorder Experiment
+
 ---
 
 ## 5 Performance Risks

@@ -111,7 +111,7 @@ Code Review Agent
 
 /peer-review
 
-Perform adversarial architecture review.
+Perform adversarial architecture review. Runs Challenge Mode: Assumption Audit, Anti-Sycophancy mandate, Multi-Perspective Challenge (Reliability Engineer / Adversarial User / Future Maintainer stances), and Prompt Autopsy Check. Optionally uses multi-model review — Claude leads and adjudicates, GPT-4o for bug analysis, Gemini for UI critique.
 
 Agent involved:
 Peer Review Agent
@@ -155,7 +155,7 @@ Deploy Agent
 
 /postmortem
 
-Analyze results and identify what went wrong across the full cycle.
+Analyze results and identify what went wrong across the full cycle. Includes mandatory Prompt Autopsy section: traces failures back to specific agent prompt instructions and proposes exact fixes to those agent files.
 
 Agent involved:
 Learning Agent
@@ -166,11 +166,28 @@ Learning Agent
 
 /learning
 
-Convert postmortem insights into durable system intelligence.
-Write lessons into knowledge/engineering-lessons.md, knowledge/product-lessons.md, and knowledge/prompt-library.md.
+Convert postmortem insights into durable system intelligence. Writes lessons to knowledge files, applies Prompt Autopsy findings directly to agent files, and generates apps/<project_name>/CODEBASE-CONTEXT.md for future agent sessions.
 
 Agent involved:
 Learning Agent
+
+---
+
+# Utility Commands (Run Anytime)
+
+These commands are not part of the sequential pipeline and have no quality gate dependencies. They can be run at any stage.
+
+/docs
+Generate AI-native codebase documentation.
+Writes CODEBASE-CONTEXT.md to the active app directory (apps/<project_name>/CODEBASE-CONTEXT.md).
+Use after any significant implementation or architecture change, or before handing off to a new agent session.
+Agent involved: Docs Agent (or active engineering agent)
+
+/explain
+Targeted learning session for the PM.
+Explains a concept, pattern, or error via the 80/20 rule tailored to a technical PM's knowledge level.
+Does not modify code or update pipeline state.
+Agent involved: none (Claude Code direct)
 
 ---
 
@@ -290,6 +307,25 @@ experiments/exploration/exploration-<issue_number>.md
 experiments/plans/plan-<issue_number>.md
 
 Step 4
+Load knowledge base.
+
+All agents must read:
+
+knowledge/product-principles.md
+knowledge/coding-standards.md
+knowledge/architecture-guide.md
+knowledge/ui-standards.md
+knowledge/analytics-framework.md
+knowledge/prompt-library.md
+knowledge/engineering-lessons.md
+knowledge/product-lessons.md
+knowledge/ai-model-guide.md
+
+For engineering commands (execute-plan, deslop, review, peer-review, qa-test, docs), also load if available:
+
+apps/<project_name>/CODEBASE-CONTEXT.md
+
+Step 5
 Provide this context to all agents.
 
 Agents must use this context when generating outputs.

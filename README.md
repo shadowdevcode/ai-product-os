@@ -1,74 +1,152 @@
-# AI Product Operating System (OS)
+# AI Product Operating System
 
-Welcome to the **AI Product OS**, a simulated, end-to-end product development organization where specialized AI agents collaborate to build products from idea to production.
+A simulated, end-to-end product development organization where specialized AI agents collaborate to take an idea from raw hypothesis to deployed, instrumented product — following the same rigor as a real product team.
 
-This repository orchestrates a team of specialized agents representing different roles in a typical tech company. The human Product Manager acts as the orchestrator, directing the workflow through structured commands.
+**Who this is for:** Product Managers, indie founders, and ICPs who want to ship AI-assisted products faster without skipping the parts that matter — research, architecture review, QA, metrics, and learning.
 
----
-
-## 🚀 Key Concepts
-
-*   **Specialized Agents**: Each agent represents a specific role (e.g., Research Agent, Frontend Engineer, QA Agent, Backend Architect). Agents are constrained to their specific responsibilities.
-*   **Command-Driven Workflow**: The development lifecycle is executed sequentially using structured `/commands` (e.g., `/create-issue`, `/execute-plan`, `/qa-test`).
-*   **Strict Quality Gates**: Progression to the next development stage is enforced by quality gates. The pipeline will block if a stage (like Peer Review or QA) fails.
-*   **Live State Management**: The system's runtime memory is maintained in `project-state.md`, tracking the active project, current stage, quality gate status, blockers, and architectural decisions.
-*   **Continuous Learning**: After every project cycle, postmortems are generated and converted into durable system intelligence, updating the shared knowledge base (`product-lessons.md`, `engineering-lessons.md`, `prompt-library.md`).
+> Built and operated with [Claude Code](https://claude.ai/code). You need Claude Code to run the slash commands.
 
 ---
 
-## 📂 Repository Structure
+## Quick Navigation
 
-*   **/agents**: Contains instructions, roles, and responsibilities for each specialized agent.
-*   **/commands**: Defines the executable workflow commands and their execution rules.
-*   **/knowledge**: The central brain. Contains architectural guides, coding standards, UI standards, product principles, and historical lessons learned.
-*   **/experiments**: Active workspace for tracking ideas, problem exploration, product plans, and testing results.
-*   **/apps** / **/src**: Where the actual implementations (codebases) are generated and stored.
-*   **/postmortems**: Archival folder for post-launch analysis before insights are extracted into `/knowledge`.
-*   `system-orchestrator.md`: Rules for stage progression, quality gates, and agent handoffs.
-*   `command-protocol.md`: The execution framework outlining how commands load context and update state.
-*   `project-state.md`: The dynamic, live memory of the system.
-
----
-
-## 🔄 The 12-Step Product Workflow
-
-The OS enforces a rigorous 12-step pipeline. Commands must be executed sequentially unless overridden by the human PM.
-
-1.  **Idea Incubation**: `/create-issue` - Convert a raw idea into a structured opportunity (Research Agent).
-2.  **Exploration**: `/explore` - Validate the problem and analyze market feasibility (Research Agent).
-3.  **Planning**: `/create-plan` - Specs, UX design, System Architecture, Database Schema (Product, Design, DB, & Backend Architects).
-4.  **Execution**: `/execute-plan` - Write the code for frontend and backend (Frontend & Backend Engineers).
-5.  **Deslop**: `/deslop` - Clean and polish AI-generated code, remove complexity (Deslop Agent).
-6.  **Code Review**: `/review` - Baseline implementation review (Code Review Agent).
-7.  **Peer Review**: `/peer-review` - Adversarial, deep architectural and scalability review (Peer Review Agent).
-8.  **QA Testing**: `/qa-test` - Emulated reliability and integration testing (QA Agent).
-9.  **Metric Planning**: `/metric-plan` - Define tracking, funnels, and success criteria (Analytics Agent).
-10. **Deployment Check**: `/deploy-check` - Final production readiness verification (Deploy Agent).
-11. **Postmortem**: `/postmortem` - Analyze performance, bugs, and workflow bottlenecks (Learning Agent).
-12. **Learning**: `/learning` - Bake insights into the durable knowledge base, concluding the cycle (Learning Agent).
+| What you're looking for | Where to find it |
+|---|---|
+| Active project status, stage, blockers | [`project-state.md`](project-state.md) |
+| Product ideas and issue definitions | [`experiments/ideas/issue-NNN.md`](experiments/ideas/) |
+| Market research and problem exploration | [`experiments/exploration/exploration-NNN.md`](experiments/exploration/) |
+| PRDs, UX specs, architecture plans | [`experiments/plans/plan-NNN.md`](experiments/plans/) |
+| QA, code review, metrics, deploy results | [`experiments/results/`](experiments/results/) |
+| Demo scripts and presentations | [`experiments/demos/`](experiments/demos/) |
+| Built app codebases | [`apps/[project-name]/`](apps/) |
+| Pipeline command instructions | [`commands/`](commands/) |
+| Agent role definitions | [`agents/`](agents/) |
+| Engineering and product knowledge base | [`knowledge/`](knowledge/) |
+| Quality gate rules and stage progression | [`system-orchestrator.md`](system-orchestrator.md) |
+| Command execution framework | [`command-protocol.md`](command-protocol.md) |
 
 ---
 
-## 🧑‍💻 The Human Product Manager Role
+## Projects Built
 
-While the agents handle the heavy lifting, **the human PM is ultimately responsible for**:
-*   Deciding which ideas to pursue.
-*   Evaluating agent outputs at each stage.
-*   Overriding blocked quality gates if necessary.
-*   Making final product and architectural decisions.
-*   Approving releases.
+| Issue | App | What It Does | Stack | Status |
+|---|---|---|---|---|
+| 002 | — | Gmail → WhatsApp daily digest summarizer | Next.js, Supabase, Gemini, Twilio | Archived |
+| 003 | [finance-advisor](apps/finance-advisor/) | AI personal finance advisor | Next.js, Supabase, Gemini | Complete |
+| 004 | [clarity](apps/clarity/) | PM to-do list with AI task categorization | Next.js, Neon, Gemini | Complete |
+| 005 | [smb-bundler](apps/smb-bundler/) | Feature bundle + value-based pricing engine for B2B SaaS PMs | Next.js, Neon, Gemini | Complete |
+| 006 | [ozi-reorder](apps/ozi-reorder/) | Reorder reminder experiment for dark-store baby essentials (50/50 test vs. control, 7 PostHog events) | Next.js, Neon, PostHog | Complete |
+| 007 | [ozi-insights](apps/ozi-insights/) | Synthetic Freshdesk support data for order reliability research (30 tickets, grounded in Play Store) | Data workspace | Explored |
 
-*Agents assist execution but do not replace human judgment.*
+Each issue number maps directly across all folders: `experiments/ideas/issue-NNN.md`, `experiments/exploration/exploration-NNN.md`, `experiments/plans/plan-NNN.md`, and `experiments/results/*-NNN.md`.
 
 ---
 
-## 🏁 Getting Started
+## The 12-Step Pipeline
 
-To operate the AI Product OS:
+The OS enforces a sequential pipeline with quality gates. A stage cannot start until the previous stage passes.
 
-1.  Check `project-state.md` to understand the current active project and stage.
-2.  Run the appropriate next command from the 12-step workflow by passing the workflow instructions found in `/commands/<command>.md` to the active AI agent.
-3.  Review the generated artifacts and ensure `project-state.md` is correctly updated according to the command protocol.
-4.  Proceed to the next stage only when Quality Gates pass!
+| # | Command | Agent | Output |
+|---|---|---|---|
+| 1 | `/create-issue` | Research Agent | Structured opportunity brief |
+| 2 | `/explore` | Research Agent | Market validation, recommendation |
+| 3 | `/create-plan` | Product + Design + Backend/DB Architects | PRD, UX, architecture, DB schema |
+| 4 | `/execute-plan` | Frontend + Backend Engineers | Working app codebase |
+| 5 | `/deslop` | Deslop Agent | Clean, comment-free code |
+| 6 | `/review` | Code Review Agent | Critical issues list (blocks until fixed) |
+| 7 | `/peer-review` | Peer Review Agent | Adversarial architecture review |
+| 8 | `/qa-test` | QA Agent | Reliability and edge-case test results |
+| 9 | `/metric-plan` | Analytics Agent | North Star, funnels, ground-truth queries |
+| 10 | `/deploy-check` | Deploy Agent | Production readiness sign-off |
+| 11 | `/postmortem` | Learning Agent | Root cause analysis of pipeline failures |
+| 12 | `/learning` | Learning Agent | Engineering rules extracted → knowledge base updated |
 
-*Build faster, learn systematically, fail safely!*
+**Utility commands** (run anytime):
+- `/docs` — Generate `CODEBASE-CONTEXT.md` for the active app
+- `/explain` — Deep-dive on a concept, pattern, or error
+
+---
+
+## Knowledge Base
+
+The system gets smarter with every cycle. After each `/learning` run, insights from postmortems are extracted into durable rules:
+
+- [`knowledge/engineering-lessons.md`](knowledge/engineering-lessons.md) — Technical rules (e.g., fan-out cron, pagination bounds, telemetry resilience)
+- [`knowledge/product-lessons.md`](knowledge/product-lessons.md) — Product patterns and anti-patterns
+- [`knowledge/prompt-library.md`](knowledge/prompt-library.md) — Refined agent prompts extracted from what worked
+- [`knowledge/coding-standards.md`](knowledge/coding-standards.md) — TypeScript, Next.js, Supabase/Neon standards
+- [`knowledge/architecture-guide.md`](knowledge/architecture-guide.md) — Default system architecture patterns
+- [`knowledge/analytics-framework.md`](knowledge/analytics-framework.md) — PostHog event schema and funnel design
+
+Every agent reads the knowledge base before executing — preventing the same class of mistake from appearing twice.
+
+---
+
+## Getting Started (Forking This Repo)
+
+1. **Check the current state** — read [`project-state.md`](project-state.md) to see what stage the system is at and which issue is active
+2. **Pick an idea** — browse [`experiments/ideas/`](experiments/ideas/) for context on past issues, or create a new one with `/create-issue`
+3. **Run commands sequentially** — pass the command file from [`commands/`](commands/) to Claude Code (e.g., paste `commands/create-issue.md` content and follow it)
+4. **Read the knowledge base first** — every command in the pipeline reads all files in [`knowledge/`](knowledge/) before generating output to avoid repeating past mistakes
+5. **Track gates, not just progress** — check `project-state.md` after each command; blocked = do not proceed
+
+**Default tech stack** (used across all apps):
+- Frontend: Next.js 16+ (App Router), TypeScript strict, Tailwind CSS 4+
+- Backend: Next.js API Routes, Neon DB (`@neondatabase/serverless`) or Supabase
+- AI: Google Gemini 2.5 Flash/Pro via `@google/genai` with structured outputs
+- Analytics: PostHog (`posthog-js` + `posthog-node`)
+- Hosting: Vercel
+
+**Environment setup per app:**
+```bash
+cd apps/[project-name]
+cp .env.local.example .env.local   # fill in your keys
+npm install
+npm run dev
+```
+
+Each app includes a `schema.sql` (idempotent) that must be applied in your database editor before first run.
+
+---
+
+## The Human PM Role
+
+Agents execute but do not replace judgment. The human PM is responsible for:
+
+- Deciding which ideas to pursue
+- Evaluating agent outputs at each stage
+- Overriding blocked quality gates when the tradeoff is justified
+- Making final product and architectural decisions
+- Approving releases
+
+---
+
+## Repository Structure
+
+```
+/agents                    # Agent role definitions (one file per role)
+/commands                  # Pipeline command instructions (one file per command)
+/knowledge                 # Shared intelligence: standards, lessons, prompts
+/experiments
+  /ideas                   # Issue briefs (issue-NNN.md)
+  /exploration             # Market validation outputs (exploration-NNN.md)
+  /plans                   # PRDs, UX, architecture, DB schema (plan-NNN.md)
+  /results                 # QA, reviews, metrics, deploy artifacts (*-NNN.md)
+  /demos                   # Demo scripts and presentations
+/apps                      # Built codebases (one folder per project)
+  /[project-name]
+    src/app/               # Next.js App Router pages and API routes
+    src/components/        # UI components
+    src/lib/               # Utilities, DB clients, AI helpers
+    schema.sql             # Idempotent DB schema
+    CODEBASE-CONTEXT.md    # Auto-generated docs (via /docs command)
+    README.md              # Setup and run instructions
+    .env.local.example     # Required env vars (no secrets)
+project-state.md           # Live runtime memory — always check this first
+system-orchestrator.md     # Quality gate rules and stage progression
+command-protocol.md        # How commands load context and update state
+```
+
+---
+
+*Build faster. Learn systematically. Fail safely.*
