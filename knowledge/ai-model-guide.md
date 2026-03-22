@@ -97,16 +97,49 @@ When running single-model:
 
 ---
 
+## Multi-Model Routing by Pipeline Stage (Zevi Arnovitz Alignment)
+
+Inspired by Zevi's methodology: route each stage to the model best suited for that task type. Claude leads strategy and review; Gemini executes UI; Claude Opus handles adversarial depth.
+
+> **Routing Rule (TL;DR):** Use **Claude Sonnet 4.6** for planning and strategy stages
+> (`/create-issue`, `/explore`, `/create-plan`, `/review`). Use **Gemini 2.5 Flash** for
+> UI/frontend execution (`/execute-plan` frontend tasks). Use **Claude Opus 4.6** for
+> adversarial depth (`/peer-review`). Default to Sonnet when in doubt.
+
+| Pipeline Stage | Recommended Model | Model ID | Rationale |
+|---|---|---|---|
+| `/create-issue` | Claude Sonnet | `claude-sonnet-4-6` | Strategic framing, problem articulation |
+| `/explore` | Claude Sonnet | `claude-sonnet-4-6` | Market reasoning, feasibility judgment |
+| `/create-plan` | Claude Sonnet | `claude-sonnet-4-6` | Architecture design, spec synthesis |
+| `/execute-plan` (backend) | Claude Sonnet | `claude-sonnet-4-6` | Logic-heavy implementation |
+| `/execute-plan` (frontend/UI) | Gemini 2.5 Flash | `gemini-2.5-flash` | UI execution speed, visual accuracy |
+| `/deslop` | Claude Sonnet | `claude-sonnet-4-6` | Code cleanup and pattern recognition |
+| `/review` | Claude Sonnet | `claude-sonnet-4-6` | Code review, standards enforcement |
+| `/peer-review` | Claude Opus | `claude-opus-4-6` | Adversarial depth, will push back hardest |
+| `/qa-test` | Claude Sonnet | `claude-sonnet-4-6` | Edge case enumeration |
+| `/metric-plan` | Claude Sonnet | `claude-sonnet-4-6` | Analytics strategy |
+| `/deploy-check` | Claude Sonnet | `claude-sonnet-4-6` | Production readiness judgment |
+| `/postmortem` | Claude Opus | `claude-opus-4-6` | Root cause synthesis, systemic insight |
+| `/learning` | Claude Sonnet | `claude-sonnet-4-6` | Knowledge extraction and distillation |
+
+**Rule**: Default to Sonnet for throughput. Escalate to Opus when adversarial depth matters most (peer-review, postmortem). Use Gemini Flash for frontend-only execution tasks to maximize UI iteration speed.
+
+**In a single-model session**: All stages run with whatever model is active. The routing table above applies when you have the ability to select models per task.
+
+# Added: 2026-03-22 — Specific model IDs and stage routing (Zevi alignment)
+
+---
+
 ## Model Selection Quick Reference
 
-| Task | Primary | Secondary (Optional) |
-|---|---|---|
-| Architecture design | Claude | — |
-| Code review | Claude | GPT-4o |
-| Peer review (architecture) | Claude | — |
-| Peer review (bugs) | Claude + GPT-4o | — |
-| Peer review (UI) | Claude + Gemini | — |
-| QA edge cases | Claude | GPT-4o |
-| Postmortem analysis | Claude | — |
-| UI design critique | Gemini | Claude |
-| Bug debugging | Claude | GPT-4o |
+| Task | Primary | Primary Model ID | Secondary (Optional) |
+|---|---|---|---|
+| Architecture design | Claude Sonnet | `claude-sonnet-4-6` | — |
+| Code review | Claude Sonnet | `claude-sonnet-4-6` | GPT-4o |
+| Peer review (architecture) | Claude Opus | `claude-opus-4-6` | — |
+| Peer review (bugs) | Claude Opus + GPT-4o | `claude-opus-4-6` | — |
+| Peer review (UI) | Claude Sonnet + Gemini | `claude-sonnet-4-6` | — |
+| QA edge cases | Claude Sonnet | `claude-sonnet-4-6` | GPT-4o |
+| Postmortem analysis | Claude Opus | `claude-opus-4-6` | — |
+| UI design critique | Gemini 2.5 Flash | `gemini-2.5-flash` | Claude |
+| Bug debugging | Claude Sonnet | `claude-sonnet-4-6` | GPT-4o |

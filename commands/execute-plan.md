@@ -152,6 +152,102 @@ Before wiring any POST route, confirm its auth header requirement from the archi
 
 ---
 
+## 9 TDD Mandate (RED-GREEN-REFACTOR)
+
+For every API route and service function, follow this cycle before marking the task complete:
+
+1. **RED**: Write a failing test in `__tests__/` that describes the expected behavior. Run it and confirm it fails.
+2. **GREEN**: Implement the minimum code to make the test pass.
+3. **REFACTOR**: Clean up the implementation without breaking tests.
+
+**Test file structure**:
+```
+apps/[project]/
+  __tests__/
+    api/
+      [route-name].test.ts   # One test file per API route
+    lib/
+      [util-name].test.ts    # One test file per utility
+```
+
+**Required test coverage for each API route**:
+- Happy path (valid input → expected output)
+- Missing required fields (expect 400)
+- Auth failure (expect 401)
+- Downstream service failure (expect 500 or graceful fallback)
+
+**Test framework**: Vitest (preferred) or Jest.
+
+```bash
+# Add to package.json
+"scripts": {
+  "test": "vitest run",
+  "test:watch": "vitest"
+}
+```
+
+Tests must pass (`npm test` exits 0) before execute-plan is marked complete. A stage with failing tests is equivalent to a blocked stage.
+
+# Added: 2026-03-22 — claude-caliper integration (TDD mandate)
+
+---
+
+## 10 Telemetry Verification Checklist
+
+After implementation, generate a verification checklist from the metric-plan events and confirm each event is present in the codebase.
+
+**Process**:
+
+1. Read `experiments/plans/plan-<issue_number>.md` and extract all PostHog event names from the analytics/metrics section.
+2. For each event, verify it is `grep`-able in the codebase:
+   ```bash
+   grep -r "posthog.capture\|posthog\.identify\|capture(" apps/[project]/src --include="*.ts" --include="*.tsx"
+   ```
+3. Produce a verification table:
+
+| Event Name | Expected In | Found? | File:Line |
+|---|---|---|---|
+| `reorder_reminder_sent` | worker route | ✓ | `api/worker/route.ts:42` |
+| `reorder_page_viewed` | page component | ✗ | MISSING |
+
+4. Any `✗` row is a **blocking violation**. Do not mark execute-plan complete until all metric-plan events are present in the codebase.
+
+**Rule**: The metric plan verifies event schema. Execute-plan verifies event presence. Both are required.
+
+# Added: 2026-03-22 — Telemetry verification (fixes Issues 004/005/006 pattern)
+
+---
+
+## 11 Parallel Execution via Git Worktrees (Optional)
+
+When the implementation plan has independent frontend and backend phases with no shared state dependencies, they can be executed in parallel using git worktrees.
+
+**When to use**:
+- Frontend pages do not depend on backend being complete (uses mock data or stubs)
+- Backend routes do not depend on frontend components
+- Both phases are defined as separate task groups in the JSON manifest
+
+**How to set up parallel worktrees**:
+```bash
+# Create a worktree for frontend work
+git worktree add ../[project]-frontend feature/[issue]-frontend
+
+# Create a worktree for backend work
+git worktree add ../[project]-backend feature/[issue]-backend
+
+# After both complete, merge to feature branch
+git merge feature/[issue]-frontend
+git merge feature/[issue]-backend
+```
+
+**Reconciliation rule**: If merge conflicts arise in shared files (`layout.tsx`, `lib/db.ts`), resolve in favor of the backend implementation for data/auth files and the frontend implementation for UI/styling files. Flag unresolvable conflicts for human review before proceeding.
+
+**Default**: Sequential execution is safe. Use parallel worktrees only when phases are clearly independent.
+
+# Added: 2026-03-22 — Parallel execution guidance (claude-caliper alignment)
+
+---
+
 ## 8 Execute-Plan Completion Checklist
 
 Before marking execute-plan complete, verify:

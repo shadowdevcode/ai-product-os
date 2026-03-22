@@ -97,6 +97,7 @@ Utility Commands (run anytime, outside the sequential pipeline):
 
 docs — Generate AI-native CODEBASE-CONTEXT.md for the active app
 explain — Targeted PM learning session via 80/20 rule
+eval — Score a completed issue's pipeline output against its spec using assertion-based grading
 
 ---
 
@@ -169,11 +170,14 @@ After /create-plan:
 - Set last_command_run to /create-plan
 - Update docs_home to point to the plan file in experiments/plans/
 - Append key architecture decisions to Decisions Log
+- Confirm manifest-<issue_number>.json was saved to experiments/plans/
 
 After /execute-plan:
 - Set stage to execute-plan
 - Set last_command_run to /execute-plan
 - Update active_branch and environments as applicable
+- Verify npm test exits 0 (TDD mandate — failing tests = blocked stage)
+- Verify telemetry verification table shows no missing events (§10 of execute-plan.md)
 
 After /deslop:
 - Set stage to deslop
@@ -201,6 +205,7 @@ After /deploy-check:
 - Set stage to deploy-check
 - Set last_command_run to /deploy-check
 - Update Quality Gates: deploy_check to pass or fail
+- If all gates pass: record PR URL returned by gh pr create in project-state.md
 
 After /postmortem:
 - Set stage to postmortem
