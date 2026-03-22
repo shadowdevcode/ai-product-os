@@ -34,6 +34,7 @@ The system operates through sequential slash commands that activate specialized 
 **Utility Commands** (run anytime, not part of the sequential pipeline):
 - `/docs` - Generate AI-native codebase documentation (`CODEBASE-CONTEXT.md`) for the active app
 - `/explain` - Targeted learning session: understand a concept, pattern, or error via 80/20 rule
+- `/eval` - Score a completed issue's pipeline output against its spec using assertion-based grading; measures agent quality improvement across cycles
 
 ### Quality Gate System
 
@@ -101,6 +102,8 @@ After every command execution, update `project-state.md`:
   /results           # QA, review, metric planning outputs
 /apps                # Implementation codebases (Next.js apps)
   /[project-name]    # Individual product implementations
+/libs                # Shared utility templates (copy to apps/[project]/src/lib/)
+  /shared            # posthog.ts, db.ts, error-handler.ts
 /postmortems         # Post-launch analysis (archived after learning extraction)
 system-orchestrator.md   # Stage progression and quality gate rules
 command-protocol.md      # Command execution framework

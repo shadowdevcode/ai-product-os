@@ -149,6 +149,13 @@ Verify production readiness.
 Agent involved:
 Deploy Agent
 
+Blocking gates (all must pass before deploy approval):
+- Build verification
+- Environment configuration
+- README quality gate (knowledge/readme-template.md standard)
+- Sentry error tracking verification (@sentry/nextjs configured)
+- Automated PR creation via `gh pr create` (if all gates pass)
+
 ---
 
 11 Postmortem
@@ -186,6 +193,14 @@ Agent involved: Docs Agent (or active engineering agent)
 /explain
 Targeted learning session for the PM.
 Explains a concept, pattern, or error via the 80/20 rule tailored to a technical PM's knowledge level.
+Does not modify code or update pipeline state.
+Agent involved: none (Claude Code direct)
+
+/eval
+Assertion-based grading of a completed issue's pipeline output against its spec.
+Run after /learning to verify that extracted insights improved the next cycle.
+Scores each assertion as PASS / FAIL / SKIP. Grade = PASS / (PASS + FAIL) * 100.
+Thresholds: 90–100% Excellent, 75–89% Good, 60–74% Needs improvement, <60% Critical.
 Does not modify code or update pipeline state.
 Agent involved: none (Claude Code direct)
 

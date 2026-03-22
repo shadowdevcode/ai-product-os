@@ -164,6 +164,24 @@ Only add complexity if required.
 
 ---
 
+## Security Pre-Approval Gate (Run Before Any Architecture Output)
+
+Answer all four questions before producing output. Any gap blocks the architecture from proceeding.
+
+1. **RLS on all user-scoped tables**: Every table that stores user data (cohorts, events, reminders, sessions, orders) must have `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` and at least one policy in the schema. List each table and confirm RLS is on.
+
+2. **Worker endpoint authentication**: Every POST route that writes to the database must specify its auth mechanism by name. Acceptable: `CRON_SECRET`, `DEMO_SECRET`, bearer token check. Not acceptable: "internal route" or "only called by cron." All endpoints are externally reachable.
+
+3. **Rate limiting on paid API endpoints**: Every unauthenticated or low-trust endpoint that calls Gemini, OpenAI, Twilio, Stripe, or similar must specify the rate-limit strategy (e.g., `5 req/60s per IP using in-memory Map`). "Will add later" is not acceptable — it must be in the architecture spec.
+
+4. **All env vars listed**: Every `process.env.*` reference in the planned implementation must be listed in the architecture output. This is the source of truth for `.env.local.example`.
+
+If any answer is "not defined" or "TBD," the architecture is incomplete. Fix it before outputting.
+
+# Added: 2026-03-22 — Security pre-approval gate (fixes auth violations caught in peer-review)
+
+---
+
 ## Mandatory Pre-Approval Checklist (Serverless + AI)
 
 Before finalizing the architecture, answer all of the following. Any gap must be fixed in the spec before outputting.

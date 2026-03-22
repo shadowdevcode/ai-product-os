@@ -121,6 +121,94 @@ Block deployment if README is missing or is the default Next.js template.
 
 ---
 
+## 7 Sentry Error Tracking Verification
+
+Verify Sentry is initialized and configured for the app.
+
+Check:
+- `@sentry/nextjs` is installed in `package.json`
+- `sentry.client.config.ts` and `sentry.server.config.ts` exist in the app root with `Sentry.init()` configured
+- `SENTRY_DSN` (or `NEXT_PUBLIC_SENTRY_DSN`) is listed in `.env.local.example`
+- `next.config.ts` wraps the config with `withSentryConfig()`
+- At least one try/catch block uses `Sentry.captureException(e)` in API routes
+
+If Sentry is not configured, add it as a deployment blocker. Post-deploy debugging without error tracking is blind.
+
+**Minimum setup**:
+```bash
+npm install @sentry/nextjs
+npx @sentry/wizard@latest -i nextjs
+```
+
+# Added: 2026-03-22 — Sentry verification (error tracking gap)
+
+---
+
+## 8 Automated PR Creation
+
+If all checks pass (Build, Environment, Infrastructure, Monitoring, README, Sentry), create a GitHub pull request.
+
+**Process**:
+
+1. Confirm working tree is clean:
+   ```bash
+   git status
+   ```
+2. Commit any uncommitted changes if present (implementation files only, no secrets):
+   ```bash
+   git add apps/[project]/ experiments/ schema.sql
+   git commit -m "feat([project]): complete issue-NNN implementation"
+   ```
+3. Push branch to remote:
+   ```bash
+   git push -u origin [current-branch]
+   ```
+4. Create PR using `gh`:
+   ```bash
+   gh pr create \
+     --title "feat([project]): [one-line description from product spec]" \
+     --body "$(cat <<'EOF'
+   ## Summary
+   - [Bullet 1 from product spec]
+   - [Bullet 2 from product spec]
+   - [Bullet 3 from product spec]
+
+   ## Issue
+   Closes #[issue-number] ([issue title])
+
+   ## Pipeline Stages Completed
+   - [x] create-issue
+   - [x] explore
+   - [x] create-plan
+   - [x] execute-plan
+   - [x] deslop
+   - [x] review
+   - [x] peer-review
+   - [x] qa-test
+   - [x] metric-plan
+   - [x] deploy-check
+
+   ## Test Plan
+   - [ ] Run `npm test` — all tests pass
+   - [ ] Apply `schema.sql` to Supabase
+   - [ ] Set env vars from `.env.local.example`
+   - [ ] Run `npm run dev` and verify user journey
+
+   🤖 Generated with AI Product OS
+   EOF
+   )"
+   ```
+5. Return the PR URL in the deploy-check output.
+
+**Block PR creation if**:
+- Any deploy-check stage is blocked
+- README quality gate fails
+- Sentry verification fails
+
+# Added: 2026-03-22 — Automated PR creation (claude-caliper alignment)
+
+---
+
 # Output Format
 
 Return output using this structure.
@@ -138,6 +226,10 @@ Monitoring Status
 Rollback Plan
 
 README Quality Gate
+
+Sentry Error Tracking
+
+PR Creation
 
 Deployment Decision
 
