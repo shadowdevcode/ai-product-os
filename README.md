@@ -4,39 +4,40 @@ A simulated, end-to-end product development organization where specialized AI ag
 
 **Who this is for:** Product Managers, indie founders, and ICPs who want to ship AI-assisted products faster without skipping the parts that matter — research, architecture review, QA, metrics, and learning.
 
-> Built and operated with [Claude Code](https://claude.ai/code). You need Claude Code to run the slash commands.
+> **Live:** [ai-product-os-493e.vercel.app](https://ai-product-os-493e.vercel.app/) | Built and operated with [Claude Code](https://claude.ai/code). You need Claude Code to run the slash commands.
 
 ---
 
 ## Quick Navigation
 
-| What you're looking for | Where to find it |
-|---|---|
-| Active project status, stage, blockers | [`project-state.md`](project-state.md) |
-| Product ideas and issue definitions | [`experiments/ideas/issue-NNN.md`](experiments/ideas/) |
-| Market research and problem exploration | [`experiments/exploration/exploration-NNN.md`](experiments/exploration/) |
-| PRDs, UX specs, architecture plans | [`experiments/plans/plan-NNN.md`](experiments/plans/) |
-| QA, code review, metrics, deploy results | [`experiments/results/`](experiments/results/) |
-| Demo scripts and presentations | [`experiments/demos/`](experiments/demos/) |
-| Built app codebases | [`apps/[project-name]/`](apps/) |
-| Pipeline command instructions | [`commands/`](commands/) |
-| Agent role definitions | [`agents/`](agents/) |
-| Engineering and product knowledge base | [`knowledge/`](knowledge/) |
-| Quality gate rules and stage progression | [`system-orchestrator.md`](system-orchestrator.md) |
-| Command execution framework | [`command-protocol.md`](command-protocol.md) |
+| What you're looking for                  | Where to find it                                                         |
+| ---------------------------------------- | ------------------------------------------------------------------------ |
+| Active project status, stage, blockers   | [`project-state.md`](project-state.md)                                   |
+| Product ideas and issue definitions      | [`experiments/ideas/issue-NNN.md`](experiments/ideas/)                   |
+| Market research and problem exploration  | [`experiments/exploration/exploration-NNN.md`](experiments/exploration/) |
+| PRDs, UX specs, architecture plans       | [`experiments/plans/plan-NNN.md`](experiments/plans/)                    |
+| QA, code review, metrics, deploy results | [`experiments/results/`](experiments/results/)                           |
+| Demo scripts and presentations           | [`experiments/demos/`](experiments/demos/)                               |
+| Built app codebases                      | [`apps/[project-name]/`](apps/)                                          |
+| Pipeline command instructions            | [`commands/`](commands/)                                                 |
+| Agent role definitions                   | [`agents/`](agents/)                                                     |
+| Engineering and product knowledge base   | [`knowledge/`](knowledge/)                                               |
+| Quality gate rules and stage progression | [`system-orchestrator.md`](system-orchestrator.md)                       |
+| Command execution framework              | [`command-protocol.md`](command-protocol.md)                             |
 
 ---
 
 ## Projects Built
 
-| Issue | App | What It Does | Stack | Status |
-|---|---|---|---|---|
-| 002 | — | Gmail → WhatsApp daily digest summarizer | Next.js, Supabase, Gemini, Twilio | Archived |
-| 003 | [finance-advisor](apps/finance-advisor/) | AI personal finance advisor | Next.js, Supabase, Gemini | Complete |
-| 004 | [clarity](apps/clarity/) | PM to-do list with AI task categorization | Next.js, Neon, Gemini | Complete |
-| 005 | [smb-bundler](apps/smb-bundler/) | Feature bundle + value-based pricing engine for B2B SaaS PMs | Next.js, Neon, Gemini | Complete |
-| 006 | [ozi-reorder](apps/ozi-reorder/) | Reorder reminder experiment for dark-store baby essentials (50/50 test vs. control, 7 PostHog events) | Next.js, Neon, PostHog | Complete |
-| 007 | [ozi-insights](apps/ozi-insights/) | Synthetic Freshdesk support data for order reliability research (30 tickets, grounded in Play Store) | Data workspace | Explored |
+| Issue | App                                      | What It Does                                                                                          | Stack                             | Status   |
+| ----- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------- | --------------------------------- | -------- |
+| 002   | —                                        | Gmail → WhatsApp daily digest summarizer                                                              | Next.js, Supabase, Gemini, Twilio | Archived |
+| 003   | [finance-advisor](apps/finance-advisor/) | AI personal finance advisor                                                                           | Next.js, Supabase, Gemini         | Complete |
+| 004   | [clarity](apps/clarity/)                 | PM to-do list with AI task categorization                                                             | Next.js, Neon, Gemini             | Complete |
+| 005   | [smb-bundler](apps/smb-bundler/)         | Feature bundle + value-based pricing engine for B2B SaaS PMs                                          | Next.js, Neon, Gemini             | Complete |
+| 006   | [ozi-reorder](apps/ozi-reorder/)         | Reorder reminder experiment for dark-store baby essentials (50/50 test vs. control, 7 PostHog events) | Next.js, Neon, PostHog            | Complete |
+| 007   | [ozi-insights](apps/ozi-insights/)       | Synthetic Freshdesk support data for order reliability research (30 tickets, grounded in Play Store)  | Data workspace                    | Explored |
+| —     | [landing](apps/landing/)                 | Framework landing page showcasing pipeline, agents, and shipped products                              | Next.js, Tailwind CSS             | Live     |
 
 Each issue number maps directly across all folders: `experiments/ideas/issue-NNN.md`, `experiments/exploration/exploration-NNN.md`, `experiments/plans/plan-NNN.md`, and `experiments/results/*-NNN.md`.
 
@@ -46,22 +47,23 @@ Each issue number maps directly across all folders: `experiments/ideas/issue-NNN
 
 The OS enforces a sequential pipeline with quality gates. A stage cannot start until the previous stage passes.
 
-| # | Command | Agent | Output |
-|---|---|---|---|
-| 1 | `/create-issue` | Research Agent | Structured opportunity brief |
-| 2 | `/explore` | Research Agent | Market validation, recommendation |
-| 3 | `/create-plan` | Product + Design + Backend/DB Architects | PRD, UX, architecture, DB schema |
-| 4 | `/execute-plan` | Frontend + Backend Engineers | Working app codebase |
-| 5 | `/deslop` | Deslop Agent | Clean, comment-free code |
-| 6 | `/review` | Code Review Agent | Critical issues list (blocks until fixed) |
-| 7 | `/peer-review` | Peer Review Agent | Adversarial architecture review |
-| 8 | `/qa-test` | QA Agent | Reliability and edge-case test results |
-| 9 | `/metric-plan` | Analytics Agent | North Star, funnels, ground-truth queries |
-| 10 | `/deploy-check` | Deploy Agent | Production readiness sign-off |
-| 11 | `/postmortem` | Learning Agent | Root cause analysis of pipeline failures |
-| 12 | `/learning` | Learning Agent | Engineering rules extracted → knowledge base updated |
+| #   | Command         | Agent                                    | Output                                               |
+| --- | --------------- | ---------------------------------------- | ---------------------------------------------------- |
+| 1   | `/create-issue` | Research Agent                           | Structured opportunity brief                         |
+| 2   | `/explore`      | Research Agent                           | Market validation, recommendation                    |
+| 3   | `/create-plan`  | Product + Design + Backend/DB Architects | PRD, UX, architecture, DB schema                     |
+| 4   | `/execute-plan` | Frontend + Backend Engineers             | Working app codebase                                 |
+| 5   | `/deslop`       | Deslop Agent                             | Clean, comment-free code                             |
+| 6   | `/review`       | Code Review Agent                        | Critical issues list (blocks until fixed)            |
+| 7   | `/peer-review`  | Peer Review Agent                        | Adversarial architecture review                      |
+| 8   | `/qa-test`      | QA Agent                                 | Reliability and edge-case test results               |
+| 9   | `/metric-plan`  | Analytics Agent                          | North Star, funnels, ground-truth queries            |
+| 10  | `/deploy-check` | Deploy Agent                             | Production readiness sign-off                        |
+| 11  | `/postmortem`   | Learning Agent                           | Root cause analysis of pipeline failures             |
+| 12  | `/learning`     | Learning Agent                           | Engineering rules extracted → knowledge base updated |
 
 **Utility commands** (run anytime):
+
 - `/docs` — Generate `CODEBASE-CONTEXT.md` for the active app
 - `/explain` — Deep-dive on a concept, pattern, or error
 
@@ -91,6 +93,7 @@ Every agent reads the knowledge base before executing — preventing the same cl
 5. **Track gates, not just progress** — check `project-state.md` after each command; blocked = do not proceed
 
 **Default tech stack** (used across all apps):
+
 - Frontend: Next.js 16+ (App Router), TypeScript strict, Tailwind CSS 4+
 - Backend: Next.js API Routes, Neon DB (`@neondatabase/serverless`) or Supabase
 - AI: Google Gemini 2.5 Flash/Pro via `@google/genai` with structured outputs
@@ -98,6 +101,7 @@ Every agent reads the knowledge base before executing — preventing the same cl
 - Hosting: Vercel
 
 **Environment setup per app:**
+
 ```bash
 cd apps/[project-name]
 cp .env.local.example .env.local   # fill in your keys
@@ -149,4 +153,16 @@ command-protocol.md        # How commands load context and update state
 
 ---
 
-*Build faster. Learn systematically. Fail safely.*
+## System Evolution
+
+This OS isn't static — it improves with every cycle. Full history in [`CHANGELOG.md`](CHANGELOG.md).
+
+| Phase  | What Changed                                                                                                                                                 | PM Decision                                                                                |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| **v0** | Manual pipeline, no enforcement                                                                                                                              | Proved the 12-step concept works end-to-end                                                |
+| **v1** | Quality gates, knowledge base, 5 shipped products                                                                                                            | Each postmortem generated rules that prevented the same class of failure in the next cycle |
+| **v2** | Developer tooling (husky, prettier, enforcement scripts), test infrastructure (Vitest + shared mocks), progressive disclosure (.claude/rules/), landing page | Shifted from "does the process work?" to "does the process scale and stay maintainable?"   |
+
+---
+
+_Build faster. Learn systematically. Fail safely._
