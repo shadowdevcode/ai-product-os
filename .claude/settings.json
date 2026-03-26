@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(npx next *)",
+      "Bash(git status*)",
+      "Bash(git log*)",
+      "Bash(git diff*)",
+      "Bash(git branch*)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(node scripts/lib/*)"
+    ],
+    "deny": [
+      "Bash(rm -rf *)",
+      "Bash(git push --force*)",
+      "Bash(git reset --hard*)",
+      "Bash(npm publish*)"
+    ]
+  }
+}

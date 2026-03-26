@@ -45,6 +45,19 @@ Follow this sequence.
 
 ---
 
+## 0 Automated Test Suite
+
+Before proceeding with manual QA, run the automated test suite if configured:
+
+1. Check if the app's `package.json` has a `test` script.
+2. If yes, run `npm test` from the app directory.
+3. If any tests fail, document failures in the QA report and treat them as blocking findings.
+4. If no test script exists, skip this step and proceed to manual testing.
+
+This step catches regressions early and reduces manual verification effort.
+
+---
+
 ## 1 Functional Testing
 
 Verify core product features.
@@ -84,6 +97,7 @@ network interruption
 Simulate PostHog unavailability (missing `POSTHOG_KEY`, invalid host, or mocked SDK rejection).
 
 Verify:
+
 1. All worker routes return 200 (not 500) when PostHog is down.
 2. DB state is correct and complete — all rows were written as expected.
 3. Cron run counters (`reminders_sent`, `errors`) reflect actual DB writes, not PostHog call success.
@@ -95,6 +109,7 @@ If any worker returns 500 on PostHog failure, this is a **blocking QA finding**.
 Trigger a controlled worker failure (e.g., invalid DB record, missing required field).
 
 Verify:
+
 1. A failure telemetry event fires from the catch block (e.g., `reminder_trigger_failed`).
 2. The trigger's aggregate counter correctly counts this worker as failed.
 3. If no failure event fires, this is a **blocking QA finding** — the worker has incomplete telemetry.

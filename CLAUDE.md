@@ -32,9 +32,10 @@ The system operates through sequential slash commands that activate specialized 
 12. `/learning` - Extract insights into durable knowledge, update agent files, generate CODEBASE-CONTEXT.md (Learning Agent)
 
 **Utility Commands** (run anytime, not part of the sequential pipeline):
+
 - `/docs` - Generate AI-native codebase documentation (`CODEBASE-CONTEXT.md`) for the active app
 - `/explain` - Targeted learning session: understand a concept, pattern, or error via 80/20 rule
-- `/eval` - Score a completed issue's pipeline output against its spec using assertion-based grading; measures agent quality improvement across cycles
+- `/eval` - Score a completed issue's pipeline output against its spec using assertion-based grading
 
 ### Quality Gate System
 
@@ -92,7 +93,7 @@ After every command execution, update `project-state.md`:
 ## Repository Structure
 
 ```
-/agents              # Agent role definitions and responsibilities
+/agents              # Agent role definitions (see AGENTS.md for index)
 /commands            # Workflow command instructions
 /knowledge           # System intelligence (standards, patterns, lessons)
 /experiments         # Active workspace
@@ -104,217 +105,32 @@ After every command execution, update `project-state.md`:
   /[project-name]    # Individual product implementations
 /libs                # Shared utility templates (copy to apps/[project]/src/lib/)
   /shared            # posthog.ts, db.ts, error-handler.ts
+/scripts             # Enforcement scripts (secrets, file size, drift detection)
 /postmortems         # Post-launch analysis (archived after learning extraction)
+/.claude             # Claude Code configuration
+  /settings.json     # Permission allow/deny lists
+  /rules/            # Path-scoped context rules (auto-loaded by file pattern)
+  /commands/         # Registered slash commands
 system-orchestrator.md   # Stage progression and quality gate rules
 command-protocol.md      # Command execution framework
 project-state.md         # Live runtime memory (always check this first)
+AGENTS.md                # Progressive disclosure index for all agents
 ```
 
 ---
 
-## Development Standards
+## Progressive Disclosure
 
-### Tech Stack (Default for All Implementations)
+Detailed rules are loaded contextually via `.claude/rules/` — they activate automatically when editing matching files:
 
-**Frontend**:
-- Next.js 16+ (App Router, not Pages Router)
-- TypeScript strict mode (no `any` types)
-- Tailwind CSS 4+
-- React Server Components by default, Client Components only when needed (`"use client"`)
+- **Tech stack & file structure** → `.claude/rules/tech-stack.md` (loads for `apps/**/*.ts`)
+- **Code quality & system rules** → `.claude/rules/code-quality.md` (loads for `apps/**/*.ts`)
+- **Agent constraints** → `.claude/rules/agents.md` (loads for `agents/**/*.md`)
+- **Command protocol** → `.claude/rules/commands.md` (loads for `commands/**/*.md`)
+- **Knowledge base rules** → `.claude/rules/knowledge.md` (loads for `knowledge/**/*.md`)
+- **Testing standards** → `.claude/rules/testing.md` (loads for `*.test.*`, `*.spec.*`)
 
-**Backend**:
-- Next.js API Routes (`app/api/[resource]/route.ts`)
-- Supabase (PostgreSQL + Auth + Storage)
-- `@supabase/supabase-js` client
-
-**AI Integration**:
-- Google Gemini (`@google/genai`)
-- Use `gemini-2.5-flash` for speed (<2s), `gemini-2.5-pro` for reasoning
-- Always use Structured Outputs (JSON Schema) to guarantee valid responses
-
-**Analytics**:
-- PostHog (`posthog-js` for web, `posthog-node` for server-side)
-
-### File Structure Standard
-
-```
-apps/[project-name]/
-  src/
-    app/              # Next.js App Router
-      api/            # API routes
-      [feature]/      # Feature-based pages
-      layout.tsx      # Root layout
-    components/       # Reusable UI components
-    lib/              # Utilities, clients, helpers
-  public/             # Static assets
-  schema.sql          # Database schema (must be idempotent)
-  package.json
-  README.md
-```
-
----
-
-## Critical System Rules
-
-### 1. Serverless Environment Constraints
-
-**Never fire-and-forget promises in API routes.** Vercel/AWS Lambda suspend execution immediately after HTTP response.
-
-```typescript
-// BAD - Promise will be dropped
-sendNotification(userId, message);
-return NextResponse.json({ success: true });
-
-// GOOD - Await all async operations
-await sendNotification(userId, message);
-return NextResponse.json({ success: true });
-```
-
-### 2. Cron Job Architecture (Fan-Out Pattern)
-
-**Never process all users synchronously in a single cron function.** Use fan-out architecture.
-
-```typescript
-// GOOD - Master cron triggers, workers process
-export async function GET() {
-  const users = await fetchAllUsers();
-
-  // Fan out to individual worker invocations
-  await Promise.allSettled(
-    users.map(user =>
-      fetch('/api/worker', {
-        method: 'POST',
-        body: JSON.stringify({ userId: user.id })
-      })
-    )
-  );
-
-  return new Response('Triggered');
-}
-```
-
-### 3. Database Queries
-
-- **Always use `.limit()`** - Never fetch unbounded lists
-- **Use batch operations** - Prefer `.in()` over N individual queries
-- **Enable RLS from day one** - All user-scoped tables must have Row-Level Security policies
-
-### 4. External API Loops
-
-**MUST have both page limit AND temporal bound** to prevent infinite loops.
-
-```typescript
-let pageCount = 0;
-const MAX_PAGES = 5;
-
-while (pageToken && pageCount < MAX_PAGES) {
-  const messages = await api.list({
-    pageToken,
-    q: `newer_than:30d`  // Temporal bound
-  });
-  pageCount++;
-}
-```
-
-### 5. AI Response Parsing
-
-**Always sanitize LLM outputs before parsing:**
-
-```typescript
-// Strip markdown codeblocks
-const cleanText = aiResponse.text
-  .replace(/```json\n?/g, '')
-  .replace(/```\n?/g, '')
-  .trim();
-
-try {
-  const result = JSON.parse(cleanText);
-
-  // Validate structure
-  if (!isValid(result)) {
-    // Apply fallback to prevent data loss
-    result = { category: 'uncategorized', title: rawInput };
-  }
-} catch (e) {
-  console.error("AI parsing failed:", e);
-  // Apply safe default
-}
-```
-
-### 6. Telemetry Integration
-
-**Implement telemetry during feature development, not post-QA.** PostHog events must be wired during `/execute-plan`, not during `/metric-plan`.
-
-### 7. Database Schema Deployment
-
-**Verify schema exists in remote database during `/deploy-check`** before running builds. Supabase requires explicit SQL execution via CLI or editor.
-
----
-
-## Common Development Tasks
-
-### Building Apps
-
-Each app in `/apps` is an independent Next.js project:
-
-```bash
-cd apps/[project-name]
-npm install
-npm run dev      # Start dev server (http://localhost:3000)
-npm run build    # Production build
-npm run lint     # ESLint check
-```
-
-### Applying Database Schema
-
-Supabase schemas must be manually applied:
-
-1. Open Supabase SQL Editor
-2. Run `schema.sql` from the project directory
-3. Verify tables exist before deploying
-
-### Running Tests
-
-Manual QA checklist (from `knowledge/coding-standards.md`):
-- Happy path (valid input)
-- Edge cases (empty strings, zero values, max lengths)
-- Invalid inputs (wrong types, malformed JSON)
-- Network failures (API timeouts, 500 errors)
-- Concurrent operations (race conditions)
-
----
-
-## Agent Role Constraints
-
-**Critical Rule**: Each agent MUST only perform its assigned responsibility.
-
-- **Research Agent**: Validates ideas, explores problems
-- **Product Agent**: Writes product specs
-- **Design Agent**: Defines UX/UI
-- **Backend/DB Architects**: Design system architecture and schemas
-- **Frontend/Backend Engineers**: Implement code
-- **Code Review Agent**: Checks for violations
-- **Peer Review Agent**: Adversarial architecture review
-- **QA Agent**: Tests reliability
-- **Deploy Agent**: Verifies production readiness
-- **Analytics Agent**: Defines metrics
-- **Learning Agent**: Extracts postmortem insights
-
-When loading an agent, read the corresponding file from `/agents/[agent-name]-agent.md`.
-
----
-
-## Learning System
-
-After every project cycle:
-
-1. `/postmortem` analyzes what failed across the full pipeline
-2. `/learning` extracts insights and writes to:
-   - `knowledge/engineering-lessons.md` (technical rules)
-   - `knowledge/product-lessons.md` (product patterns)
-   - `knowledge/prompt-library.md` (agent prompts)
-
-**All agents must re-read these files at the start of every command** to avoid repeating past mistakes.
+Full agent index: [AGENTS.md](AGENTS.md)
 
 ---
 
@@ -330,6 +146,20 @@ After every project cycle:
 8. Adding telemetry after QA instead of during implementation
 9. Naive `JSON.parse(ai_response)` without sanitization
 10. Optimistic UI without backend persistence endpoints
+
+---
+
+## Learning System
+
+After every project cycle:
+
+1. `/postmortem` analyzes what failed across the full pipeline
+2. `/learning` extracts insights and writes to:
+   - `knowledge/engineering-lessons.md` (technical rules)
+   - `knowledge/product-lessons.md` (product patterns)
+   - `knowledge/prompt-library.md` (agent prompts)
+
+**All agents must re-read these files at the start of every command** to avoid repeating past mistakes.
 
 ---
 

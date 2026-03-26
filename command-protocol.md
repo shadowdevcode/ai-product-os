@@ -154,6 +154,7 @@ The system must update project-state.md after every command execution.
 ## Rules for state updates
 
 After /create-issue:
+
 - Set name to the new project name
 - Set goal to the one-sentence hypothesis
 - Set stage to create-issue
@@ -161,11 +162,13 @@ After /create-issue:
 - Set last_command_run to /create-issue
 
 After /explore:
+
 - Set stage to explore
 - Set last_command_run to /explore
 - Append exploration decision to Decisions Log
 
 After /create-plan:
+
 - Set stage to create-plan
 - Set last_command_run to /create-plan
 - Update docs_home to point to the plan file in experiments/plans/
@@ -173,6 +176,7 @@ After /create-plan:
 - Confirm manifest-<issue_number>.json was saved to experiments/plans/
 
 After /execute-plan:
+
 - Set stage to execute-plan
 - Set last_command_run to /execute-plan
 - Update active_branch and environments as applicable
@@ -180,56 +184,67 @@ After /execute-plan:
 - Verify telemetry verification table shows no missing events (§10 of execute-plan.md)
 
 After /deslop:
+
 - Set stage to deslop
 - Set last_command_run to /deslop
 - Set status to done when clean
 
 After /review:
+
 - Set last_command_run to /review
 - Update Quality Gates: review to pass or fail
 
 After /peer-review:
+
 - Set last_command_run to /peer-review
 - Update Quality Gates: peer_review to pass or fail
 
 After /qa-test:
+
 - Set last_command_run to /qa-test
 - Update Quality Gates: qa_test to pass or fail
 
 After /metric-plan:
+
 - Set stage to metric-plan
 - Set last_command_run to /metric-plan
 - Set status to done when metrics are defined
 
 After /deploy-check:
+
 - Set stage to deploy-check
 - Set last_command_run to /deploy-check
 - Update Quality Gates: deploy_check to pass or fail
 - If all gates pass: record PR URL returned by gh pr create in project-state.md
 
 After /postmortem:
+
 - Set stage to postmortem
 - Set status to done
 - Append postmortem learnings to Decisions Log
 
 After /learning:
+
 - Set stage to learning
 - Set status to completed
 - Update project-registry.md: set stage to learning, status to completed
 - Append a note to Decisions Log confirming knowledge files were updated
 
 After /docs:
+
 - Does not update pipeline stage
 - Writes apps/<project_name>/CODEBASE-CONTEXT.md
 - No state change required
 
 After /explain:
+
 - Does not update pipeline stage
 - No state change required
 
 ## New project rule
 
 When /create-issue is run with a new idea that differs from the current active project:
+
 - Archive the current project state by appending it to the Decisions Log with a "project closed" note
 - Reset all fields for the new project
 - This makes the file always reflect the current active project
@@ -331,3 +346,35 @@ postmortems/
 knowledge/
 
 depending on command type.
+
+---
+
+Step 8
+Recommend next command.
+
+After completing execution and updating project-state.md, inform the user of the next recommended command.
+
+Use the Next Command Resolution table from system-orchestrator.md:
+
+If current_stage = create-issue → suggest /explore
+If current_stage = explore → suggest /create-plan
+If current_stage = create-plan → suggest /execute-plan
+If current_stage = execute-plan → suggest /deslop
+If current_stage = deslop → suggest /review
+If current_stage = review → suggest /peer-review
+If current_stage = peer-review → suggest /qa-test
+If current_stage = qa-test → suggest /metric-plan
+If current_stage = metric-plan → suggest /deploy-check
+If current_stage = deploy-check → suggest /postmortem
+If current_stage = postmortem → suggest /learning
+If current_stage = learning → pipeline complete, suggest /create-issue to start a new cycle
+
+If the stage is blocked (quality gate failed), do not suggest the next command. Instead, state the blocker and what must be fixed before re-running the current stage.
+
+Format:
+
+✅ Next step: run `/[command]` to [one-line description of what it does]
+
+Or if blocked:
+
+🚫 Blocked: [reason]. Fix the issue and re-run `/[current-command]`.

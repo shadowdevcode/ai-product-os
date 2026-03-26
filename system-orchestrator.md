@@ -150,6 +150,7 @@ Agent involved:
 Deploy Agent
 
 Blocking gates (all must pass before deploy approval):
+
 - Build verification
 - Environment configuration
 - README quality gate (knowledge/readme-template.md standard)
@@ -199,7 +200,7 @@ Agent involved: none (Claude Code direct)
 /eval
 Assertion-based grading of a completed issue's pipeline output against its spec.
 Run after /learning to verify that extracted insights improved the next cycle.
-Scores each assertion as PASS / FAIL / SKIP. Grade = PASS / (PASS + FAIL) * 100.
+Scores each assertion as PASS / FAIL / SKIP. Grade = PASS / (PASS + FAIL) \* 100.
 Thresholds: 90–100% Excellent, 75–89% Good, 60–74% Needs improvement, <60% Critical.
 Does not modify code or update pipeline state.
 Agent involved: none (Claude Code direct)
@@ -306,6 +307,7 @@ Step 1
 Read project-state.md.
 
 Extract:
+
 - project_name
 - active_issue
 - current_stage
@@ -407,3 +409,9 @@ next_command = /learning
 
 If current_stage = learning
 next_command = none — cycle complete. Run /create-issue to start next project.
+
+---
+
+## Next Command Display Rule
+
+After completing any command, the system must display the next recommended command to the user using the resolution logic above. If the stage is blocked, display the blocker instead.

@@ -1,0 +1,3 @@
+node scripts/lib/check-drift.js
+node scripts/lib/validate-docs.js
+node scripts/lib/check-function-sizes.js

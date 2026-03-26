@@ -1,0 +1,20 @@
+{
+  "name": "ai-product-os",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI Product Operating System — command-driven development framework with specialized AI agents",
+  "scripts": {
+    "prepare": "husky",
+    "check:secrets": "node scripts/lib/check-secrets.js",
+    "check:file-sizes": "node scripts/lib/check-file-sizes.js",
+    "check:env-files": "node scripts/lib/check-env-files.js",
+    "check:function-sizes": "node scripts/lib/check-function-sizes.js",
+    "validate:docs": "node scripts/lib/validate-docs.js",
+    "check:all": "npm run check:secrets && npm run check:file-sizes && npm run check:env-files"
+  },
+  "devDependencies": {
+    "husky": "^9.1.0",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.4.0"
+  }
+}
