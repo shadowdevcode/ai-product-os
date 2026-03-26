@@ -14,6 +14,7 @@ export function Footer() {
             href="https://github.com/shadowdevcode/ai-product-os"
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="View AI Product OS on GitHub"
             className="text-neutral-500 transition-colors hover:text-neutral-300"
           >
             <GitHubIcon className="h-5 w-5" />
