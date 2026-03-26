@@ -1,0 +1,5 @@
+{
+  "apps/**/*.{ts,tsx}": ["prettier --write"],
+  "src/**/*.{ts,tsx}": ["prettier --write"],
+  "*.md": ["prettier --write --prose-wrap preserve"]
+}
