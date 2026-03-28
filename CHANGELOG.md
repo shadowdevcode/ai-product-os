@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-03-28 — AI Product OS v2 Finalized (issue-008 Archived)
+
+**What:** Final archival of the Nykaa Hyper-Personalization project.
+
+- Implemented robust **Backend Product API** (`GET /api/catalog/product/[id]`) to replace client-side mocks.
+- Refactored Product Details Page (PDP) to use server-side fetch for full "Backend Agent" compliance.
+- Updated `project-state.md` and root `README.md` to reflect the completed and archived status of the MVP.
+- Reset the pipeline to `idle` for the next project cycle.
+  **Why:** Continuous improvement of the AI Product OS. Fixes the "missing backend" gap in issue-008 and ensures the repository is in a clean, professional state for portfolio review.
+  **Files:** `apps/nykaa-personalisation/src/app/api/catalog/product/[id]/route.ts`, `apps/nykaa-personalisation/src/app/product/[id]/PDPContent.tsx`, `project-state.md`, `README.md`
+
 System-level changes to the AI Product OS framework. Pipeline issue work (product ideas, plans, QA results) is tracked in `experiments/` and `project-state.md`.
 
 ---

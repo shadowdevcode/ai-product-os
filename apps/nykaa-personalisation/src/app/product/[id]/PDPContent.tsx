@@ -27,18 +27,28 @@ export function PDPContent({ productId }: PDPContentProps) {
 
   useEffect(() => {
     async function loadProduct() {
-      const p = await getProductById(productId);
-      setProduct(p || null);
-      setLoading(false);
+      try {
+        const response = await fetch(`/api/catalog/product/${productId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch product');
+        }
+        const p = await response.json();
+        setProduct(p);
 
-      // Track page view for the product
-      if (typeof window !== 'undefined' && window.posthog) {
-        window.posthog.capture('pdp_viewed', {
-          productId,
-          userId,
-          productName: p?.name,
-          category: p?.categoryName,
-        });
+        // Track page view for the product
+        if (typeof window !== 'undefined' && window.posthog) {
+          window.posthog.capture('pdp_viewed', {
+            productId,
+            userId,
+            productName: p?.name,
+            category: p?.categoryName,
+          });
+        }
+      } catch (err) {
+        console.error('[PDP_LOAD_ERROR]', err);
+        setProduct(null);
+      } finally {
+        setLoading(false);
       }
     }
     loadProduct();

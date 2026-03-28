@@ -29,15 +29,16 @@ A simulated, end-to-end product development organization where specialized AI ag
 
 ## Projects Built
 
-| Issue | App                                      | What It Does                                                                                          | Stack                             | Status   |
-| ----- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------- | --------------------------------- | -------- |
-| 002   | —                                        | Gmail → WhatsApp daily digest summarizer                                                              | Next.js, Supabase, Gemini, Twilio | Archived |
-| 003   | [finance-advisor](apps/finance-advisor/) | AI personal finance advisor                                                                           | Next.js, Supabase, Gemini         | Complete |
-| 004   | [clarity](apps/clarity/)                 | PM to-do list with AI task categorization                                                             | Next.js, Neon, Gemini             | Complete |
-| 005   | [smb-bundler](apps/smb-bundler/)         | Feature bundle + value-based pricing engine for B2B SaaS PMs                                          | Next.js, Neon, Gemini             | Complete |
-| 006   | [ozi-reorder](apps/ozi-reorder/)         | Reorder reminder experiment for dark-store baby essentials (50/50 test vs. control, 7 PostHog events) | Next.js, Neon, PostHog            | Complete |
-| 007   | [ozi-insights](apps/ozi-insights/)       | Synthetic Freshdesk support data for order reliability research (30 tickets, grounded in Play Store)  | Data workspace                    | Explored |
-| —     | [landing](apps/landing/)                 | Framework landing page showcasing pipeline, agents, and shipped products                              | Next.js, Tailwind CSS             | Live     |
+| Issue | App                                                  | What It Does                                                                                          | Stack                             | Status   |
+| ----- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | --------------------------------- | -------- |
+| 002   | —                                                    | Gmail → WhatsApp daily digest summarizer                                                              | Next.js, Supabase, Gemini, Twilio | Archived |
+| 003   | [finance-advisor](apps/finance-advisor/)             | AI personal finance advisor                                                                           | Next.js, Supabase, Gemini         | Complete |
+| 004   | [clarity](apps/clarity/)                             | PM to-do list with AI task categorization                                                             | Next.js, Neon, Gemini             | Complete |
+| 005   | [smb-bundler](apps/smb-bundler/)                     | Feature bundle + value-based pricing engine for B2B SaaS PMs                                          | Next.js, Neon, Gemini             | Complete |
+| 006   | [ozi-reorder](apps/ozi-reorder/)                     | Reorder reminder experiment for dark-store baby essentials (50/50 test vs. control, 7 PostHog events) | Next.js, Neon, PostHog            | Complete |
+| 007   | [ozi-insights](apps/ozi-insights/)                   | Synthetic Freshdesk support data for order reliability research (30 tickets, grounded in Play Store)  | Data workspace                    | Explored |
+| 008   | [nykaa-personalisation](apps/nykaa-personalisation/) | Hyper-personalized discovery feed (affinity + intent scoring, 10 PostHog events, 5 API routes)        | Next.js, Neon, PostHog            | Archived |
+| —     | [landing](apps/landing/)                             | Framework landing page showcasing pipeline, agents, and shipped products                              | Next.js, Tailwind CSS             | Live     |
 
 Each issue number maps directly across all folders: `experiments/ideas/issue-NNN.md`, `experiments/exploration/exploration-NNN.md`, `experiments/plans/plan-NNN.md`, and `experiments/results/*-NNN.md`.
 
@@ -157,11 +158,11 @@ command-protocol.md        # How commands load context and update state
 
 This OS isn't static — it improves with every cycle. Full history in [`CHANGELOG.md`](CHANGELOG.md).
 
-| Phase  | What Changed                                                                                                                                                 | PM Decision                                                                                |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
-| **v0** | Manual pipeline, no enforcement                                                                                                                              | Proved the 12-step concept works end-to-end                                                |
-| **v1** | Quality gates, knowledge base, 5 shipped products                                                                                                            | Each postmortem generated rules that prevented the same class of failure in the next cycle |
-| **v2** | Developer tooling (husky, prettier, enforcement scripts), test infrastructure (Vitest + shared mocks), progressive disclosure (.claude/rules/), landing page | Shifted from "does the process work?" to "does the process scale and stay maintainable?"   |
+| Phase  | What Changed                                                                                                                                                 | PM Decision                                                                                       |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| **v0** | Manual pipeline, no enforcement                                                                                                                              | Proved the 12-step concept works end-to-end                                                       |
+| **v1** | Quality gates, knowledge base, 5 shipped products                                                                                                            | Each postmortem generated rules that prevented the same class of failure in the next cycle        |
+| **v2** | Developer tooling (husky, prettier, enforcement scripts), test infrastructure (Vitest + shared mocks), progressive disclosure (.claude/rules/), landing page | Finalized with Nykaa Hyper-Personalization (issue-008). AI Product OS v2 is now feature-complete. |
 
 ---
 
