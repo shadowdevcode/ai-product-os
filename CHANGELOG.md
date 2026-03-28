@@ -4,6 +4,12 @@ System-level changes to the AI Product OS framework. Pipeline issue work (produc
 
 ---
 
+## 2026-03-28 — Learning: issue-008 (Nykaa Personalisation)
+
+**What:** `/learning` cycle complete. 4 engineering rules, 1 product rule extracted. 3 agent files hardened. CODEBASE-CONTEXT.md generated.
+**Why:** Closes the pipeline loop for issue-008. Key new system guardrails: fire-and-forget telemetry in hot paths, A/B salt server-only enforcement, metric-to-UI flow mapping requirement, frontend defensive programming standards.
+**Files:** `knowledge/engineering-lessons.md`, `knowledge/product-lessons.md`, `knowledge/prompt-library.md`, `agents/backend-architect-agent.md`, `agents/backend-engineer-agent.md`, `agents/frontend-engineer-agent.md`, `apps/nykaa-personalisation/CODEBASE-CONTEXT.md`, `project-state.md`
+
 ## 2026-03-27 — Landing Page + Vercel Deployment
 
 **What:** Static Next.js landing page at `apps/landing/` showcasing the pipeline, agents, and shipped products for the ICP.

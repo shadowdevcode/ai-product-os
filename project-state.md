@@ -1,29 +1,37 @@
 # Project State
 
 ## Active Project
-- name: none
-- repo_path:
-- owner:
-- started_on:
-- goal (1 sentence):
+
+- name: Nykaa Hyper-Personalized Style Concierge (issue-008)
+- repo_path: experiments/ideas/issue-008.md
+- owner: Vijay
+- started_on: 2026-03-27
+- goal (1 sentence): Replace Nykaa Fashion's static editorial discovery feed with an AI-driven, user-affinity weighted recommendation engine to lift logged-in CVR by 15–25%.
 
 ## Current Stage
-- stage: idle
-- last_command_run: /archive
-- status: archived
-- active_issue: none
+
+- stage: learning/presentation
+- last_command_run: /finish-off
+- status: done
+- active_issue: issue-008
 
 ## Active Work
+
 - active_branch: main
 - last_commit:
 - open_pr_link:
 - environments: local
 
 ## Quality Gates
-- create_issue: —
-- explore: —
-- create_plan: —
-- execute_plan: done — apps/ozi-reorder built, TypeScript clean, build passes
+
+- create_issue: done — issue-008 created. Nykaa Fashion Hyper-Personalized Discovery Feed. First-hand nykaa.com audit (12 surfaces) as primary signal. Zero personalization gap confirmed. Hypothesis: affinity-weighted 40/30/20/10 ranking engine lifts homepage-to-PDP CVR by 15–25% for logged-in cohort. Saved to experiments/ideas/issue-008.md.
+- explore: done — Recommendation: Build. Problem is critical, gap is unserved in Nykaa's context. MVP proposed: Rule-based "For You" shelf (historical affinity + real-time intent), excluding complex ML models and cold-start UX for V1. Saved to experiments/exploration/exploration-008.md.
+- create_plan: done — plan-008.md + manifest-008.json created. Architecture: Next.js 16, Neon DB (3 tables), rule-based scoring (affinity 0.6 + intent 0.4), PostHog for A/B and telemetry. 12 implementation tasks.
+- execute_plan: in_progress — Phase 1 (Core Engine): apps/nykaa-personalisation built, Neon DB ready, 5 API routes, affinity scoring live. Phase 2 (P2P & Conversions): PDP UI implemented with dynamic routing ([id]), ingest-event API enhanced for `add_to_cart` tracking, `useIntentTracker` refactored for conversion instrumentation, lineage context (userId) propagated to PDP for consistent cohort alignment.
+  - deslop (issue-008): done — extracted duplicated scoreProduct into shared score-product.ts module, 1 restatement comment removed (NykaaCatalogClient.ts), 1 dead hook deleted (useCohort.ts). Build clean. Flag for /review: shelf_click event defined in taxonomy but never emitted.
+  - review (issue-008): done — Fixed missing SHELF_CLICK tracking in ingest-events API route and reduced latency in rerank route by parallelising cohort/catalog API calls. No dual emissions detected. Build passes cleanly.
+  - qa_test (issue-008): done — PASS. 2 medium UX issues (JSON.parse risk and missing search AbortController). No high-risk blockers. Safe for demo. Results saved to experiments/results/qa-test-008.md.
+  - metric_plan (issue-008): done — metric-plan-008.md created. North Star: Add-to-Cart Rate Lift (Test vs. Control, +10% target). Supporting metrics defined (Shelf CTR, Rerank CTR). Event tracking mapped for shelf load, shelf click, rerank, and cart. Funnel logic defined. Success thresholds established. Results saved to experiments/results/metric-plan-008.md.
 - deslop: done — 9 restatement comments removed, 1 dead prop removed, PostHog events parallelised
 - review: done — all items fixed, build passes
 - peer_review: done — all items fixed; EC1 localStorage guard on ControlGroupSimulator, PA1 split test/control orders in North Star section, RR1 DEMO_SECRET header on reorder-events, AC1 reminder_sent=false filter on dashboard query, AC2 DO NOTHING write-once cohort. Build clean.
@@ -34,12 +42,15 @@
 - learning: done — 7 engineering rules extracted. knowledge/engineering-lessons.md and knowledge/prompt-library.md updated. Agent files updated: backend-architect-agent.md (items 4–7 in Mandatory Pre-Approval Checklist), peer-review-agent.md (Step 5 simulation idempotency + URL ID fidelity checks), qa-agent.md (Telemetry Unavailability Test + Failure Telemetry Verification), code-review-agent.md (PostHog dual-emission critical check), commands/execute-plan.md (Sections 6–8). CODEBASE-CONTEXT.md written to apps/ozi-reorder/. Full pipeline cycle for issue-006 complete.
 
 ## Pending Queue
+
 - none
 
 ## Blockers
+
 - none
 
 ## Decisions Log (append-only)
+
 - 2026-03-05: Chose PostgreSQL via Supabase because relational model fits users → digests → processed_emails structure
 - 2026-03-05: Chose monolith + cron worker over microservices because MVP speed is the priority
 - 2026-03-05: Excluded reply-from-WhatsApp from MVP because it adds OAuth write scope complexity and is not needed to validate core hypothesis
@@ -74,7 +85,7 @@
 - 2026-03-19: Chose Neon DB over Supabase because no auth is needed — Neon is lighter (connection string only, no client SDK, no RLS setup) and @neondatabase/serverless works natively in Vercel serverless functions via HTTP without a connection pool.
 - 2026-03-19: Executed /execute-plan for issue-005. Implemented full apps/smb-bundler Next.js app: FeatureBoard with 10-item catalogue, POST /api/generate-proposal (whitelist validation + Gemini 2.5 Flash structured output + Neon insert), PATCH /api/bundle-sessions/[id]/copied, PostHog server (bundle_generated) and client (pitch_copied) telemetry. DB failure non-blocking. All 20 tasks complete.
 - 2026-03-19: Executed /deslop for issue-005. No naming, complexity, hallucination, or standards violations found. Removed 11 restatement comments across gemini.ts, route.ts, EmailPitchCard.tsx, FeatureCard.tsx, page.tsx. Removed 1 dead guard (!disabled &&) from FeatureCard.tsx onClick. Ready for /review.
-- 2026-03-19: Executed /review for issue-005. Approved. No critical issues or architecture violations. 1 required fix before deploy: S1 rate limiting on /api/generate-proposal (Gemini cost abuse). Low items: Q1 roi_points length not validated, Q2 "unknown" sessionId contaminates PostHog, Q3 posthog.__loaded is internal API, P1 sequential DB+PostHog awaits (parallelisable). Proceeding to /peer-review.
+- 2026-03-19: Executed /review for issue-005. Approved. No critical issues or architecture violations. 1 required fix before deploy: S1 rate limiting on /api/generate-proposal (Gemini cost abuse). Low items: Q1 roi_points length not validated, Q2 "unknown" sessionId contaminates PostHog, Q3 posthog.\_\_loaded is internal API, P1 sequential DB+PostHog awaits (parallelisable). Proceeding to /peer-review.
 - 2026-03-19: Executed /peer-review for issue-005. BLOCKED. 3 must-fix items: RR1 (sessionId="unknown" fallback corrupts PostHog analytics and causes 400 on PATCH — fix: pre-generate crypto.randomUUID()), RR2 (no Gemini timeout — add AbortController 9s + JSON 504), PA3 ([First Name] literal placeholder in copied pitch with no UI affordance). Additional: S1 rate limiting still required. Result saved to experiments/results/peer-review-005.md.
 - 2026-03-19: Fixed all 4 peer-review blockers. RR1: pre-generate crypto.randomUUID() before DB insert in route.ts + db.ts accepts caller-supplied id. RR2: Promise.race with 9s timeout in gemini.ts, returns JSON 504 on timeout. PA3: amber warning note added to EmailPitchCard above pitch text. S1: in-memory rate limiter (5 req/60s per IP) added to route.ts. TypeScript clean. peer_review gate: approved.
 - 2026-03-19: Executed /qa-test for issue-005. BLOCKED. QA1 (required): silent clipboard failure in EmailPitchCard.tsx — empty catch block gives PM zero feedback if copy fails during live sales call. Additional findings: QA2 stale proposal visible after feature toggle (medium), QA3 sequential DB+PostHog awaits (medium), QA4-6 low severity items. Results saved to experiments/results/qa-test-005.md.
@@ -97,12 +108,22 @@
 - 2026-03-21: Executed /deslop for issue-006. No naming, complexity, or hallucination violations. Removed 9 restatement comments across reorder-trigger, reorder-worker, reorder/[orderId]/page.tsx, ReorderProductCard.tsx, and page.tsx. Removed unused skuCategory prop from ReorderProductCard (dead code). Parallelised independent PostHog event calls in reorder-worker (Promise.all). Build clean. Ready for /review.
 - 2026-03-20: Executed /execute-plan for issue-006. Built apps/ozi-reorder Next.js app: experiment dashboard (cohort split, funnel stats, eligible orders table, cron run log, "Run Trigger Now" button), POST /api/reorder-trigger (cron master, LIMIT 500, Promise.allSettled fan-out), POST /api/reorder-worker (deterministic cohort assign, reminders_sent insert, reminder_triggered + reminder_delivered PostHog events), GET /api/order-history/[userId]/last-essential, POST /api/reorder-events, /reorder/[orderId] page (reminder_opened, cart_prefilled, checkout_started, order_placed events), POST /api/seed with 15 mock baby essential orders (Pampers, MamyPoko, Huggies, Himalaya, Johnson's). All 7 PostHog events wired. Neon DB with 5 tables. TypeScript clean, build passes (8 dynamic routes). Decision: Option B for both trigger (cron fan-out) and repeat order path (lightweight reorder screen).
 - 2026-03-20: Executed /create-plan for issue-006. Architecture: experiment instrumentation layer (not standalone app). Two Option A/B decision gates: (1) trigger — event-based workflow tooling vs. cron fan-out; (2) repeat order path — pre-filled cart deep link vs. lightweight /reorder/:orderId screen. 4 new DB tables (experiment_cohorts, reminders_sent, reorder_events, cron_runs). 7 required PostHog events. 25 implementation tasks. North Star: 21-day repeat purchase rate test vs. control (+10pp target). Decision gate with Ozi engineering required before sprint start. Saved to experiments/plans/plan-006.md. Demo Screen 4 updated with Option A/B framing. Recommendation: Build. Problem is real and confirmed — dark-store churn is driven by absence of re-engagement, not delivery failure. Competitive gap: no quick-commerce player uses consumption-cycle-aware push timing. Primary risks: push infra event-trigger capability and pre-filled cart deep link feasibility must be confirmed with Ozi engineering before sprint scope is committed. MVP: push trigger (Day 18–20 post order_delivered) + pre-filled cart deep link + 7 events + 50/50 control group. Saved to experiments/exploration/exploration-006.md. Target user: parents of 0–3 year olds in Delhi-NCR; sub-segments: emergency, routine replenishment, first-time. Core hypothesis: timely reorder reminder (Day 18–20 post-delivery) + one-tap pre-filled cart repeat order will improve repeat purchase rate within 21 days by removing memory friction. Demo script created at experiments/demos/ozi-reorder-demo.md — 6-screen founder walkthrough with opening/closing narration.
+- 2026-03-27: Executed /create-plan for issue-008. Architecture: Next.js 16 (App Router), Neon DB (serverless PostgreSQL), rule-based scoring engine (0.6 affinity + 0.4 intent). 3 tables (experiment_cohorts, user_affinity_profiles, session_events). 4 API routes. Deterministic SHA-256 A/B cohort split. 10 PostHog events. 12 implementation tasks. Saved to experiments/plans/plan-008.md + experiments/plans/manifest-008.json.
+- 2026-03-27: Executed /execute-plan for issue-008. Built apps/nykaa-personalisation: Neon DB project created (fancy-morning-92870210), 3 tables + 5 indexes applied. 5 API routes (GET shelf, POST ingest-event, GET rerank, POST rebuild-affinity, POST seed). 4 services (CohortService with SHA-256 cohort, PersonalisationService, RerankEngine, AffinityBuilder). Frontend: ForYouShelf with 500ms timeout fallback, ShelfSkeleton, ProductCard, useIntentTracker (sessionStorage FIFO + async ingest), demo user switcher (5 users with different affinities), search page with re-ranking + personalised badge. PostHog: 10 events wired (5 server-side, 5 client-side), all with single emission source. Rate limiting on shelf + rerank routes. Auth: base64 JWT for user routes, CRON_SECRET for admin routes. TypeScript clean, npm run build passes. README.md + .env.local.example created. Database choice: Neon DB over Supabase (no auth SDK needed, lighter setup).
+- 2026-03-28: Executed /review for issue-008. Approved with 2 fixes committed: 1 critical bug fixed (missing `shelf_click` event added to `ingest-event` server route per single source rule) and 1 performance improvement (parallelized catalog search and cohort lookup in `rerank` route). Dual-emission check passed. SQL injection safe via parameterized queries. Proceeding to peer-review.
 - 2026-03-21: [ARCHIVED] issue-007 (Order Reliability & Support Escape Hatch) — explored for demonstration purposes only. No sprint committed, no app built. Artifacts preserved: experiments/ideas/issue-007.md, experiments/exploration/exploration-007.md. Pipeline reset to idle.
+- 2026-03-28: Executed /peer-review round 2 for issue-008. APPROVED. All 6 prior findings verified fixed: RR1 (AffinityBuilder batched Promise.allSettled), EC1 (AB_EXPERIMENT_SALT server-only), AC1 (fire-and-forget PostHog in user-facing routes), EC2 (search reads ?user= param), EC3 (control returns 'default'), RR2 (ingest-event rate limited). Challenge mode: no new blocking assumptions. 2 low items noted: L1 (rerank still returns real cohort label vs shelf's 'default'), L2 (EDITORIAL_PRODUCTS positional slice undocumented). Ready for /qa-test. Result saved to experiments/results/peer-review-008-r2.md.
+- 2026-03-28: Executed /peer-review for issue-008. BLOCKED. 3 must-fix items: RR1 (AffinityBuilder sequential processing — will timeout at scale, needs batched SQL or Promise.allSettled), EC1 (NEXT_PUBLIC_AB_EXPERIMENT_SALT exposes A/B salt to client — rename to server-only), AC1 (PostHog await flush() in user-facing routes adds 200-500ms latency, causes false client-side timeouts corrupting experiment measurement — make fire-and-forget). Medium: EC2 (search page ignores homepage user selection), EC3 (control cohort label exposed in API response), RR2 (ingest-event has no rate limiting). Result saved to experiments/results/peer-review-008.md.
 - 2026-03-21: Executed /explore for issue-007. Recommendation: Build. Problem confirmed — compound trust failure (ghost-support 86% abandonment + no cancel button) is entirely product-fixable. Competitive scan: delay alerts and in-window cancel are now category standard (Blinkit, Swiggy Instamart) but no competitor solves post-dispatch escape. Unserved gap: honest delay alert + cancel request after dispatch. MVP: in-app delay alert (>15 min past ETA) + cancel-as-ops-queue-request + WhatsApp deep link escalation. Pre-sprint dependencies: ops cancel policy + order status API access. Do not wait — build demo with simulated delay state in parallel. Saved to experiments/exploration/exploration-007.md.
 - 2026-03-21: Executed /create-issue for issue-007. Source: Play Store scrape (85 reviews, 18×1★) + 30 synthetic Freshdesk tickets (apps/ozi-insights/data/freshdesk-synthetic.json). Analysis: support-ghost priority score 26.9 (#1), delivery-delay 23.2 (#2), compound failure identified (86% ghost rate, 14% resolution rate on support tickets). Issue: Order Reliability & Support Escape Hatch. Hypothesis: proactive delay alert + self-serve cancel/reschedule + non-chat escalation breaks the UX trap that converts every late delivery into a 1-star churn event.
 - 2026-03-21: Executed /learning for issue-006. 7 engineering rules extracted and written to knowledge/engineering-lessons.md + knowledge/prompt-library.md. Agent files updated: backend-architect-agent.md (Mandatory Pre-Approval Checklist items 4–7: worker auth, URL ID fidelity, simulation idempotency, North Star comparison display), peer-review-agent.md (Step 5: simulation tool idempotency check + URL ID fidelity check), qa-agent.md (Error Scenario Testing: Telemetry Unavailability Test + Failure Telemetry Verification), code-review-agent.md (Security Review: PostHog dual-emission critical check), commands/execute-plan.md (Section 6 telemetry resilience + error-path events, Section 7 single emission source rule, Section 8 completion checklist). CODEBASE-CONTEXT.md written to apps/ozi-reorder/. Full pipeline cycle for issue-006 complete.
+- 2026-03-28: Executed /qa-test for issue-008. PASS. Validated robustness of PostHog drop logic and DB connection failovers. 2 medium UX issues identified: unprotected JSON parse and missing AbortController. Proceeding to /metric-plan. Result saved to experiments/results/qa-test-008.md.
+- 2026-03-28: Executed /metric-plan for issue-008. North Star: Add-to-Cart Rate Lift defined.
+- 2026-03-28: Executed /deploy-check for issue-008. Resolved README missing details and configured Sentry for error tracking. Automated PR #7 created successfully.
+- 2026-03-28: Executed /learning for issue-008. 4 engineering rules extracted (fire-and-forget telemetry, A/B salt security, frontend defensive programming, metric verifiability). 1 product rule extracted (metric-to-UI flow mapping). knowledge/engineering-lessons.md, knowledge/product-lessons.md, knowledge/prompt-library.md updated. Agent files updated: backend-architect-agent.md (item 9: telemetry latency isolation), backend-engineer-agent.md (cohort label masking), frontend-engineer-agent.md (AbortController cleanup). CODEBASE-CONTEXT.md written to apps/nykaa-personalisation/. Full pipeline cycle for issue-008 complete.
 
 ## Links
+
 - linear_project:
 - docs_home: experiments/ideas/issue-007.md
 - demo:

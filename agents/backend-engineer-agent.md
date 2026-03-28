@@ -150,3 +150,7 @@ Avoid unnecessary complexity.
 Prefer simple, maintainable backend systems.
 
 Optimize for MVP speed.
+
+Experiment Integrity & Telemetry: Ensure cryptographic salts for A/B testing are server-only (do not use NEXT_PUBLIC). Telemetry calls (e.g., PostHog `captureServerEvent`) in user-facing API routes must be fire-and-forget (`.catch(() => {})`) instead of `await`ed to prevent external latency from corrupting SLAs and experiment data. Control group API responses must return a neutral label ("default"), never the real cohort string — the true cohort is captured server-side in PostHog only.
+
+# Added: 2026-03-28 — Nykaa Personalisation (issue-008)

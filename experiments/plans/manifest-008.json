@@ -1,0 +1,208 @@
+{
+  "issue": "exploration-008",
+  "project": "nykaa-personalisation-mvp",
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "Database Foundation",
+      "parallel": false,
+      "depends_on": [],
+      "tasks": [
+        {
+          "id": "T1",
+          "name": "Create Supabase schema (experiment_cohorts, user_affinity_profiles, session_events) with RLS and indexes",
+          "agent": "backend-engineer",
+          "files_to_create": [
+            "supabase/migrations/001_personalisation_schema.sql"
+          ],
+          "files_to_modify": [],
+          "verification": "psql $DATABASE_URL -c \"\\dt\" | grep experiment_cohorts && psql $DATABASE_URL -c \"\\dt\" | grep user_affinity_profiles && psql $DATABASE_URL -c \"\\dt\" | grep session_events",
+          "test_file": "__tests__/db/schema.test.ts"
+        },
+        {
+          "id": "T2",
+          "name": "Seed experiment_cohorts for staging test users",
+          "agent": "backend-engineer",
+          "files_to_create": [
+            "supabase/seed/seed-cohorts.ts"
+          ],
+          "files_to_modify": [],
+          "verification": "ts-node supabase/seed/seed-cohorts.ts && psql $DATABASE_URL -c \"SELECT COUNT(*) FROM experiment_cohorts;\"",
+          "test_file": null
+        }
+      ]
+    },
+    {
+      "id": "phase-2",
+      "name": "Core API",
+      "parallel": false,
+      "depends_on": ["phase-1"],
+      "tasks": [
+        {
+          "id": "T3",
+          "name": "Implement GET /api/personalisation/shelf (PersonalisationService + CohortService)",
+          "agent": "backend-engineer",
+          "files_to_create": [
+            "src/app/api/personalisation/shelf/route.ts",
+            "src/lib/personalisation/PersonalisationService.ts",
+            "src/lib/personalisation/CohortService.ts"
+          ],
+          "files_to_modify": [],
+          "verification": "curl -H 'Authorization: Bearer $TEST_JWT' http://localhost:3000/api/personalisation/shelf | jq '.products | length'",
+          "test_file": "__tests__/api/personalisation/shelf.test.ts"
+        },
+        {
+          "id": "T4",
+          "name": "Implement POST /api/personalisation/ingest-event (EventIngestionService)",
+          "agent": "backend-engineer",
+          "files_to_create": [
+            "src/app/api/personalisation/ingest-event/route.ts",
+            "src/lib/personalisation/EventIngestionService.ts"
+          ],
+          "files_to_modify": [],
+          "verification": "curl -X POST -H 'Authorization: Bearer $TEST_JWT' -H 'Content-Type: application/json' -d '{\"productId\":\"p1\",\"brandId\":\"b1\",\"categoryId\":\"c1\"}' http://localhost:3000/api/personalisation/ingest-event | jq '.ok'",
+          "test_file": "__tests__/api/personalisation/ingest-event.test.ts"
+        },
+        {
+          "id": "T5",
+          "name": "Implement GET /api/personalisation/rerank (RerankEngine + Nykaa Catalog API)",
+          "agent": "backend-engineer",
+          "files_to_create": [
+            "src/app/api/personalisation/rerank/route.ts",
+            "src/lib/personalisation/RerankEngine.ts",
+            "src/lib/catalog/NykaaCatalogClient.ts"
+          ],
+          "files_to_modify": [],
+          "verification": "curl -H 'Authorization: Bearer $TEST_JWT' 'http://localhost:3000/api/personalisation/rerank?q=dress' | jq '.results | length'",
+          "test_file": "__tests__/api/personalisation/rerank.test.ts"
+        },
+        {
+          "id": "T6",
+          "name": "Implement POST /api/admin/rebuild-affinity (nightly cron, CRON_SECRET auth)",
+          "agent": "backend-engineer",
+          "files_to_create": [
+            "src/app/api/admin/rebuild-affinity/route.ts",
+            "src/lib/personalisation/AffinityBuilder.ts"
+          ],
+          "files_to_modify": [
+            "vercel.json"
+          ],
+          "verification": "curl -X POST -H 'x-cron-secret: $CRON_SECRET' -H 'Content-Type: application/json' -d '{\"date\":\"2026-03-27\"}' http://localhost:3000/api/admin/rebuild-affinity | jq '.usersProcessed'",
+          "test_file": "__tests__/api/admin/rebuild-affinity.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "Frontend Components",
+      "parallel": true,
+      "depends_on": ["phase-1"],
+      "tasks": [
+        {
+          "id": "T7",
+          "name": "Build ForYouShelf component with ShelfSkeleton fallback",
+          "agent": "frontend-engineer",
+          "files_to_create": [
+            "src/components/personalisation/ForYouShelf.tsx",
+            "src/components/personalisation/ShelfSkeleton.tsx"
+          ],
+          "files_to_modify": [
+            "src/app/page.tsx"
+          ],
+          "verification": "npm run build && npx playwright test tests/e2e/shelf.spec.ts",
+          "test_file": "__tests__/components/ForYouShelf.test.tsx"
+        },
+        {
+          "id": "T8",
+          "name": "Wrap product card click with intent tracker (sessionStorage + ingest-event)",
+          "agent": "frontend-engineer",
+          "files_to_create": [
+            "src/components/personalisation/withIntentTracker.tsx"
+          ],
+          "files_to_modify": [
+            "src/components/ProductCard.tsx"
+          ],
+          "verification": "npx playwright test tests/e2e/intent-tracker.spec.ts",
+          "test_file": "__tests__/components/withIntentTracker.test.tsx"
+        },
+        {
+          "id": "T9",
+          "name": "Integrate search page with /api/personalisation/rerank",
+          "agent": "frontend-engineer",
+          "files_to_create": [],
+          "files_to_modify": [
+            "src/app/search/page.tsx",
+            "src/lib/hooks/useSearch.ts"
+          ],
+          "verification": "npm run build",
+          "test_file": "__tests__/pages/search.test.tsx"
+        },
+        {
+          "id": "T10",
+          "name": "Homepage cohort check: render shelf only for test cohort users",
+          "agent": "frontend-engineer",
+          "files_to_create": [],
+          "files_to_modify": [
+            "src/app/page.tsx",
+            "src/lib/hooks/useCohort.ts"
+          ],
+          "verification": "npx playwright test tests/e2e/ab-cohort.spec.ts",
+          "test_file": "__tests__/pages/home-cohort.test.tsx"
+        }
+      ]
+    },
+    {
+      "id": "phase-4",
+      "name": "Instrumentation",
+      "parallel": false,
+      "depends_on": ["phase-2", "phase-3"],
+      "tasks": [
+        {
+          "id": "T11",
+          "name": "Implement PostHog events: shelf_impression, shelf_click, search_rerank_impression, add_to_cart",
+          "agent": "frontend-engineer",
+          "files_to_create": [
+            "src/lib/analytics/events.ts"
+          ],
+          "files_to_modify": [
+            "src/components/personalisation/ForYouShelf.tsx",
+            "src/components/personalisation/withIntentTracker.tsx",
+            "src/app/search/page.tsx"
+          ],
+          "verification": "npx playwright test tests/e2e/posthog-events.spec.ts",
+          "test_file": "__tests__/analytics/events.test.ts"
+        },
+        {
+          "id": "T12",
+          "name": "Validate A/B split ratio (50/50) in PostHog dashboard",
+          "agent": "frontend-engineer",
+          "files_to_create": [],
+          "files_to_modify": [],
+          "verification": "Manual check: PostHog → Experiments → personalisation-v1 → cohort distribution ≈ 50/50",
+          "test_file": null
+        }
+      ]
+    }
+  ],
+  "env_vars": [
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "SUPABASE_ANON_KEY",
+    "CRON_SECRET",
+    "NEXT_PUBLIC_POSTHOG_KEY",
+    "POSTHOG_HOST",
+    "NYKAA_CATALOG_API_KEY",
+    "NEXT_PUBLIC_AB_EXPERIMENT_SALT"
+  ],
+  "schema_tables": [
+    "experiment_cohorts",
+    "user_affinity_profiles",
+    "session_events"
+  ],
+  "posthog_events": [
+    "shelf_impression",
+    "shelf_click",
+    "search_rerank_impression",
+    "add_to_cart"
+  ]
+}
