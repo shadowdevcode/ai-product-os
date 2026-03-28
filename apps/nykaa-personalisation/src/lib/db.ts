@@ -41,6 +41,7 @@ export interface SessionEvent {
   product_id: string;
   brand_id: string | null;
   category_id: string | null;
+  event_type: string;
   created_at: string;
 }
 
@@ -113,6 +114,22 @@ export async function upsertAffinityProfile(params: {
   `;
 }
 
+export async function upsertAffinityProfilesBatch(
+  batch: {
+    userId: string;
+    topBrands: string[];
+    topCategories: string[];
+    orderCount: number;
+    sessionCount: number;
+  }[]
+): Promise<void> {
+  const sql = getDb();
+  // Neon serverless doesn't support batching multiple statements in a single transaction via template strings easily,
+  // but we can optimize by using parallel execution in a single batch of promises for this project scale.
+  // In a real production at Nykaa scale, we would use a single `INSERT ... VALUES (...), (...)... ON CONFLICT` statement.
+  await Promise.allSettled(batch.map((params) => upsertAffinityProfile(params)));
+}
+
 // ─── session_events ──────────────────────────────────────────────────────────
 
 export async function insertSessionEvent(params: {
@@ -121,11 +138,12 @@ export async function insertSessionEvent(params: {
   productId: string;
   brandId?: string | null;
   categoryId?: string | null;
+  eventType?: string;
 }): Promise<void> {
   const sql = getDb();
   await sql`
-    INSERT INTO session_events (user_id, session_id, product_id, brand_id, category_id)
-    VALUES (${params.userId}, ${params.sessionId}, ${params.productId}, ${params.brandId ?? null}, ${params.categoryId ?? null})
+    INSERT INTO session_events (user_id, session_id, product_id, brand_id, category_id, event_type)
+    VALUES (${params.userId}, ${params.sessionId}, ${params.productId}, ${params.brandId ?? null}, ${params.categoryId ?? null}, ${params.eventType ?? 'click'})
   `;
 }
 

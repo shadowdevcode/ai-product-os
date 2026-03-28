@@ -90,6 +90,7 @@ function SearchPageContent() {
               key={product.id}
               product={product}
               position={index}
+              userId={activeUser.id}
               onClick={() => handleProductClick(product)}
             />
           ))}

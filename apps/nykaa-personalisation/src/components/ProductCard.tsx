@@ -2,23 +2,22 @@
 
 import { ShoppingCart, Star } from 'lucide-react';
 import { type Product } from '@/lib/catalog/NykaaCatalogClient';
-
+import Link from 'next/link';
 interface ProductCardProps {
   product: Product;
   position: number;
   onClick?: () => void;
+  userId?: string;
 }
 
-export function ProductCard({ product, position, onClick }: ProductCardProps) {
+export function ProductCard({ product, position, onClick, userId = 'user-001' }: ProductCardProps) {
   return (
-    <div
+    <Link
+      href={`/product/${product.id}?user=${userId}`}
       className="product-card"
       onClick={onClick}
       data-product-id={product.id}
       data-position={position}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && onClick?.()}
     >
       <div className="product-image-container">
         <div className="product-image-placeholder">
@@ -35,6 +34,6 @@ export function ProductCard({ product, position, onClick }: ProductCardProps) {
           </span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

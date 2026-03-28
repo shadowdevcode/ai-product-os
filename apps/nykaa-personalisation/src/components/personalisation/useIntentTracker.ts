@@ -29,8 +29,10 @@ function storeIntentClick(product: Product): void {
   let entries: IntentEntry[] = [];
   try {
     entries = raw ? JSON.parse(raw) : [];
+    if (!Array.isArray(entries)) entries = [];
   } catch {
     entries = [];
+    sessionStorage.removeItem(STORAGE_KEY);
   }
 
   entries.push({
@@ -69,5 +71,27 @@ export function useIntentTracker(authToken: string) {
     [authToken]
   );
 
-  return { trackClick };
+  const trackAddToCart = useCallback(
+    (product: Product) => {
+      // Fire-and-forget to ingest-event API
+      const sessionId = getSessionId();
+      fetch('/api/personalisation/ingest-event', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          productId: product.id,
+          brandId: product.brandId,
+          categoryId: product.categoryId,
+          sessionId,
+          eventType: 'add_to_cart',
+        }),
+      }).catch((e) => console.error('[intent-tracker] conversion ingest failed:', e));
+    },
+    [authToken]
+  );
+
+  return { trackClick, trackAddToCart };
 }

@@ -151,3 +151,7 @@ Prefer reusable components.
 Avoid over-engineering.
 
 Optimize for fast MVP development.
+
+Browser Storage & Network Safety: Always wrap `JSON.parse` of `localStorage`/`sessionStorage` in a try/catch block. Always use an `AbortController` for asynchronous `fetch` calls triggered by user input (e.g., search) to prevent network race conditions. Clean up AbortController on component unmount or before issuing a new request to prevent memory leaks.
+
+# Added: 2026-03-28 — Nykaa Personalisation (issue-008)

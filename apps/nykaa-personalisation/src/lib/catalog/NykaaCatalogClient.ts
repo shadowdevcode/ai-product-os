@@ -276,3 +276,15 @@ export async function searchProducts(query: string): Promise<Product[]> {
     clearTimeout(timeoutId);
   }
 }
+
+/**
+ * Fetch a single product by ID (mock implementation).
+ */
+export async function getProductById(id: string): Promise<Product | undefined> {
+  // Simulate network delay
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(MOCK_PRODUCTS.find((p) => p.id === id));
+    }, 50);
+  });
+}

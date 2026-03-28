@@ -9,7 +9,8 @@ import { isRateLimited } from '@/lib/rate-limit';
 
 export async function GET(req: Request) {
   const ip = req.headers.get('x-forwarded-for') ?? 'unknown';
-  if (isRateLimited(ip)) {
+  // Rate limit rerank calls (30 per min)
+  if (isRateLimited(ip, 30)) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
@@ -48,7 +49,7 @@ export async function GET(req: Request) {
     }).catch(() => {});
 
     return NextResponse.json({
-      cohort,
+      cohort: cohort === 'control' ? 'default' : cohort,
       results,
       query,
       reranked: cohort === 'test',

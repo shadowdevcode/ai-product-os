@@ -74,7 +74,12 @@ export default function HomePage() {
       </section>
 
       {/* Personalised shelf — injected below hero banner */}
-      <ForYouShelf key={shelfKey} authToken={authToken} onProductClick={handleProductClick} />
+      <ForYouShelf
+        key={shelfKey}
+        authToken={authToken}
+        userId={activeUser.id}
+        onProductClick={handleProductClick}
+      />
 
       {/* Rest of homepage (static editorial sections) */}
       <section className="editorial-section">

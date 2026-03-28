@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getUserIdFromRequest } from '@/lib/auth';
-import { ingestClickEvent } from '@/lib/personalisation/EventIngestionService';
+import { ingestSessionEvent } from '@/lib/personalisation/EventIngestionService';
 import { captureServerEvent } from '@/lib/posthog';
 import { EVENTS } from '@/lib/analytics/events';
 import { isRateLimited } from '@/lib/rate-limit';
 
 export async function POST(req: Request) {
   const ip = req.headers.get('x-forwarded-for') ?? 'unknown';
-  if (isRateLimited(ip)) {
+  // Strict rate limit for events to prevent noise/spam (10 per min)
+  if (isRateLimited(ip, 10)) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
@@ -25,17 +26,20 @@ export async function POST(req: Request) {
     const sessionId =
       body.sessionId && typeof body.sessionId === 'string' ? body.sessionId : crypto.randomUUID();
 
-    await ingestClickEvent({
+    const eventType = body.eventType === 'add_to_cart' ? EVENTS.ADD_TO_CART : EVENTS.SHELF_CLICK;
+
+    await ingestSessionEvent({
       userId,
       sessionId,
       productId: body.productId,
       brandId: body.brandId ?? null,
       categoryId: body.categoryId ?? null,
+      eventType: eventType === EVENTS.ADD_TO_CART ? 'add_to_cart' : 'click',
     });
 
     // Single emission source: server-side in /api/personalisation/ingest-event
     // Fire-and-forget: telemetry must not block user-facing response latency
-    captureServerEvent(userId, EVENTS.SHELF_CLICK, {
+    captureServerEvent(userId, eventType as string, {
       productId: body.productId,
       brandId: body.brandId ?? null,
       categoryId: body.categoryId ?? null,

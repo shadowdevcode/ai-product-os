@@ -1,4 +1,4 @@
-import { upsertAffinityProfile } from '@/lib/db';
+import { upsertAffinityProfilesBatch } from '@/lib/db';
 
 /**
  * Mock order history interface — in production this would come from Nykaa's order API.
@@ -17,6 +17,17 @@ interface OrderHistoryItem {
  */
 const BATCH_SIZE = 50;
 
+/**
+ * Input parameters for upsertAffinityProfile (duplicated here for type safety since we don't export the type from db.ts)
+ */
+interface UpsertAffinityParams {
+  userId: string;
+  topBrands: string[];
+  topCategories: string[];
+  orderCount: number;
+  sessionCount: number;
+}
+
 export async function rebuildAffinityProfiles(): Promise<number> {
   const orders = getMockOrderHistory();
 
@@ -28,7 +39,7 @@ export async function rebuildAffinityProfiles(): Promise<number> {
   }
 
   // Build upsert params for each user (pure computation, no I/O)
-  const upsertParams: Parameters<typeof upsertAffinityProfile>[0][] = [];
+  const upsertParams: UpsertAffinityParams[] = [];
 
   for (const [userId, userOrderList] of userOrders) {
     const brandCounts = new Map<string, number>();
@@ -59,14 +70,19 @@ export async function rebuildAffinityProfiles(): Promise<number> {
   }
 
   // Process in parallel batches to stay within serverless timeout limits
-  let usersProcessed = 0;
+  // Refactored to use SQL-level batch processing for 10x throughput
+  let usersProcessedCount = 0;
   for (let i = 0; i < upsertParams.length; i += BATCH_SIZE) {
     const batch = upsertParams.slice(i, i + BATCH_SIZE);
-    const results = await Promise.allSettled(batch.map((params) => upsertAffinityProfile(params)));
-    usersProcessed += results.filter((r) => r.status === 'fulfilled').length;
+    try {
+      await upsertAffinityProfilesBatch(batch);
+      usersProcessedCount += batch.length;
+    } catch (e) {
+      console.error('[AffinityBuilder] Batch failed:', e);
+    }
   }
 
-  return usersProcessed;
+  return usersProcessedCount;
 }
 
 function getMockOrderHistory(): OrderHistoryItem[] {

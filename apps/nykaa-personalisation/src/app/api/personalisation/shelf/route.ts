@@ -10,7 +10,8 @@ import { isRateLimited } from '@/lib/rate-limit';
 
 export async function GET(req: Request) {
   const ip = req.headers.get('x-forwarded-for') ?? 'unknown';
-  if (isRateLimited(ip)) {
+  // Rate limit shelf loads (20 per min)
+  if (isRateLimited(ip, 20)) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 

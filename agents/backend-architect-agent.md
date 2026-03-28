@@ -214,8 +214,17 @@ Before finalizing the architecture, answer all of the following. Any gap must be
    → If yes: specify that the stat must display BOTH sides as separate values.
    → A single aggregate count filtered to one cohort is not a valid North Star metric display.
 
+8. **Metric Verifiability**: For every success metric defined in the product specification, explicitly ensure that the required UI flow and API endpoints exist to measure it.
+   → If a metric requires an action (e.g., Add to Cart, Upgrade) but the UI only covers a list view, flag the architectural gap immediately before approval.
+
+9. **Telemetry Latency Isolation**: For every API route with a latency SLA (P95 target), confirm that PostHog/telemetry calls are fire-and-forget (not awaited). Awaited telemetry in hot paths violates latency contracts and creates false fallback triggers in experiment flows.
+   → Exception: admin/cron routes where latency SLA doesn't apply.
+
 # Added: 2026-03-19 — SMB Feature Bundling Engine
+
 # Updated: 2026-03-21 — Ozi Reorder Experiment (items 4–7)
+
+# Updated: 2026-03-28 — Nykaa Personalisation (items 8–9)
 
 ---
 

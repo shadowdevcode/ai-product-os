@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nykaa Fashion Personalisation Engine — Vijay Sehgal</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface-2: #1c1c1c;
+    --surface-3: #242424;
+    --text: #ededed;
+    --text-muted: #a0a0a0;
+    --text-dim: #666;
+    --pink: #fc2779;
+    --pink-soft: #ff6b6b;
+    --pink-glow: rgba(252, 39, 121, 0.15);
+    --pink-border: rgba(252, 39, 121, 0.3);
+    --border: #2a2a2a;
+    --border-light: #333;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --red: #ef4444;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .deck {
+    width: 100%;
+    height: 100vh;
+    position: relative;
+  }
+
+  .slide {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: var(--bg);
+    padding: 56px 72px 72px;
+    flex-direction: column;
+    opacity: 0;
+    transition: opacity 0.18s ease;
+    overflow-y: auto;
+  }
+
+  .slide.active {
+    display: flex;
+    opacity: 1;
+  }
+
+  /* ── COVER SLIDES ── */
+  .slide--cover {
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a0a12 40%, #0a0a0a 100%);
+    justify-content: center;
+    padding: 72px 80px;
+  }
+
+  .slide--cover .eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--pink);
+    margin-bottom: 24px;
+  }
+
+  .slide--cover h1 {
+    font-size: 48px;
+    font-weight: 700;
+    line-height: 1.12;
+    max-width: 800px;
+    color: var(--text);
+    margin-bottom: 20px;
+  }
+
+  .slide--cover .sub {
+    font-size: 17px;
+    color: var(--text-muted);
+    max-width: 640px;
+    line-height: 1.6;
+    margin-bottom: 32px;
+  }
+
+  .slide--cover .tag-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .slide--cover .tag {
+    background: rgba(252, 39, 121, 0.1);
+    border: 1px solid var(--pink-border);
+    color: var(--pink);
+    border-radius: 100px;
+    padding: 7px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.15s;
+  }
+
+  .slide--cover .tag:hover {
+    background: rgba(252, 39, 121, 0.2);
+  }
+
+  /* ── STANDARD CONTENT ── */
+  .slide__header {
+    margin-bottom: 32px;
+    flex-shrink: 0;
+  }
+
+  .slide__label {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--pink);
+    background: var(--pink-glow);
+    padding: 5px 14px;
+    border-radius: 100px;
+    margin-bottom: 14px;
+  }
+
+  .slide__headline {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--text);
+    max-width: 820px;
+  }
+
+  .slide__headline em {
+    color: var(--pink);
+    font-style: normal;
+  }
+
+  .slide__sub {
+    font-size: 15px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    font-weight: 400;
+    max-width: 760px;
+    line-height: 1.5;
+  }
+
+  /* ── BULLETS ── */
+  .bullets {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 860px;
+  }
+
+  .bullets li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--text-muted);
+  }
+
+  .bullets li::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--pink);
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 8px;
+  }
+
+  .bullets li strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  /* ── SOURCE LINE ── */
+  .source {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 20px;
+    font-style: italic;
+  }
+
+  /* ── DATA TABLE ── */
+  .data-table {
+    width: 100%;
+    max-width: 920px;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+
+  .data-table th {
+    text-align: left;
+    padding: 10px 16px;
+    background: var(--surface-2);
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .data-table th:first-child { border-radius: 8px 0 0 0; }
+  .data-table th:last-child { border-radius: 0 8px 0 0; }
+
+  .data-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+
+  .data-table td strong { color: var(--text); }
+
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:nth-child(even) td { background: var(--surface); }
+
+  .data-table tr.highlight td {
+    background: var(--pink-glow);
+    color: var(--pink);
+    font-weight: 600;
+  }
+
+  .data-table tr.highlight td strong { color: var(--pink); }
+
+  /* ── CODE BLOCK ── */
+  .code-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--text-muted);
+    white-space: pre;
+    overflow-x: auto;
+    max-width: 920px;
+  }
+
+  .code-block .keyword { color: var(--pink); }
+  .code-block .comment { color: var(--text-dim); }
+  .code-block .value { color: var(--green); }
+
+  /* ── TWO COLUMN ── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    flex: 1;
+    align-items: start;
+    max-width: 920px;
+  }
+
+  .col-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 24px;
+  }
+
+  .col-box__title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .col-box .bullets li { font-size: 13.5px; }
+
+  /* ── STAT CALLOUT ── */
+  .stat-callout {
+    background: var(--pink-glow);
+    border: 1px solid var(--pink-border);
+    border-radius: 10px;
+    padding: 16px 22px;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--text-muted);
+    max-width: 860px;
+    margin-top: 16px;
+  }
+
+  .stat-callout strong { color: var(--pink); }
+
+  /* ── SEVERITY BADGES ── */
+  .severity-critical {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 700;
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    letter-spacing: 0.02em;
+  }
+
+  .severity-medium {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 700;
+    background: rgba(234, 179, 8, 0.15);
+    color: #eab308;
+    letter-spacing: 0.02em;
+  }
+
+  /* ── METRIC BADGES ── */
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .badge--star { background: rgba(252, 39, 121, 0.15); color: var(--pink); }
+  .badge--support { background: rgba(34, 197, 94, 0.15); color: var(--green); }
+  .badge--guard { background: rgba(234, 179, 8, 0.15); color: var(--yellow); }
+
+  /* ── PIPELINE FLOW ── */
+  .pipeline-flow {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    max-width: 920px;
+    margin-bottom: 24px;
+  }
+
+  .pipeline-chip {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  .pipeline-arrow {
+    color: var(--text-dim);
+    font-size: 12px;
+  }
+
+  /* ── FUNNEL ── */
+  .funnel {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    max-width: 860px;
+    margin: 16px 0;
+  }
+
+  .funnel-step {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: "SF Mono", "Fira Code", monospace;
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 6px;
+  }
+
+  .funnel-step.mvp-end {
+    border-color: var(--pink-border);
+    color: var(--pink);
+  }
+
+  .funnel-arrow {
+    color: var(--text-dim);
+    font-size: 14px;
+  }
+
+  /* ── HYPOTHESIS BOX ── */
+  .hypothesis-box {
+    background: var(--pink-glow);
+    border-left: 4px solid var(--pink);
+    border-radius: 0 10px 10px 0;
+    padding: 20px 24px;
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--text);
+    font-style: italic;
+    max-width: 820px;
+    margin-bottom: 24px;
+  }
+
+  /* ── CLOSING QUOTE ── */
+  .closing-quote {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 22px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-muted);
+    font-style: italic;
+    max-width: 860px;
+    margin-top: 16px;
+  }
+
+  .closing-quote strong { color: var(--text); }
+
+  /* ── NUMBERED LIST ── */
+  .numbered-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 860px;
+  }
+
+  .numbered-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--text-muted);
+  }
+
+  .numbered-list li .num {
+    width: 28px;
+    height: 28px;
+    background: var(--pink-glow);
+    border: 1px solid var(--pink-border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--pink);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .numbered-list li strong { color: var(--text); }
+
+  /* ── CLOSING STATEMENT ── */
+  .closing-statement {
+    background: linear-gradient(135deg, rgba(252,39,121,0.1), rgba(255,107,107,0.05));
+    border: 1px solid var(--pink-border);
+    border-radius: 12px;
+    padding: 24px 28px;
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--text);
+    font-weight: 500;
+    max-width: 820px;
+    margin-top: 28px;
+  }
+
+  /* ── WATERMARK ── */
+  .slide__watermark {
+    position: absolute;
+    bottom: 24px;
+    left: 72px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--border);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* ── NAVIGATION ── */
+  .nav {
+    position: fixed;
+    bottom: 28px;
+    right: 36px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 100;
+  }
+
+  .nav__counter {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+    min-width: 48px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nav__btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: var(--text-muted);
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+    user-select: none;
+  }
+
+  .nav__btn:hover {
+    background: var(--pink-glow);
+    border-color: var(--pink-border);
+    color: var(--pink);
+  }
+
+  .nav__btn:disabled {
+    opacity: 0.25;
+    cursor: default;
+  }
+
+  .nav__btn:disabled:hover {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--text-muted);
+  }
+
+  .progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--pink), var(--pink-soft));
+    transition: width 0.25s ease;
+    z-index: 200;
+  }
+
+  /* ── SCROLLBAR ── */
+  .slide::-webkit-scrollbar { width: 4px; }
+  .slide::-webkit-scrollbar-track { background: transparent; }
+  .slide::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* ── COMPACT TABLE VARIANT ── */
+  .data-table--compact td { padding: 8px 14px; font-size: 13px; }
+  .data-table--compact th { padding: 8px 14px; }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress"></div>
+
+<div class="deck" id="deck">
+
+  <!-- ══════════════════════════════════
+       SLIDE 1 — TITLE / COVER
+  ══════════════════════════════════ -->
+  <div class="slide slide--cover active" id="slide-1">
+    <div class="eyebrow">PM Portfolio Project</div>
+    <h1>Nykaa Fashion Personalisation Engine</h1>
+    <p class="sub">A rule-based recommendation MVP that proves personalisation lifts engagement &mdash; built end-to-end in 48 hours.</p>
+    <p style="font-size:14px; color:var(--text-muted); margin-bottom:28px;">Vijay Sehgal &middot; March 2026</p>
+    <div class="tag-row">
+      <a class="tag" href="https://github.com/shadowdevcode/ai-product-os" target="_blank">GitHub Repository</a>
+      <a class="tag" href="#" target="_blank">Live Demo</a>
+      <span class="tag">14 slides &middot; 15 min</span>
+    </div>
+    <span class="slide__watermark">Vijay Sehgal &middot; PM - Personalisation</span>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SLIDE 2 — THE PROBLEM
+  ══════════════════════════════════ -->
+  <div class="slide" id="slide-2">
+    <div class="slide__header">
+      <span class="slide__label">Product Sense</span>
+      <h2 class="slide__headline">12 surfaces. <em>Zero personalised.</em></h2>
+      <p class="slide__sub">I audited Nykaa Fashion as a logged-in user with 6 past orders.</p>
+    </div>
+    <ul class="bullets">
+      <li>A logged-in user with 6 past orders sees the <strong>exact same homepage</strong> as a first-time visitor</li>
+      <li>The nav bar renders my name ("Vijay") &mdash; but identity is <strong>never used for product discovery</strong></li>
+      <li>Searching "moisturizer" returns <strong>2,277 undifferentiated results</strong> with no relevance signal</li>
+      <li>Every SKU on the homepage is editorially placed &mdash; <strong>same for all 50M+ users</strong></li>
+      <li>This is the <strong>Paradox of Choice</strong>: too many options + no relevance = decision fatigue = bounce</li>
+    </ul>
+    <p class="source">Source: First-hand PM audit of nykaa.com, March 27, 2026 (logged-in session, 12 surfaces checked)</p>
+    <span class="slide__watermark">Vijay Sehgal &middot; PM - Personalisation</span>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SLIDE 3 — COMPETITIVE GAP
+  ══════════════════════════════════ -->
+  <div class="slide" id="slide-3">
+    <div class="slide__header">
+      <span class="slide__label">Competitive Analysis</span>
+      <h2 class="slide__headline">Nykaa is the largest beauty-fashion platform in India &mdash; <em>and trailing on table-stakes capability</em></h2>
+    </div>
+    <table class="data-table" style="margin-bottom:20px;">
+      <thead>
+        <tr>
+          <th>Platform</th>
+          <th>Personalisation Capability</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Myntra</strong></td>
+          <td>Adaptive category ordering based on browse history</td>
+          <td style="color:var(--green);">Live</td>
+        </tr>
+        <tr>
+          <td><strong>Purplle</strong></td>
+          <td>Skin profile onboarding + "For You" shelves</td>
+          <td style="color:var(--green);">Live</td>
+        </tr>
+        <tr>
+          <td><strong>Sephora</strong></td>
+          <td>Re-ranking search results by skin profile</td>
+          <td style="color:var(--green);">Live</td>
+        </tr>
+        <tr>
+          <td><strong>Amazon</strong></td>
+          <td>Collaborative filtering at scale</td>
+          <td style="color:var(--green);">Live</td>
+        </tr>
+        <tr class="highlight">
+          <td><strong>Nykaa</strong></td>
+          <td>Zero personalisation on web discovery surfaces</td>
+          <td><strong>Gap</strong></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="stat-callout">
+      <strong>43.5% uplift in clicks</strong> &mdash; Nykaa's own published result with Netcore personalisation. The question isn't "should we personalise?" &mdash; it's "how fast can we build in-house capability?"
+    </div>
+    <span class="slide__watermark">Vijay Sehgal &middot; PM - Personalisation</span>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SLIDE 4 — HYPOTHESIS & IMPACT
+  ══════════════════════════════════ -->
+  <div class="slide" id="slide-4">
+    <div class="slide__header">
+      <span class="slide__label">Hypothesis</span>
+      <h2 class="slide__headline">Replace editorial curation with <em>affinity-weighted ranking</em></h2>
+    </div>
+    <div class="hypothesis-box">
+      "If we replace Nykaa Fashion's static editorial shelf with an affinity-weighted recommendation layer, returning users will find relevant products faster."
+    </div>
+    <div class="code-block" style="margin-bottom:20px;"><span class="keyword">Scoring Formula</span>
+<span class="value">60%</span> Historical Affinity  <span class="comment">// top brands + categories from order history</span>
+<span class="value">40%</span> In-Session Intent    <span class="comment">// last 3 product clicks in current session</span></div>
+    <table class="data-table" style="max-width:600px;">
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th>Target</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Homepage-to-PDP conversion</strong></td>
+          <td>+15-25% lift</td>
+        </tr>
+        <tr>
+          <td><strong>30-day GMV per user (logged-in)</strong></td>
+          <td>+10-15% lift</td>
+        </tr>
+        <tr>
+          <td><strong>Shelf CTR (test vs control)</strong></td>
+          <td>+15% lift</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="source">Benchmarks: Sephora, Amazon, and Myntra published data show personalised shelves drive 15-30% higher CTR and 10-20% higher ATC vs. generic shelves.</p>
+    <span class="slide__watermark">Vijay Sehgal &middot; PM - Personalisation</span>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SLIDE 5 — SCOPE DECISIONS
+  ══════════════════════════════════ -->
+  <div class="slide" id="slide-5">
+    <div class="slide__header">
+      <span class="slide__label">PM Discipline</span>
+      <h2 class="slide__headline">What I built &mdash; and <em>what I said no to</em></h2>
+    </div>
+    <div class="two-col">
+      <div class="col-box">
+        <div class="col-box__title">What I Built</div>
+        <ul class="bullets">
+          <li>"Picked for You" homepage shelf with personalised product ranking</li>
+          <li>Search re-ranking with same scoring engine</li>
+          <li>Deterministic A/B testing infrastructure (SHA-256 cohort split)</li>
+          <li>5 demo personas with realistic order histories</li>
+          <li>10 telemetry events for experiment measurement</li>
+          <li>Graceful degradation (500ms fallback to editorial)</li>
+        </ul>
+      </div>
+      <div class="col-box">
+        <div class="col-box__title">What I Excluded</div>
+        <table class="data-table data-table--compact" style="margin:0;">
+          <tbody>
+            <tr>
+              <td><strong>ML / Collaborative filtering</strong></td>
+              <td style="font-size:12px;">Validate ANY signal lifts CTR first</td>
+            </tr>
+            <tr>
+              <td><strong>Cold-start swipe module</strong></td>
+              <td style="font-size:12px;">Too much UX disruption for V1</td>
+            </tr>
+            <tr>
+              <td><strong>PDP / Add-to-Cart flow</strong></td>
+              <td style="font-size:12px;">Shelf CTR is sufficient leading indicator</td>
+            </tr>
+            <tr>
+              <td><strong>Admin boost lever</strong></td>
+              <td style="font-size:12px;">V2 feature after base layer works</td>
+            </tr>
+            <tr>
+              <td><strong>Computer vision tags</strong></td>
+              <td style="font-size:12px;">Requires image pipeline infra</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="closing-quote" style="margin-top:20px;">
+      The hardest PM skill is saying no. These exclusions kept the MVP focused on one question: <strong>does affinity-weighted ranking outperform editorial curation?</strong>
+    </div>
+    <span class="slide__watermark">Vijay Sehgal &middot; PM - Personalisation</span>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SLIDE 6 — ARCHITECTURE
+  ══════════════════════════════════ -->
+  <div class="slide" id="slide-6">
+    <div class="slide__header">
+      <span class="slide__label">Architecture</span>
+      <h2 class="slide__headline">System design &mdash; <em>built for debuggability</em></h2>
+    </div>
+    <div class="code-block" style="font-size:12px; line-height:1.5; margin-bottom:20px;">
+<span class="keyword">Homepage</span>                       <span class="keyword">Search Page</span>
+  ForYouShelf                      SearchResults
+       |                                |
+       v                                v
+  GET /api/shelf --------+-----> GET /api/rerank
+       |                 |              |
+  PersonalisationSvc     |        RerankEngine
+       |                 |              |
+  CohortSvc (SHA-256)    |      <span class="comment">// Same scoring</span>
+       |                 |
+       v                 v
+    <span class="value">Neon DB</span> (3 tables)
+    experiment_cohorts | user_affinity_profiles | session_events
+
+  <span class="keyword">User Click</span> ----> POST /api/ingest ----> session_events <span class="comment">(24h TTL)</span>
+  <span class="keyword">Nightly Cron</span> --> POST /api/rebuild --> user_affinity_profiles</div>
+    <table class="data-table" style="max-width:700px;">
+      <thead>
+        <tr>
+          <th>Choice</th>
+          <th>Rationale</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Neon DB</strong> (not Supabase)</td>
+          <td>Direct PostgreSQL, no ORM overhead, serverless-native</td>
+        </tr>
+        <tr>
+          <td><strong>PostHog</strong> (not Mixpanel)</td>
+          <td>Open-source, A/B cohort analysis built-in</td>
+        </tr>
+        <tr>
+          <td><strong>Rule-based scoring</strong> (not ML)</td>
+          <td>Debuggable, explainable, no training cycles</td>
+        </tr>
+        <tr>
+          <td><strong>Fire-and-forget telemetry</strong></td>
+          <td>Observability never degrades user experience</td>
+        </tr>
+      </tbody>
+    </table>
+    <span class="slide__watermark">Vijay Sehgal &middot; PM - Personalisation</span>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SLIDE 7 — SCORING ENGINE
+  ══════════════════════════════════ -->
+  <div class="slide" id="slide-7">
+    <div class="slide__header">
+      <span class="slide__label">Scoring Engine</span>
+      <h2 class="slide__headline">How products get ranked &mdash; <em>the math</em></h2>
+    </div>
+    <div class="code-block" style="margin-bottom:20px;">
+<span class="keyword">Final Score</span> = <span class="value">0.6</span> x Affinity Score + <span class="value">0.4</span> x Intent Score
+
+<span class="keyword">Affinity Score</span> = (brand_match + category_match) / 2
+  brand_match:    <span class="value">1</span> if product brand in user's top 5 brands, else <span class="value">0</span>
+  category_match: <span class="value">1</span> if product category in user's top 5 categories, else <span class="value">0</span>
+  Source: Order history, rebuilt nightly by AffinityBuilder
+
+<span class="keyword">Intent Score</span> = (brand_intent + category_intent) / 2
+  brand_intent:    <span class="value">1</span> if product brand matches any of last 3 clicks, else <span class="value">0</span>
+  category_intent: <span class="value">1</span> if product category matches any of last 3 clicks, else <span class="value">0</span>
+  Source: session_events table <span class="comment">(24h TTL)</span></div>
+    <div class="stat-callout" style="margin-bottom:16px;">
+      <strong>Example: User "Priya" (Fashion)</strong><br>
+      Top brands: Zara, H&M, Mango. Last 3 clicks: Nike sneaker, Zara top, H&M blazer.<br><br>
+      H&M Blazer: 0.6 x 0.5 + 0.4 x 1.0 = <strong>0.70</strong> (ranked high)<br>
+      Lakme Lipstick: 0.6 x 0.0 + 0.4 x 0.0 = <strong>0.00</strong> (ranked low)
+    </div>
+    <div class="closing-quote">
+      <strong>Why 60/40?</strong> Historical affinity represents durable preferences. Session intent captures ephemeral style goals (e.g., shopping for a wedding guest dress even though usual style is casual). 60/40 anchors on stable signal while remaining responsive to in-session behaviour.
+    </div>
+    <span class="slide__watermark">Vijay Sehgal &middot; PM - Personalisation</span>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SLIDE 8 — A/B TESTING
+  ══════════════════════════════════ -->
+  <div class="slide" id="slide-8">
+    <div class="slide__header">
+      <span class="slide__label">Experiment Design</span>
+      <h2 class="slide__headline">Deterministic A/B testing &mdash; <em>SHA-256 cohort split</em></h2>
+    </div>
+    <div class="code-block" style="margin-bottom:20px;">
+<span class="keyword">cohort</span> = SHA-256(userId + serverOnlySalt) % 2
+  <span class="value">0</span> = Control <span class="comment">(editorial default)</span>
+  <span class="value">1</span> = Test    <span class="comment">(personalised ranking)</span></div>
+    <ul class="bullets" style="margin-bottom:20px;">
+      <li><strong>Reproducible:</strong> Same user always gets same cohort (no cookie dependency)</li>
+      <li><strong>Stable:</strong> Assignment persisted in DB (write-once, first-assignment-wins)</li>
+      <li><strong>Secure:</strong> Salt is server-only (never exposed to browser bundle)</li>
+      <li><strong>Masked:</strong> Control group API response says "default" not "control" to prevent experiment contamination</li>
+    </ul>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Persona</th>
+          <th>Affinity</th>
+          <th>Cohort</th>
+          <th>What You'll See</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Priya</strong></td>
+          <td>Fashion (Zara, H&M, Mango)</td>
+          <td style="color:var(--pink);">Test</td>
+          <td>Personalised shelf</td>
+        </tr>
+        <tr>
+          <td><strong>Arjun</strong></td>
+          <td>Activewear (Nike, Adidas)</td>
+          <td style="color:var(--pink);">Test</td>
+          <td>Personalised shelf</td>
+        </tr>
+        <tr>
+          <td><strong>Meera</strong></td>
+          <td>Beauty (Lakme, Maybelline)</td>
+          <td style="color:var(--pink);">Test</td>
+          <td>Personalised shelf</td>
+        </tr>
+        <tr>
+          <td><strong>Rahul</strong></td>
+          <td>Denim (Levi's, Wrangler)</td>
+          <td style="color:var(--text-muted);">Control</td>
+          <td>Editorial default</td>
+        </tr>
+        <tr>
+          <td><strong>Ananya</strong></td>
+          <td>Tops (Forever21, H&M)</td>
+          <td style="color:var(--text-muted);">Control</td>
+          <td>Editorial default</td>
+        </tr>
+      </tbody>
+    </table>
+    <span class="slide__watermark">Vijay Sehgal &middot; PM - Personalisation</span>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SLIDE 9 — METRICS FRAMEWORK
+  ══════════════════════════════════ -->
+  <div class="slide" id="slide-9">
+    <div class="slide__header">
+      <span class="slide__label">Metrics</span>
+      <h2 class="slide__headline">North Star: <em>ATC Rate Lift</em></h2>
+      <p class="slide__sub">ATC is unmeasurable in current MVP (no PDP/cart flow). Shelf CTR is the measurable proxy.</p>
+    </div>
+    <table class="data-table" style="margin-bottom:20px;">
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th>Target</th>
+          <th>Why It Matters</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Shelf CTR Lift</strong> <span class="badge badge--star">North Star Proxy</span></td>
+          <td>+15%</td>
+          <td>Are recommendations relevant enough to click?</td>
+        </tr>
+        <tr>
+          <td><strong>Search Re-rank CTR</strong> <span class="badge badge--support">Supporting</span></td>
+          <td>+10%</td>
+          <td>Does re-ranking improve search quality?</td>
+        </tr>
+        <tr>
+          <td><strong>Shelf Load Latency (P95)</strong> <span class="badge badge--support">Supporting</span></td>
+          <td>&le; 200ms</td>
+          <td>Personalisation must not degrade UX</td>
+        </tr>
+        <tr>
+          <td><strong>Cold-Start Suppression Rate</strong> <span class="badge badge--guard">Guardrail</span></td>
+          <td>Track</td>
+          <td>How many users get fallback due to insufficient data?</td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="font-size:13px; font-weight:600; color:var(--text-muted); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.08em;">Funnel</p>
+    <div class="funnel" style="margin-bottom:20px;">
+      <span class="funnel-step">Homepage Visit</span>
+      <span class="funnel-arrow">&rarr;</span>
+      <span class="funnel-step">Shelf Impression</span>
+      <span class="funnel-arrow">&rarr;</span>
+      <span class="funnel-step">Shelf Click</span>
+      <span class="funnel-arrow">&rarr;</span>
+      <span class="funnel-step mvp-end">PDP View</span>
+      <span class="funnel-arrow">&rarr;</span>
+      <span class="funnel-step" style="opacity:0.4;">ATC</span>
+    </div>
+    <ul class="bullets">
+      <li><strong>P95 &gt; 500ms</strong> &rarr; investigate (AbortController fires, users see fallback)</li>
+      <li><strong>shelf_load_failed &gt; 2%</strong> of impressions &rarr; investigate</li>
+      <li><strong>Cohort split outside 48/52</strong> &rarr; investigate assignment algorithm</li>
+    </ul>
+    <span class="slide__watermark">Vijay Sehgal &middot; PM - Personalisation</span>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SLIDE 10 — HONEST ASSESSMENT
+  ══════════════════════════════════ -->
+  <div class="slide" id="slide-10">
+    <div class="slide__header">
+      <span class="slide__label">Honest Assessment</span>
+      <h2 class="slide__headline">What this MVP <em>lacks</em></h2>
+    </div>
+    <table class="data-table" style="margin-bottom:16px;">
+      <thead>
+        <tr>
+          <th>Limitation</th>
+          <th>Production Requirement</th>
+          <th>Why It's OK for MVP</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>No PDP / Add-to-Cart</strong></td>
+          <td>ATC is the true North Star</td>
+          <td>Shelf CTR is a validated leading indicator</td>
+        </tr>
+        <tr>
+          <td><strong>Mock catalog (20 products)</strong></td>
+          <td>Real Nykaa catalog API</td>
+          <td>Scoring engine is the value, not product data</td>
+        </tr>
+        <tr>
+          <td><strong>In-memory rate limiting</strong></td>
+          <td>Redis / Upstash distributed</td>
+          <td>Resets on cold start; acceptable for demo</td>
+        </tr>
+        <tr>
+          <td><strong>Unsigned base64 auth</strong></td>
+          <td>JWT verification (Nykaa SSO)</td>
+          <td>5 synthetic users; auth is deployment concern</td>
+        </tr>
+        <tr>
+          <td><strong>No collaborative filtering</strong></td>
+          <td>ML pipeline with similarity</td>
+          <td>Rule-based validates signal first</td>
+        </tr>
+        <tr>
+          <td><strong>No cold-start handling</strong></td>
+          <td>Preference capture for new users</td>
+          <td>New users get editorial default (same as today)</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="closing-quote">
+      A PM who can articulate what their product <strong>doesn't do</strong> is more credible than one who only talks about what it does. These limitations are intentional scope decisions, not oversights.
+    </div>
+    <span class="slide__watermark">Vijay Sehgal &middot; PM - Personalisation</span>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SLIDE 11 — ISSUES FOUND & FIXED
+  ══════════════════════════════════ -->
+  <div class="slide" id="slide-11">
+    <div class="slide__header">
+      <span class="slide__label">Engineering Rigor</span>
+      <h2 class="slide__headline">6 issues found through <em>adversarial review</em></h2>
+      <p class="slide__sub">All blocking issues fixed before completion.</p>
+    </div>
+    <table class="data-table data-table--compact">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Issue</th>
+          <th>Severity</th>
+          <th>What Happened</th>
+          <th>Fix Applied</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td><strong>Telemetry latency in critical path</strong></td>
+          <td><span class="severity-critical">Critical</span></td>
+          <td>PostHog flush() added 200-500ms to shelf API, triggering fallback</td>
+          <td>Fire-and-forget pattern</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><strong>A/B salt exposed to client</strong></td>
+          <td><span class="severity-critical">Critical</span></td>
+          <td>NEXT_PUBLIC_ prefix leaked salt to browser bundle</td>
+          <td>Server-only env var</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><strong>Sequential DB writes in AffinityBuilder</strong></td>
+          <td><span class="severity-critical">Critical</span></td>
+          <td>for-await loop: 5000 users x 50ms = 250s (Vercel 60s limit)</td>
+          <td>Batched Promise.allSettled</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td><strong>Control cohort label leaked</strong></td>
+          <td><span class="severity-medium">Medium</span></td>
+          <td>API returned "control" in network tab</td>
+          <td>Returns "default" instead</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td><strong>Search ignored user selection</strong></td>
+          <td><span class="severity-medium">Medium</span></td>
+          <td>Search page hardcoded user-001</td>
+          <td>Pass userId via URL param</td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td><strong>Missing shelf_click event</strong></td>
+          <td><span class="severity-medium">Medium</span></td>
+          <td>No telemetry on product clicks &mdash; CTR unmeasurable</td>
+          <td>Added to ingest-event route</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="closing-quote">
+      These weren't bugs I introduced and then fixed. They were caught by a <strong>structured adversarial review process</strong> &mdash; the same process I'd use at Nykaa to ensure production releases don't ship with experiment-corrupting issues.
+    </div>
+    <span class="slide__watermark">Vijay Sehgal &middot; PM - Personalisation</span>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SLIDE 12 — PROCESS
+  ══════════════════════════════════ -->
+  <div class="slide" id="slide-12">
+    <div class="slide__header">
+      <span class="slide__label">Process</span>
+      <h2 class="slide__headline">How I work &mdash; <em>12-step pipeline with quality gates</em></h2>
+    </div>
+    <div class="pipeline-flow" style="margin-bottom:20px;">
+      <span class="pipeline-chip">Issue</span><span class="pipeline-arrow">&rarr;</span>
+      <span class="pipeline-chip">Explore</span><span class="pipeline-arrow">&rarr;</span>
+      <span class="pipeline-chip">Plan</span><span class="pipeline-arrow">&rarr;</span>
+      <span class="pipeline-chip">Execute</span><span class="pipeline-arrow">&rarr;</span>
+      <span class="pipeline-chip">Deslop</span><span class="pipeline-arrow">&rarr;</span>
+      <span class="pipeline-chip">Review</span><span class="pipeline-arrow">&rarr;</span>
+      <span class="pipeline-chip">Peer Review</span><span class="pipeline-arrow">&rarr;</span>
+      <span class="pipeline-chip">QA</span><span class="pipeline-arrow">&rarr;</span>
+      <span class="pipeline-chip">Metrics</span><span class="pipeline-arrow">&rarr;</span>
+      <span class="pipeline-chip">Deploy Check</span><span class="pipeline-arrow">&rarr;</span>
+      <span class="pipeline-chip">Postmortem</span><span class="pipeline-arrow">&rarr;</span>
+      <span class="pipeline-chip" style="border-color:var(--pink-border); color:var(--pink);">Learning</span>
+    </div>
+    <table class="data-table data-table--compact">
+      <thead>
+        <tr>
+          <th>Stage</th>
+          <th>What Happened</th>
+          <th>Key Output</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Issue</strong></td>
+          <td>PM audit of nykaa.com, 12 surfaces checked</td>
+          <td>Problem statement + hypothesis</td>
+        </tr>
+        <tr>
+          <td><strong>Explore</strong></td>
+          <td>Market scan, competitor analysis, risk assessment</td>
+          <td>Build recommendation + MVP scope</td>
+        </tr>
+        <tr>
+          <td><strong>Plan</strong></td>
+          <td>Architecture, DB schema, scoring formula, metrics</td>
+          <td>Technical spec + success criteria</td>
+        </tr>
+        <tr>
+          <td><strong>Execute</strong></td>
+          <td>Built 5 API routes, 4 services, 3 DB tables</td>
+          <td>Working app with 5 demo personas</td>
+        </tr>
+        <tr>
+          <td><strong>Review</strong></td>
+          <td>Static code analysis</td>
+          <td>2 fixes (missing event, sequential query)</td>
+        </tr>
+        <tr>
+          <td><strong>Peer Review</strong></td>
+          <td>Adversarial security + reliability audit</td>
+          <td>6 findings, 3 MUST-FIX (all fixed)</td>
+        </tr>
+        <tr>
+          <td><strong>QA</strong></td>
+          <td>Functional, edge case, failure scenario testing</td>
+          <td>PASS + 2 medium UX issues</td>
+        </tr>
+        <tr>
+          <td><strong>Metrics</strong></td>
+          <td>Define North Star, funnels, alert thresholds</td>
+          <td>ATC lift target, 10 events defined</td>
+        </tr>
+        <tr>
+          <td><strong>Postmortem</strong></td>
+          <td>Root cause analysis of all issues</td>
+          <td>4 systemic rules extracted</td>
+        </tr>
+        <tr>
+          <td><strong>Learning</strong></td>
+          <td>Rules written back into system knowledge</td>
+          <td>Prevents same mistakes in future</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="closing-quote">
+      The postmortem doesn't just list problems &mdash; it <strong>extracts rules that feed back into the system.</strong> Every future project benefits from this one's mistakes.
+    </div>
+    <span class="slide__watermark">Vijay Sehgal &middot; PM - Personalisation</span>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SLIDE 13 — ROADMAP
+  ══════════════════════════════════ -->
+  <div class="slide" id="slide-13">
+    <div class="slide__header">
+      <span class="slide__label">Roadmap</span>
+      <h2 class="slide__headline">Proposed roadmap <em>if hired</em></h2>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Phase</th>
+          <th>Timeline</th>
+          <th>Focus</th>
+          <th>Key Deliverable</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Phase 1</strong></td>
+          <td>Month 1-2</td>
+          <td style="color:var(--pink);">Foundation</td>
+          <td>Integrate real Nykaa catalog API, real user auth (SSO), production A/B platform. Ship "Picked for You" shelf to 5% of logged-in traffic.</td>
+        </tr>
+        <tr>
+          <td><strong>Phase 2</strong></td>
+          <td>Month 3-4</td>
+          <td style="color:var(--pink);">Intelligence</td>
+          <td>Add collaborative filtering (users-who-bought-X-also-bought-Y). Cold-start preference capture. Expand to category pages.</td>
+        </tr>
+        <tr>
+          <td><strong>Phase 3</strong></td>
+          <td>Month 5-6</td>
+          <td style="color:var(--pink);">Cross-sell</td>
+          <td>Visual similarity matching (embeddings). "Complete the Look" shelf. Category team boost lever for commercial weighting.</td>
+        </tr>
+        <tr>
+          <td><strong>Phase 4</strong></td>
+          <td>Month 7+</td>
+          <td style="color:var(--pink);">Scale</td>
+          <td>Full ML pipeline with real-time feature store. Push notifications for high-affinity new arrivals. Personalised email campaigns.</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="stat-callout" style="margin-top:20px;">
+      <strong>Phase 1 is designed to prove value fast.</strong> 5% traffic = low risk, high learning. If shelf CTR lifts 15%+, we expand. If not, we investigate signal selection before scaling.
+    </div>
+    <span class="slide__watermark">Vijay Sehgal &middot; PM - Personalisation</span>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SLIDE 14 — WHY THIS MATTERS (CLOSING)
+  ══════════════════════════════════ -->
+  <div class="slide slide--cover" id="slide-14" style="background: linear-gradient(135deg, #0a0a0a 0%, #1a0812 30%, #140a10 60%, #0a0a0a 100%);">
+    <div class="eyebrow">Why This Matters for Nykaa</div>
+    <h1 style="font-size:36px; margin-bottom:32px;">Five reasons this project matters</h1>
+    <ol class="numbered-list">
+      <li>
+        <span class="num">1</span>
+        <span><strong>The gap is real.</strong> 12 surfaces audited, zero personalised. This isn't theoretical &mdash; it's a measurable missed revenue opportunity for 50M+ users.</span>
+      </li>
+      <li>
+        <span class="num">2</span>
+        <span><strong>Nykaa already proved personalisation works.</strong> The 43.5% click uplift with Netcore shows the user base responds to relevance. The question is building in-house capability.</span>
+      </li>
+      <li>
+        <span class="num">3</span>
+        <span><strong>The CTO will recognise this.</strong> Rajesh Uppalapati spent 20 years at Amazon &mdash; he knows what clean A/B testing, deterministic cohort splits, and production-grade error handling look like.</span>
+      </li>
+      <li>
+        <span class="num">4</span>
+        <span><strong>This PM can think, build, and learn systematically.</strong> Product sense from first-hand audit. Technical depth across the stack. Experiment design with metric frameworks. Self-correction through adversarial review.</span>
+      </li>
+      <li>
+        <span class="num">5</span>
+        <span><strong>The PM - Personalisation role exists because this is a board-level priority.</strong> This project demonstrates exactly the thinking, building, and measurement skills that role requires.</span>
+      </li>
+    </ol>
+    <div class="closing-statement">
+      I didn't just identify the problem. I built the solution, tested it adversarially, documented what it lacks, and proposed a roadmap to scale it. That's the PM I am.
+    </div>
+    <span class="slide__watermark">Vijay Sehgal &middot; PM - Personalisation</span>
+  </div>
+
+</div>
+
+<!-- Navigation -->
+<div class="nav" id="nav">
+  <button class="nav__btn" id="prevBtn" onclick="prevSlide()" disabled>&#8592;</button>
+  <span class="nav__counter" id="counter">1 / 14</span>
+  <button class="nav__btn" id="nextBtn" onclick="nextSlide()">&#8594;</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  let current = 0;
+
+  function showSlide(index) {
+    slides[current].classList.remove('active');
+    current = Math.max(0, Math.min(index, total - 1));
+    slides[current].classList.add('active');
+    document.getElementById('counter').textContent = (current + 1) + ' / ' + total;
+    document.getElementById('prevBtn').disabled = current === 0;
+    document.getElementById('nextBtn').disabled = current === total - 1;
+    document.getElementById('progress').style.width = ((current + 1) / total * 100) + '%';
+
+    // Update nav styling for dark vs. cover slides
+    const navEl = document.getElementById('nav');
+    const iscover = slides[current].classList.contains('slide--cover');
+    navEl.dataset.theme = iscover ? 'cover' : 'default';
+  }
+
+  function nextSlide() { showSlide(current + 1); }
+  function prevSlide() { showSlide(current - 1); }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+      e.preventDefault();
+      nextSlide();
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      prevSlide();
+    }
+  });
+
+  // Click navigation — click left half to go back, right half to go forward
+  document.getElementById('deck').addEventListener('click', function(e) {
+    // Don't navigate if clicking buttons, links, or interactive elements
+    if (e.target.closest('.nav, a, button')) return;
+    const x = e.clientX;
+    const w = window.innerWidth;
+    if (x < w * 0.35) {
+      prevSlide();
+    } else if (x > w * 0.65) {
+      nextSlide();
+    }
+  });
+
+  // Initialize progress bar
+  document.getElementById('progress').style.width = (1 / total * 100) + '%';
+</script>
+</body>
+</html>

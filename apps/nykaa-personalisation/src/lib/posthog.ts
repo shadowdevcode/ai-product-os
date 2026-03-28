@@ -23,7 +23,11 @@ export async function captureServerEvent(
     const client = getPostHogServer();
     if (!client) return;
     client.capture({ distinctId, event, properties });
-    await client.flush();
+    // FIRE-AND-FORGET: Do not await flush() in hot paths.
+    // PostHog node SDK handles batching and flushing in the background.
+    // client.flush() is only needed for short-lived processes (like Lambda termination).
+    // In Vercel, we rely on the process surviving long enough for background flush or use .flush() in non-critical paths if needed.
+    // For this experiment, we prioritize low latency.
   } catch (e) {
     console.error(`[PostHog] Failed to capture ${event}:`, e);
   }

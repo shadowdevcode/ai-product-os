@@ -10,8 +10,8 @@ export async function POST(req: Request) {
     const cohortCount = await seedTestCohorts([
       { userId: 'user-001', cohort: 'test' },
       { userId: 'user-002', cohort: 'test' },
-      { userId: 'user-003', cohort: 'control' },
-      { userId: 'user-004', cohort: 'test' },
+      { userId: 'user-003', cohort: 'test' },
+      { userId: 'user-004', cohort: 'control' },
       { userId: 'user-005', cohort: 'control' },
     ]);
 

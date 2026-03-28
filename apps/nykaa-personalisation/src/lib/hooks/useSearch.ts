@@ -35,8 +35,8 @@ export function useSearch(authToken: string) {
 
         setResults(data.results ?? []);
         setReranked(data.reranked ?? false);
-      } catch (e: any) {
-        if (e.name === 'AbortError') return;
+      } catch (e: unknown) {
+        if (e instanceof Error && e.name === 'AbortError') return;
         setResults([]);
         setReranked(false);
       } finally {

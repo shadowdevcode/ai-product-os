@@ -7,10 +7,11 @@ import { type Product, EDITORIAL_PRODUCTS } from '@/lib/catalog/NykaaCatalogClie
 
 interface ForYouShelfProps {
   authToken: string;
+  userId: string;
   onProductClick?: (product: Product) => void;
 }
 
-export function ForYouShelf({ authToken, onProductClick }: ForYouShelfProps) {
+export function ForYouShelf({ authToken, userId, onProductClick }: ForYouShelfProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [cohort, setCohort] = useState<string>('');
@@ -18,7 +19,7 @@ export function ForYouShelf({ authToken, onProductClick }: ForYouShelfProps) {
 
   const fetchShelf = useCallback(async () => {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 500);
+    const timeout = setTimeout(() => controller.abort(), 5000);
 
     try {
       const res = await fetch('/api/personalisation/shelf', {
@@ -53,7 +54,7 @@ export function ForYouShelf({ authToken, onProductClick }: ForYouShelfProps) {
       <div className="shelf-header">
         <h2 className="shelf-title">{label}</h2>
         <span className="shelf-subtitle">
-          {isFallback ? 'Curated picks' : 'Based on your style'}
+          {isFallback || cohort === 'default' ? 'Curated picks' : 'Based on your style'}
         </span>
       </div>
       <div className="shelf-scroll">
@@ -62,6 +63,7 @@ export function ForYouShelf({ authToken, onProductClick }: ForYouShelfProps) {
             key={product.id}
             product={product}
             position={index}
+            userId={userId}
             onClick={() => onProductClick?.(product)}
           />
         ))}
