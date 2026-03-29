@@ -1,5 +1,15 @@
 # Command: /explore
 
+## Required Knowledge
+
+Load only these knowledge files before executing:
+
+- knowledge/product-principles.md
+- knowledge/product-lessons.md
+- knowledge/architecture-guide.md
+
+---
+
 Purpose:
 Analyze a product idea deeply before development begins.
 

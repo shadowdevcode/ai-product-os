@@ -22,7 +22,7 @@ Before executing ANY command, the system must read:
 
 - `project-state.md` — extract active_issue, current_stage, status
 - `experiments/ideas/<active_issue>.md` — the active issue file
-- All knowledge files in `/knowledge/`
+- Only the knowledge files listed in the command's `## Required Knowledge` section (top of each `commands/*.md` file)
 - Related exploration and plan files if they exist
 
 ## State Management

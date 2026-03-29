@@ -1,5 +1,14 @@
 # Command: /qa-test
 
+## Required Knowledge
+
+Load only these knowledge files before executing:
+
+- knowledge/coding-standards.md
+- knowledge/engineering-lessons.md
+
+---
+
 Purpose:
 Perform comprehensive testing of the system before deployment.
 

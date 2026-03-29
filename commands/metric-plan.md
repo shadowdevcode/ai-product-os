@@ -1,5 +1,15 @@
 # Command: /metric-plan
 
+## Required Knowledge
+
+Load only these knowledge files before executing:
+
+- knowledge/analytics-framework.md
+- knowledge/product-principles.md
+- knowledge/product-lessons.md
+
+---
+
 Purpose:
 Define the post-launch measurement plan before deployment is approved.
 

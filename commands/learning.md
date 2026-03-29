@@ -1,5 +1,21 @@
 # Command: /learning
 
+## Required Knowledge
+
+Load ALL knowledge files before executing (this is the one command that legitimately needs the full knowledge base):
+
+- knowledge/product-principles.md
+- knowledge/coding-standards.md
+- knowledge/architecture-guide.md
+- knowledge/ui-standards.md
+- knowledge/analytics-framework.md
+- knowledge/prompt-library.md
+- knowledge/engineering-lessons.md
+- knowledge/product-lessons.md
+- knowledge/ai-model-guide.md
+
+---
+
 Purpose:
 Activate the Learning Agent to convert postmortem insights into durable system intelligence.
 
@@ -14,10 +30,12 @@ Load the active project context before executing.
 Read project-state.md.
 
 Extract:
+
 - active_issue
 - project_name
 
 Load:
+
 - experiments/results/postmortem.md
 - experiments/results/peer-review-2.md (if exists)
 - experiments/results/qa-test.md (if exists)
@@ -76,12 +94,14 @@ knowledge/engineering-lessons.md
 Format:
 
 ---
+
 date: YYYY-MM-DD
 project: <project_name>
 issue: <one-line description>
 root_cause: <why it happened>
 rule: <rule that prevents recurrence>
 improvement: <what to change in agents or commands>
+
 ---
 
 ---
@@ -95,12 +115,14 @@ knowledge/product-lessons.md
 Format:
 
 ---
+
 date: YYYY-MM-DD
 project: <project_name>
 issue: <one-line description>
 root_cause: <why it happened>
 rule: <rule that prevents recurrence>
 improvement: <what to change in product or planning agents>
+
 ---
 
 ---
@@ -112,6 +134,7 @@ Append process-category findings and any new reusable prompt patterns to:
 knowledge/prompt-library.md
 
 Under the relevant section:
+
 - Product Planning Prompts
 - Architecture Prompts
 - Code Generation Prompts
@@ -184,22 +207,28 @@ Return a structured summary:
 ---
 
 ## Learning Run: <project_name>
+
 Date: YYYY-MM-DD
 
 ### Engineering Lessons Written
+
 - List each rule appended to engineering-lessons.md
 
 ### Product Lessons Written
+
 - List each rule appended to product-lessons.md
 
 ### Prompt Library Updates
+
 - List each update appended to prompt-library.md
 
 ### Agent Files Updated
+
 - List each agent file modified and what was added
 - If Prompt Autopsy was empty: flag this explicitly
 
 ### CODEBASE-CONTEXT.md
+
 - Confirm file was written to apps/<project_name>/CODEBASE-CONTEXT.md
 
 ---

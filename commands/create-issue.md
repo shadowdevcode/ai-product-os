@@ -1,5 +1,14 @@
 # Command: /create-issue
 
+## Required Knowledge
+
+Load only these knowledge files before executing:
+
+- knowledge/product-principles.md
+- knowledge/product-lessons.md
+
+---
+
 Purpose:
 Capture a raw product idea and convert it into a structured issue that can enter the product development pipeline.
 

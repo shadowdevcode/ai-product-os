@@ -1,5 +1,14 @@
 # Command: /deslop
 
+## Required Knowledge
+
+Load only these knowledge files before executing:
+
+- knowledge/coding-standards.md
+- knowledge/engineering-lessons.md
+
+---
+
 Purpose:
 Clean and polish AI-generated code before it enters the review pipeline.
 

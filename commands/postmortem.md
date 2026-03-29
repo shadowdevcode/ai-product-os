@@ -1,5 +1,15 @@
 # Command: /postmortem
 
+## Required Knowledge
+
+Load only these knowledge files before executing:
+
+- knowledge/engineering-lessons.md
+- knowledge/product-lessons.md
+- knowledge/prompt-library.md
+
+---
+
 Purpose:
 Analyze the results of a product release and improve the system for future iterations.
 
@@ -128,10 +138,10 @@ System Improvements
 Knowledge Updates
 
 Prompt Autopsy
-  Agent: <agent-name>
-  Missed: <what it failed to catch>
-  Root cause in prompt: <which instruction was missing or wrong>
-  Proposed fix: <exact text to add to the agent file>
+Agent: <agent-name>
+Missed: <what it failed to catch>
+Root cause in prompt: <which instruction was missing or wrong>
+Proposed fix: <exact text to add to the agent file>
 
 ---
 

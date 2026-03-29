@@ -1,5 +1,15 @@
 # Command: /deploy-check
 
+## Required Knowledge
+
+Load only these knowledge files before executing:
+
+- knowledge/coding-standards.md
+- knowledge/architecture-guide.md
+- knowledge/readme-template.md
+
+---
+
 Purpose:
 Verify that the system is safe and ready to deploy.
 
@@ -126,6 +136,7 @@ Block deployment if README is missing or is the default Next.js template.
 Verify Sentry is initialized and configured for the app.
 
 Check:
+
 - `@sentry/nextjs` is installed in `package.json`
 - `sentry.client.config.ts` and `sentry.server.config.ts` exist in the app root with `Sentry.init()` configured
 - `SENTRY_DSN` (or `NEXT_PUBLIC_SENTRY_DSN`) is listed in `.env.local.example`
@@ -135,6 +146,7 @@ Check:
 If Sentry is not configured, add it as a deployment blocker. Post-deploy debugging without error tracking is blind.
 
 **Minimum setup**:
+
 ```bash
 npm install @sentry/nextjs
 npx @sentry/wizard@latest -i nextjs
@@ -164,6 +176,7 @@ If all checks pass (Build, Environment, Infrastructure, Monitoring, README, Sent
    git push -u origin [current-branch]
    ```
 4. Create PR using `gh`:
+
    ```bash
    gh pr create \
      --title "feat([project]): [one-line description from product spec]" \
@@ -198,9 +211,11 @@ If all checks pass (Build, Environment, Infrastructure, Monitoring, README, Sent
    EOF
    )"
    ```
+
 5. Return the PR URL in the deploy-check output.
 
 **Block PR creation if**:
+
 - Any deploy-check stage is blocked
 - README quality gate fails
 - Sentry verification fails
@@ -243,3 +258,15 @@ Block Deployment
 Never approve deployment if critical risks exist.
 
 Prioritize system stability over speed.
+
+---
+
+# Optional: PM Portfolio Output
+
+If this project targets a specific company role (e.g., "PM - Personalisation, Nykaa"), suggest generating PM portfolio materials after all gates pass:
+
+1. **PM-PORTFOLIO-KIT.md** — Generate in the app directory (committed to repo). Include: local testing guide, deployment guide, executive presentation outline, email draft, interview trade-off narratives.
+2. **Executive deck outline** — Save to `pm-assets/<company>/deck/` (local only, gitignored). Structure: problem statement, solution, architecture, metrics impact, demo screenshots.
+3. **Company context** — Save to `pm-assets/<company>/context.md` (local only). Include: product decisions, business/health/product metrics impact, competitive positioning.
+
+This is optional and only applies when the project is a PM portfolio piece targeting a specific company.
