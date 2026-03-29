@@ -3,4 +3,3 @@ node scripts/lib/check-secrets.js
 node scripts/lib/check-file-sizes.js
 node scripts/lib/check-env-files.js
 node scripts/lib/check-patterns.js
-node scripts/lib/generate-claude-sections.js
