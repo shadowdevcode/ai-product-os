@@ -62,15 +62,10 @@ The system operates through sequential slash commands that activate specialized 
    - `experiments/exploration/exploration-<issue_number>.md`
    - `experiments/plans/plan-<issue_number>.md`
 4. **Load knowledge base** (MUST read before generating outputs):
-   - `knowledge/product-principles.md`
-   - `knowledge/coding-standards.md`
-   - `knowledge/architecture-guide.md`
-   - `knowledge/ui-standards.md`
-   - `knowledge/analytics-framework.md`
-   - `knowledge/prompt-library.md`
-   - `knowledge/engineering-lessons.md`
-   - `knowledge/product-lessons.md`
-   - `knowledge/ai-model-guide.md`
+   - Load **only** the files listed in the command's `## Required Knowledge` section (at the top of each `commands/*.md` file)
+   - Do NOT load all 9 knowledge files for every command — each command specifies exactly what it needs
+   - Only `/learning` loads the full knowledge base
+   - Full index for reference: product-principles, coding-standards, architecture-guide, ui-standards, analytics-framework, prompt-library, engineering-lessons, product-lessons, ai-model-guide
 5. **Load app context** (for engineering commands `/execute-plan`, `/deslop`, `/review`, `/peer-review`, `/qa-test`, `/docs`):
    - `apps/<project_name>/CODEBASE-CONTEXT.md` (if exists)
 
@@ -134,18 +129,29 @@ Full agent index: [AGENTS.md](AGENTS.md)
 
 ---
 
+## Context Management
+
+- Run `/compact` after execute-plan, create-plan, or qa-test (large output commands)
+- Run `/compact` before peer-review or postmortem (need headroom for adversarial depth)
+- If context exceeds ~80K tokens, compact before proceeding
+
+---
+
+<!-- AUTO: anti-patterns -->
+
 ## Key Anti-Patterns (From Production Postmortems)
 
-1. Fire-and-forget promises in serverless functions
-2. Unbounded database queries without `.limit()`
-3. Synchronous `await` loops (use `Promise.all()`)
-4. Processing all users in a single cron execution
-5. Using AI snippets/previews instead of full payloads
-6. Treating all third-party errors as permanent failures
-7. Skipping RLS because "it's just an MVP"
-8. Adding telemetry after QA instead of during implementation
-9. Naive `JSON.parse(ai_response)` without sanitization
-10. Optimistic UI without backend persistence endpoints
+1. No product or architecture plan can be approved unless every single success metric has a corresponding, explicitly designed user flow and telemetry trigger in the specification.
+2. Cryptographic salts for A/B experiments must be server-only env vars (no NEXT*PUBLIC* prefix). API responses to clients must never expose the true cohort label for control groups — return a neutral value like "default". Server-side PostHog events are the correct place to record the real cohort.
+3. All local storage reads must be wrapped in try/catch, and all search/filter network requests triggered by user input must utilize an AbortController.
+4. Telemetry calls (e.g., PostHog `captureServerEvent`) in user-facing API routes must be fire-and-forget (`.catch(() => {})`) instead of `await`ed to prevent external latency from corrupting performance SLAs and experiment data.
+5. Telemetry completeness means happy-path AND error-path events. For every cron worker: (1) wire a per-user failure event in the catch block, (2) wire a cron_run_completed event after Promise.allSettled, (3) wire experiment lifecycle events at every guard evaluation (EXPERIMENT_END_DATE, opt-out threshold). These are blocking requirements, not production-only enhancements.
+6. README.md and .env.local.example are mandatory deliverables of /execute-plan, not polish for /deploy-check. Every env var introduced at any pipeline stage (including peer-review fix cycles) must be added to .env.local.example in the same commit that introduces it. A /deploy-check README failure is always an execute-plan prompt failure.
+7. All PostHog server-side calls in worker routes must be individually wrapped in try/catch before being passed to Promise.allSettled. A PostHog failure must never cause a worker to return 500. Worker HTTP status must reflect DB write state, not telemetry write state. Pattern: Promise.allSettled([trackA(data).catch(e => console.error(e)), trackB(data).catch(e => console.error(e))]).
+8. Any simulation or conversion tool that fires write-once PostHog events must be idempotent across page refreshes. React component state is insufficient. Apply localStorage keying (check on mount → disable if key exists) AND a DB uniqueness constraint (ON CONFLICT DO NOTHING) for every write-once event emitter.
+9. When a URL parameter names a specific entity (orderId, reminderId, sessionId), the page or API handler must fetch that exact entity by that ID. Fallback-to-owner lookups (e.g., fetching by userId when orderId is in the URL) corrupt experiment attribution and are never acceptable for experiment-instrumented flows.
+10. Each PostHog event that contributes to the North Star metric must have exactly one authoritative emission point — either client OR server, never both. If the server fires the event on API confirmation, all client-side re-firings of the same event name must be removed. Document the single source in an inline comment.
+<!-- /AUTO: anti-patterns -->
 
 ---
 
@@ -159,7 +165,7 @@ After every project cycle:
    - `knowledge/product-lessons.md` (product patterns)
    - `knowledge/prompt-library.md` (agent prompts)
 
-**All agents must re-read these files at the start of every command** to avoid repeating past mistakes.
+Agents must re-read the knowledge files listed in their command's `## Required Knowledge` section to avoid repeating past mistakes.
 
 ---
 

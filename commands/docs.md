@@ -1,5 +1,14 @@
 # Command: /docs
 
+## Required Knowledge
+
+Load only these knowledge files before executing:
+
+- knowledge/architecture-guide.md
+- knowledge/coding-standards.md
+
+---
+
 Purpose:
 Generate AI-native codebase documentation for the active project.
 
@@ -44,6 +53,7 @@ docs-agent.md (if available), otherwise the active engineering agent reads the c
 ## Step 1 — Understand the App
 
 Read the codebase to understand:
+
 - What user problem does this app solve?
 - What is the primary user flow (from landing to value)?
 - What are the most important files?
@@ -55,6 +65,7 @@ Read the codebase to understand:
 ## Step 2 — Identify Fragile Patterns
 
 Look for:
+
 - Non-obvious architectural decisions that are easy to accidentally break
 - Patterns that look redundant but are there for a reason
 - External dependencies with important constraints (rate limits, auth flows, timing requirements)
@@ -70,12 +81,15 @@ Write the file to `apps/<project_name>/CODEBASE-CONTEXT.md`.
 
 ```markdown
 # Codebase Context: <project_name>
+
 Last updated: YYYY-MM-DD
 
 ## What This App Does
+
 [One paragraph: the user problem, the core feature, and the primary user flow.]
 
 ## Architecture Overview
+
 - **Frontend**: [tech stack, key files, main page location]
 - **Backend**: [API route location, key endpoints]
 - **Database**: [Supabase schema summary, key tables and relationships]
@@ -83,29 +97,35 @@ Last updated: YYYY-MM-DD
 - **Analytics**: [PostHog events tracked, key funnels]
 
 ## Key Files
-| File | Purpose |
-|---|---|
-| src/app/page.tsx | Main UI, primary user interaction |
-| src/app/api/.../route.ts | [describe each API route] |
-| src/lib/supabase.ts | Supabase client configuration |
-| schema.sql | Database schema (run in Supabase SQL Editor) |
+
+| File                     | Purpose                                      |
+| ------------------------ | -------------------------------------------- |
+| src/app/page.tsx         | Main UI, primary user interaction            |
+| src/app/api/.../route.ts | [describe each API route]                    |
+| src/lib/supabase.ts      | Supabase client configuration                |
+| schema.sql               | Database schema (run in Supabase SQL Editor) |
 
 ## Data Model
+
 [Brief table-by-table description. For each table: name, purpose, key columns, relationships.]
 
 ## API Endpoints
-| Method | Path | Purpose |
-|---|---|---|
-| POST | /api/... | [what it does] |
-| GET | /api/... | [what it does] |
+
+| Method | Path     | Purpose        |
+| ------ | -------- | -------------- |
+| POST   | /api/... | [what it does] |
+| GET    | /api/... | [what it does] |
 
 ## Auth Flow
+
 [How authentication works. Provider used. Where session is checked.]
 
 ## Things NOT to Change Without Reading First
+
 [List any fragile patterns, non-obvious decisions, or architectural constraints that would be easy to accidentally break.]
 
 ## Known Limitations / Future Work
+
 [TODOs and known issues from postmortem or code comments.]
 ```
 

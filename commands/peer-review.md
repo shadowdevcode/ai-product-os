@@ -1,5 +1,16 @@
 # Command: /peer-review
 
+## Required Knowledge
+
+Load only these knowledge files before executing:
+
+- knowledge/coding-standards.md
+- knowledge/architecture-guide.md
+- knowledge/engineering-lessons.md
+- knowledge/ai-model-guide.md
+
+---
+
 Purpose:
 Perform an adversarial peer review of the system implementation.
 

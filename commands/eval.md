@@ -1,5 +1,13 @@
 # Command: /eval
 
+## Required Knowledge
+
+Load only these knowledge files before executing:
+
+- knowledge/product-principles.md
+
+---
+
 Purpose:
 Measure agent quality improvement by scoring a completed issue's output against its original spec using assertion-based grading.
 
@@ -43,11 +51,13 @@ For the given issue, generate a set of graded assertions — binary checks that 
 Assertions come from three sources:
 
 **A. Spec assertions** (from the plan):
+
 - Was the product goal delivered?
 - Were all acceptance criteria met?
 - Were all user journey steps implemented?
 
 **B. Standards assertions** (from knowledge files):
+
 - Did the implementation follow `coding-standards.md`?
 - Did the architecture follow `architecture-guide.md`?
 - Were all PostHog events from the metric plan implemented?
@@ -55,6 +65,7 @@ Assertions come from three sources:
 - Were tests written?
 
 **C. Failure-mode assertions** (from `engineering-lessons.md`):
+
 - Was fire-and-forget avoided?
 - Were all queries bounded with `.limit()`?
 - Was RLS enabled on all user tables?
@@ -67,11 +78,11 @@ Assertions come from three sources:
 
 For each assertion, assign:
 
-| Score | Meaning |
-|---|---|
-| `PASS` | Assertion met with evidence |
+| Score  | Meaning                                           |
+| ------ | ------------------------------------------------- |
+| `PASS` | Assertion met with evidence                       |
 | `FAIL` | Assertion not met — describe the specific failure |
-| `SKIP` | Not applicable to this issue |
+| `SKIP` | Not applicable to this issue                      |
 
 ---
 
@@ -84,6 +95,7 @@ Grade = (PASS count) / (PASS + FAIL count) * 100
 Exclude SKIP from denominator.
 
 Thresholds:
+
 - **90–100%**: Excellent — pipeline is operating at target quality
 - **75–89%**: Good — minor gaps to address in next learning cycle
 - **60–74%**: Needs improvement — pattern failures present; extract to lessons
@@ -94,6 +106,7 @@ Thresholds:
 ## 4 Failure Pattern Analysis
 
 Group FAIL items by category:
+
 - Architecture failures (security, auth, rate limiting)
 - Implementation failures (telemetry, tests, error handling)
 - Documentation failures (README, env vars, endpoints)
@@ -125,23 +138,26 @@ Return output using this structure.
 
 ### Assertion Results
 
-| # | Assertion | Source | Result | Evidence / Failure |
-|---|---|---|---|---|
-| 1 | Product goal delivered | plan spec | PASS | User journey complete |
-| 2 | All PostHog events implemented | metric-plan | FAIL | `reorder_page_viewed` missing from codebase |
-| ... | | | | |
+| #   | Assertion                      | Source      | Result | Evidence / Failure                          |
+| --- | ------------------------------ | ----------- | ------ | ------------------------------------------- |
+| 1   | Product goal delivered         | plan spec   | PASS   | User journey complete                       |
+| 2   | All PostHog events implemented | metric-plan | FAIL   | `reorder_page_viewed` missing from codebase |
+| ... |                                |             |        |                                             |
 
 ---
 
 ### Failure Pattern Analysis
 
 **Architecture failures** (N):
+
 - [failure description]
 
 **Implementation failures** (N):
+
 - [failure description]
 
 **Recurring failures** (N — appeared in prior issues):
+
 - [failure + prior issue reference]
 
 ---
@@ -149,12 +165,15 @@ Return output using this structure.
 ### Recommendations
 
 **Knowledge updates**:
+
 - [file]: [specific addition/change]
 
 **Agent updates**:
+
 - [agent file]: [specific addition/change]
 
 **Process updates**:
+
 - [command file]: [specific addition/change]
 
 ---

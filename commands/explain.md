@@ -1,5 +1,11 @@
 # Command: /explain
 
+## Required Knowledge
+
+No knowledge files required. This is an ad-hoc learning command — load knowledge files only if the topic directly relates to a specific knowledge area.
+
+---
+
 Purpose:
 Activate a targeted learning session to build genuine technical understanding.
 
@@ -28,6 +34,7 @@ Do not run `/explain` to avoid making a decision. Use it to make better ones.
 No project state context is required. Provide the confusing thing directly.
 
 You can pass:
+
 - A code snippet
 - An error message
 - An architectural diagram or description
@@ -41,6 +48,7 @@ You can pass:
 ## Your Knowledge Level
 
 You are a technical PM in the making. You have:
+
 - Strong product intuition and user empathy
 - Mid-level engineering knowledge (can read code, understand patterns, follow logic)
 - Some gaps in deep computer science concepts (distributed systems, memory management, compiler theory)

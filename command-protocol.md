@@ -40,19 +40,11 @@ When a command is triggered:
 
 # Knowledge Context
 
-Before executing any command, the system must read:
+Before executing any command, the system must read only the knowledge files listed in the command's `## Required Knowledge` section (at the top of each `commands/*.md` file).
 
-knowledge/product-principles.md
-knowledge/coding-standards.md
-knowledge/architecture-guide.md
-knowledge/ui-standards.md
-knowledge/analytics-framework.md
-knowledge/prompt-library.md
-knowledge/engineering-lessons.md
-knowledge/product-lessons.md
-knowledge/ai-model-guide.md
+Do NOT load all knowledge files for every command. Each command specifies exactly what it needs. Only `/learning` loads the full knowledge base.
 
-These files define system behavior.
+Full index for reference: product-principles, coding-standards, architecture-guide, ui-standards, analytics-framework, prompt-library, engineering-lessons, product-lessons, ai-model-guide.
 
 ---
 
@@ -286,19 +278,11 @@ If stage is invalid → stop execution.
 Step 3
 Load knowledge.
 
-Agents must read:
+Agents must read only the knowledge files listed in the command's `## Required Knowledge` section (at the top of each `commands/*.md` file).
 
-knowledge/product-principles.md
-knowledge/coding-standards.md
-knowledge/architecture-guide.md
-knowledge/ui-standards.md
-knowledge/analytics-framework.md
-knowledge/prompt-library.md
-knowledge/engineering-lessons.md
-knowledge/product-lessons.md
-knowledge/ai-model-guide.md
+Do NOT load all 9 knowledge files for every command — each command specifies exactly what it needs. Only `/learning` loads the full knowledge base.
 
-before generating outputs.
+Full index for reference: product-principles, coding-standards, architecture-guide, ui-standards, analytics-framework, prompt-library, engineering-lessons, product-lessons, ai-model-guide.
 
 ---
 
@@ -378,3 +362,14 @@ Format:
 Or if blocked:
 
 🚫 Blocked: [reason]. Fix the issue and re-run `/[current-command]`.
+
+---
+
+Step 8.5
+Context management advisory.
+
+After completing execute-plan, create-plan, or qa-test:
+Display: "💡 Consider running /compact before the next command to free context space."
+
+Before peer-review or postmortem:
+Display: "💡 Run /compact now — adversarial analysis needs maximum context headroom."

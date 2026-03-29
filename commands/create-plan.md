@@ -1,5 +1,17 @@
 # Command: /create-plan
 
+## Required Knowledge
+
+Load only these knowledge files before executing:
+
+- knowledge/product-principles.md
+- knowledge/coding-standards.md
+- knowledge/architecture-guide.md
+- knowledge/ui-standards.md
+- knowledge/analytics-framework.md
+
+---
+
 Purpose:
 Convert a validated product opportunity into a structured development plan.
 
@@ -178,6 +190,7 @@ This manifest enables parallel execution, dependency validation, and automated p
 ```
 
 **Rules**:
+
 - `depends_on`: List phase IDs this phase requires to be complete first
 - `parallel: true`: Phase can execute concurrently with other `parallel: true` phases at the same dependency level
 - `verification`: Shell command to verify the task output is correct

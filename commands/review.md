@@ -1,5 +1,15 @@
 # Command: /review
 
+## Required Knowledge
+
+Load only these knowledge files before executing:
+
+- knowledge/coding-standards.md
+- knowledge/architecture-guide.md
+- knowledge/engineering-lessons.md
+
+---
+
 Purpose:
 Review the implementation produced by /execute-plan.
 

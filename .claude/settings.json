@@ -18,5 +18,19 @@
       "Bash(git reset --hard*)",
       "Bash(npm publish*)"
     ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": ["node scripts/lib/check-gate-before-write.js"]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": ["node scripts/lib/check-function-sizes.js"]
+      }
+    ]
   }
 }

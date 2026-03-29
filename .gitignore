@@ -83,3 +83,23 @@ posthog/
 *.pem
 *.p12
 *.pfx
+
+# PM Portfolio Assets (personal, never commit)
+pm-assets/
+
+# Claude Code local state
+.claude/plans/
+.claude/todos/
+
+# Playwright test artifacts
+.playwright-mcp/
+playwright-report/
+test-results/
+
+# Office documents (deck files)
+*.pptx
+*.docx
+*.xlsx
+
+# Local deck directories (per-app)
+**/deck/

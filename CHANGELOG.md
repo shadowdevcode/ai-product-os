@@ -1,5 +1,66 @@
 # Changelog
 
+## 2026-03-29 — Global Claude Code Optimization (60-70% Cost Reduction)
+
+**What:** Global `~/.claude/` configuration for cost and token optimization across all projects.
+
+- Created `~/.claude/CLAUDE.md` — lean 16-line global instructions (context management, subagent tiers, efficiency habits)
+- Updated `~/.claude/settings.json` — default model `opus` → `sonnet` (5x cheaper for 80% of tasks), `MAX_THINKING_TOKENS=10000` (70% thinking cost reduction from 32K default), `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=50` (earlier compaction prevents context bloat)
+
+**Why:** Project-level optimizations (knowledge subsetting, hooks) save 40-60% per command but only apply to this repo. Global settings compound those savings across all projects. Boris Cherny recommends lean CLAUDE.md for prompt cache efficiency (cached reads = 10% cost). Community consensus: Sonnet for 80%+ tasks, Opus only for adversarial/complex work.
+
+**Sources:** Boris Cherny (Anthropic) — prompt caching, lean CLAUDE.md; community power users — model defaults, thinking token caps, auto-compaction thresholds
+
+**Files:** `~/.claude/CLAUDE.md` (new), `~/.claude/settings.json` (modified)
+
+---
+
+## 2026-03-29 — 10x System Upgrade: Token Optimization, Mechanical Enforcement, Workflow Enhancement
+
+**What:** Major system-wide upgrade inspired by Boris Cherny (Anthropic), Zevi Arnovitz (Meta PM), Harness Engineering, and ChatPRD/Lenny podcast practitioners.
+
+### Phase 1: Token Optimization (40-60% reduction)
+
+- Added `## Required Knowledge` sections to all 15 command files — each command now loads only relevant knowledge files instead of all 9 (2,820 lines)
+- Updated loading directives in CLAUDE.md, command-protocol.md, and .claude/rules/commands.md
+- Added `/compact` guidance section to CLAUDE.md
+- Added model routing reminders (Opus) to peer-review and postmortem slash commands
+- Updated all 12 .claude/commands/ files to reference command-level subsetting
+
+### Phase 2: Mechanical Enforcement
+
+- Created `scripts/lib/check-gate-before-write.js` — Claude Code PreToolUse hook blocks writes to apps/ when pipeline status is "blocked"
+- Created `scripts/lib/check-patterns.js` — pre-commit grep checker for top 3 postmortem anti-patterns (fire-and-forget, missing .limit(), naked JSON.parse)
+- Added hooks configuration to `.claude/settings.json` (PreToolUse gate check, PostToolUse function size check)
+- Updated `.husky/pre-commit` with check-patterns.js and generate-claude-sections.js
+
+### Phase 3: Workflow Enhancement
+
+- Added `## 0 Task Breakdown` section to execute-plan.md — atomic task decomposition (name, files, size S/M/L, dependencies) presented to PM before any code is written
+- Added Step 8.5 (context management advisory) to command-protocol.md
+- Added Subagent Cost Tiers + Multi-Model Guidance to ai-model-guide.md (Haiku for exploration, Sonnet for implementation, Opus for adversarial review)
+- Created `scripts/lib/generate-claude-sections.js` — auto-regenerates CLAUDE.md anti-patterns from engineering-lessons.md
+- Added AUTO markers to CLAUDE.md anti-patterns section
+
+### Phase 4: PM Portfolio System
+
+- Created `pm-assets/` directory (gitignored) for personal PM career materials
+- Created `pm-assets/README.md` with template structure (context.md, deck/, prd/, email-drafts/, interview-prep/)
+- Added optional PM Portfolio Output section to deploy-check.md
+- Hardened `.gitignore`: added pm-assets/, .claude/plans/, .claude/todos/, _.pptx, _.docx, \*\*/deck/, playwright artifacts
+
+### Phase 5: Readiness Framework
+
+- Created `knowledge/readiness-framework.md` — 5-pillar self-assessment (Pipeline Compliance, Knowledge Currency, Enforcement Coverage, Token Efficiency, Cycle Velocity) with 5 maturity levels (Bare → Autonomous)
+
+**Why:** System was scoring 8.2/10 — excellent pipeline and learning loop but token-inefficient (all knowledge loaded every command), enforcement was prose-only (gates could be skipped), and no atomic task decomposition. These changes target 9.0+ by making enforcement mechanical, context lean, and execution granular.
+
+**Sources:** Boris Cherny (lean context, /compact, lint rules from review), Zevi Arnovitz (strict plan execution, model specialization), Harness Engineering (three-layer enforcement, auto-markers, readiness pillars), ChatPRD/Lenny (atomic tasks, subagent cost tiers)
+
+**Files:** 15 commands/_.md, 12 .claude/commands/_.md, CLAUDE.md, command-protocol.md, .claude/rules/commands.md, .claude/settings.json, .husky/pre-commit, .gitignore, knowledge/ai-model-guide.md, knowledge/readiness-framework.md, scripts/lib/check-gate-before-write.js, scripts/lib/check-patterns.js, scripts/lib/generate-claude-sections.js, pm-assets/README.md, commands/deploy-check.md
+
+---
+
 ## 2026-03-28 — AI Product OS v2 Finalized (issue-008 Archived)
 
 **What:** Final archival of the Nykaa Hyper-Personalization project.
