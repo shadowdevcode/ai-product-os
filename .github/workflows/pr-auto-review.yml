@@ -33,4 +33,4 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
           claude --dangerously-skip-permissions \
-            -p "/assign-reviewers ${{ github.event.pull_request.html_url }}"
+            -p "Read commands/assign-reviewers.md and execute the full protocol for this PR: ${{ github.event.pull_request.html_url }}"
