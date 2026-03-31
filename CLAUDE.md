@@ -36,6 +36,7 @@ The system operates through sequential slash commands that activate specialized 
 - `/docs` - Generate AI-native codebase documentation (`CODEBASE-CONTEXT.md`) for the active app
 - `/explain` - Targeted learning session: understand a concept, pattern, or error via 80/20 rule
 - `/eval` - Score a completed issue's pipeline output against its spec using assertion-based grading
+- `/assign-reviewers` - Risk-based PR reviewer routing (standalone utility, no pipeline role)
 
 ### Quality Gate System
 
