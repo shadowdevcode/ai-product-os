@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-03-31 — Assign PR Reviewers (Automated Risk-Based Review Routing)
+
+**What:** New standalone utility command `/assign-reviewers` that assesses PR risk from the actual code diff and routes accordingly.
+
+- Created `.claude/commands/assign-reviewers.md` — skill stub that registers the command in Claude Code
+- Created `commands/assign-reviewers.md` — full protocol: adversarial PR content handling, 5-tier risk model (Very Low → High), reviewer selection via `git log`/`git blame`, approval/unapproval logic, PR comment, Slack notification
+- Created `.github/workflows/pr-auto-review.yml` — GitHub Action that triggers on `pull_request: [opened, synchronize]`, skips bot PRs, and calls `/assign-reviewers <PR-URL>` via Claude Code CLI
+
+**Why:** Manual reviewer assignment is inconsistent and slow. Risk-based routing ensures high-risk PRs always get eyes, low-risk PRs get approved without friction, and the decision is derived from actual diffs — not PR description claims (adversarial input model).
+
+**How triggers work:** GitHub Action fires on PR open and PR push (synchronize). It calls Claude Code CLI with `--dangerously-skip-permissions` in a non-interactive context, passing the PR URL. Slack notifications are opt-in via `SLACK_WEBHOOK_URL` secret.
+
+**Required GitHub secrets:** `ANTHROPIC_API_KEY` (required), `SLACK_WEBHOOK_URL` (optional — skip Slack if absent).
+
+**Pipeline isolation:** This command has no pipeline role. It does not read or write `project-state.md`, does not interact with `experiments/` or `knowledge/`, and cannot block or unblock any pipeline stage.
+
+**Files:** `commands/assign-reviewers.md` (new), `.claude/commands/assign-reviewers.md` (new), `.github/workflows/pr-auto-review.yml` (new)
+
+---
+
 ## 2026-03-29 — Global Claude Code Optimization (60-70% Cost Reduction)
 
 **What:** Global `~/.claude/` configuration for cost and token optimization across all projects.
