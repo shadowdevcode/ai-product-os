@@ -37,10 +37,10 @@ The system operates through sequential slash commands that activate specialized 
 - `/explain` - Targeted learning session: understand a concept, pattern, or error via 80/20 rule
 - `/eval` - Score a completed issue's pipeline output against its spec using assertion-based grading
 - `/assign-reviewers` - Risk-based PR reviewer routing (standalone utility, no pipeline role)
-- `/linear-bind` - Bind the active repo issue to a Linear team and project
-- `/linear-sync` - Sync repo artifacts and workflow state into Linear
-- `/linear-brief` - Read the current Linear view for the active issue
-- `/linear-close` - Close the Linear project after repo workflow completion
+- `/linear-bind` - Bind the active repo issue to a Linear team and project; run once after `/create-issue` (now automatic at end of `/create-issue`)
+- `/linear-sync` - Mirror repo artifacts into Linear; accepts a mode: `issue` (brief), `plan` (PRD + child tasks), `status` (gate updates), `release` (deploy links)
+- `/linear-brief` - Read-only summary of the current Linear issue/project state; use before standup or planning reviews
+- `/linear-close` - Finalize and archive the Linear project after `/learning` completes
 
 ### Quality Gate System
 
@@ -70,7 +70,7 @@ The system operates through sequential slash commands that activate specialized 
    - Load **only** the files listed in the command's `## Required Knowledge` section (at the top of each `commands/*.md` file)
    - Do NOT load all 9 knowledge files for every command — each command specifies exactly what it needs
    - Only `/learning` loads the full knowledge base
-   - Full index for reference: product-principles, coding-standards, architecture-guide, ui-standards, analytics-framework, prompt-library, engineering-lessons, product-lessons, ai-model-guide
+   - Full index for reference: product-principles, coding-standards, architecture-guide, ui-standards, analytics-framework, prompt-library, engineering-lessons, product-lessons, ai-model-guide, linear-operations (loaded only by Linear commands)
 5. **Load app context** (for engineering commands `/execute-plan`, `/deslop`, `/review`, `/peer-review`, `/qa-test`, `/docs`):
    - `apps/<project_name>/CODEBASE-CONTEXT.md` (if exists)
 

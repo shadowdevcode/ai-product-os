@@ -127,18 +127,20 @@
 
 ## Links
 
-- linear_enabled: true
-- linear_team_id: 70aea0d1-a706-481f-a0b7-3e636709ba77
+<!-- Linear fields: set by /linear-bind; updated by /linear-sync; read by /linear-brief; cleared on /linear-close -->
+
+- linear_enabled: true <!-- set to true by /linear-bind; false = Linear layer inactive -->
+- linear_team_id: 70aea0d1-a706-481f-a0b7-3e636709ba77 <!-- immutable after bind -->
 - linear_team: Vijaypmworkspace
-- linear_project_id:
-- linear_project:
-- linear_project_url:
-- linear_root_issue_id:
-- linear_root_issue_identifier:
-- linear_cycle:
-- linear_sync_map_path:
-- linear_last_sync: 2026-04-01T07:41:00.000Z
-- linear_sync_status: retroactive-sync-complete — issues 002–006 + 008 synced to Linear (Done). Sync maps written to experiments/linear-sync/. Issue 007 skipped (exploration-only, no sprint).
+- linear_project_id: <!-- populated by /linear-bind when project is created -->
+- linear_project: <!-- human-readable project name in Linear -->
+- linear_project_url: <!-- direct link to the Linear project page -->
+- linear_root_issue_id: <!-- id of the root issue created in Linear -->
+- linear_root_issue_identifier: <!-- e.g. VIJ-42 — display identifier for the root issue -->
+- linear_cycle: <!-- Linear cycle/sprint, if assigned -->
+- linear_sync_map_path: <!-- path to experiments/linear-sync/issue-NNN.json (durable id map) -->
+- linear_last_sync: 2026-04-01T07:41:00.000Z <!-- ISO timestamp of last successful /linear-sync -->
+- linear_sync_status: retroactive-sync-complete — issues 002–006 + 008 synced to Linear (Done). Sync maps written to experiments/linear-sync/. Issue 007 skipped (exploration-only, no sprint). <!-- last sync mode or failure reason -->
 - docs_home: experiments/ideas/issue-007.md
 - demo:
 - analytics_dashboard:

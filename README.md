@@ -67,10 +67,10 @@ The OS enforces a sequential pipeline with quality gates. A stage cannot start u
 
 - `/docs` — Generate `CODEBASE-CONTEXT.md` for the active app
 - `/explain` — Deep-dive on a concept, pattern, or error
-- `/linear-bind` — Bind the active repo issue to a Linear team/project
-- `/linear-sync` — Sync repo artifacts and workflow status into Linear
-- `/linear-brief` — Summarize the current Linear state for the active issue
-- `/linear-close` — Close the Linear project after the repo workflow completes
+- `/linear-bind` — Bind the active repo issue to a Linear team/project (auto-runs at end of `/create-issue`)
+- `/linear-sync [mode]` — Mirror repo artifacts into Linear; modes: `issue`, `plan`, `status`, `release`
+- `/linear-brief` — Read-only summary of the current Linear state; use before reviews or standups
+- `/linear-close` — Finalize and archive the Linear project after `/learning`
 
 ---
 
@@ -110,12 +110,13 @@ Linear exists to improve:
 
 Recommended usage:
 
-1. Run `/linear-bind` after `/create-issue`
-2. Run `/linear-sync issue` after the issue brief exists
-3. Run `/linear-sync plan` after `/create-plan` to publish plan artifacts and child tasks
-4. Run `/linear-sync status` after review gates to reflect blockers or approvals
-5. Run `/linear-sync release` after `/deploy-check`
-6. Run `/linear-close` after `/learning`
+| Pipeline stage                        | Linear command             | What it does                               |
+| ------------------------------------- | -------------------------- | ------------------------------------------ |
+| `/create-issue`                       | (auto) bind + `sync issue` | Creates Linear project; syncs issue brief  |
+| `/create-plan`                        | `/linear-sync plan`        | Publishes PRD summary + child tasks        |
+| `/review`, `/peer-review`, `/qa-test` | `/linear-sync status`      | Reflects gate pass/fail, surfaces blockers |
+| `/deploy-check`                       | `/linear-sync release`     | Attaches PR link and release notes         |
+| `/learning`                           | `/linear-close`            | Marks project complete, archives it        |
 
 If Linear is unavailable, the Linear utility command should fail explicitly. The 12-step pipeline remains usable because Linear is not the workflow engine.
 
