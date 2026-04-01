@@ -127,7 +127,18 @@
 
 ## Links
 
+- linear_enabled: true
+- linear_team_id: 70aea0d1-a706-481f-a0b7-3e636709ba77
+- linear_team: Vijaypmworkspace
+- linear_project_id:
 - linear_project:
+- linear_project_url:
+- linear_root_issue_id:
+- linear_root_issue_identifier:
+- linear_cycle:
+- linear_sync_map_path:
+- linear_last_sync: 2026-04-01T07:41:00.000Z
+- linear_sync_status: retroactive-sync-complete — issues 002–006 + 008 synced to Linear (Done). Sync maps written to experiments/linear-sync/. Issue 007 skipped (exploration-only, no sprint).
 - docs_home: experiments/ideas/issue-007.md
 - demo:
 - analytics_dashboard:

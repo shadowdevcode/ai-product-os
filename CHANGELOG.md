@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-04-01 — Linear PM Layer (Retroactive Sync + Auto-Bind)
+
+**What:** Full Linear integration layer added as a PM-facing workflow mirror. The repo remains the source of truth; Linear reflects state for stakeholder visibility.
+
+- Created `commands/linear-bind.md` — binds active repo issue to a Linear team and project; creates `experiments/linear-sync/issue-<NNN>.json` sync map; writes `linear_enabled: true` and all binding fields to `project-state.md`
+- Created `commands/linear-sync.md` — mirrors repo artifacts into Linear in 4 modes: `issue` (brief), `plan` (document snapshot + child issues from manifest), `status` (stage labels + blockers), `release` (PR/deployment links)
+- Created `commands/linear-brief.md` — read-only summary of current Linear view; compares repo stage against Linear status; identifies mismatches
+- Created `commands/linear-close.md` — finalizes Linear project after `/learning`; sets project to `completed`, root issue to `Done`, creates closeout snapshot document
+- Created `agents/linear-agent.md` — Linear Agent role definition (product operations specialist); idempotent sync behavior; repo-as-source-of-truth constraint
+- Created `knowledge/linear-operations.md` — shared runtime rules: sync map schema, naming conventions, label taxonomy (`AI Product OS` parent + 7 children), status mapping, failure policy
+- Registered all 4 commands as `.claude/commands/` stubs
+- Added Linear PM Layer section to `CLAUDE.md` with recommended sync checkpoints
+- Updated `commands/create-issue.md` to auto-bind Linear at the end of every new issue creation (no manual `/linear-bind` step required going forward)
+- Retroactively synced issues 002–006 and 008 to Linear as `Completed`
+
+**Why:** Pipeline had no PM-facing visibility layer. Issues were built, shipped, and archived with zero Linear record. Linear now mirrors all 6 completed projects with closeout snapshots, enabling portfolio visibility and cycle velocity tracking.
+
+**Pipeline isolation:** Linear commands are utility-only. They do not alter stage progression, do not interact with `experiments/` artifact content, and cannot block or unblock pipeline stages.
+
+**Files:** `commands/linear-bind.md` (new), `commands/linear-sync.md` (new), `commands/linear-brief.md` (new), `commands/linear-close.md` (new), `agents/linear-agent.md` (new), `knowledge/linear-operations.md` (new), `.claude/commands/linear-*.md` (4 new stubs), `CLAUDE.md` (updated), `commands/create-issue.md` (updated), `experiments/linear-sync/issue-{002,003,004,005,006,008}.json` (new)
+
+---
+
 ## 2026-03-31 — Assign PR Reviewers (Automated Risk-Based Review Routing)
 
 **What:** New standalone utility command `/assign-reviewers` that assesses PR risk from the actual code diff and routes accordingly.

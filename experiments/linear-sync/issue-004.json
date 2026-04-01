@@ -1,0 +1,20 @@
+{
+  "issue_number": "004",
+  "issue_title": "To-Do List for Product Managers (Project Clarity)",
+  "team_id": "70aea0d1-a706-481f-a0b7-3e636709ba77",
+  "team_name": "Vijaypmworkspace",
+  "project_id": "e11a70a6-3281-46f2-96d7-7e32cbfc53b1",
+  "project_name": "issue-004 — Project Clarity (PM To-Do List)",
+  "project_url": "https://linear.app/vijaypmworkspace/project/issue-004-project-clarity-pm-to-do-list-9d2090312ee5",
+  "root_issue_id": "VIJ-7",
+  "root_issue_identifier": "VIJ-7",
+  "root_issue_url": "https://linear.app/vijaypmworkspace/issue/VIJ-7/issue-004-project-clarity-pm-to-do-list",
+  "labels": {
+    "feature": "70095fc1-871c-427e-bc1f-2c29b8d87aa8",
+    "completed": "3d396021-0cab-46d0-8320-c10ddd72af6d"
+  },
+  "last_sync_mode": "close",
+  "last_sync_timestamp": "2026-04-01T07:39:00.000Z",
+  "pipeline_status": "completed",
+  "learning_date": "2026-03-11"
+}

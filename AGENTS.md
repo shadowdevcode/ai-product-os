@@ -28,9 +28,10 @@ Each agent has a dedicated definition file in `/agents/` with full role instruct
 
 ## Utility Agents
 
-| Agent         | Role                                                | Definition                            |
-| ------------- | --------------------------------------------------- | ------------------------------------- |
-| Documentation | Maintains clear documentation (CODEBASE-CONTEXT.md) | [docs-agent.md](agents/docs-agent.md) |
+| Agent         | Role                                                | Definition                                |
+| ------------- | --------------------------------------------------- | ----------------------------------------- |
+| Documentation | Maintains clear documentation (CODEBASE-CONTEXT.md) | [docs-agent.md](agents/docs-agent.md)     |
+| Linear        | Syncs repo workflow state into Linear for PM use    | [linear-agent.md](agents/linear-agent.md) |
 
 ---
 

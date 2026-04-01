@@ -1,0 +1,20 @@
+{
+  "issue_number": "006",
+  "issue_title": "Ozi Reorder Experiment — Improving Repeat Purchase for Baby Essentials",
+  "team_id": "70aea0d1-a706-481f-a0b7-3e636709ba77",
+  "team_name": "Vijaypmworkspace",
+  "project_id": "3274f9dc-6bdf-444b-bcb6-2a5f0cb677f3",
+  "project_name": "issue-006 — Ozi Reorder Experiment",
+  "project_url": "https://linear.app/vijaypmworkspace/project/issue-006-ozi-reorder-experiment-d2ed6d95201e",
+  "root_issue_id": "VIJ-9",
+  "root_issue_identifier": "VIJ-9",
+  "root_issue_url": "https://linear.app/vijaypmworkspace/issue/VIJ-9/issue-006-ozi-reorder-experiment",
+  "labels": {
+    "feature": "70095fc1-871c-427e-bc1f-2c29b8d87aa8",
+    "completed": "3d396021-0cab-46d0-8320-c10ddd72af6d"
+  },
+  "last_sync_mode": "close",
+  "last_sync_timestamp": "2026-04-01T07:40:00.000Z",
+  "pipeline_status": "completed",
+  "learning_date": "2026-03-20"
+}

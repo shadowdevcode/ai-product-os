@@ -1,0 +1,20 @@
+{
+  "issue_number": "002",
+  "issue_title": "Gmail Summary to WhatsApp Notifier",
+  "team_id": "70aea0d1-a706-481f-a0b7-3e636709ba77",
+  "team_name": "Vijaypmworkspace",
+  "project_id": "253a9894-fd58-43ac-aa31-9f5a82632100",
+  "project_name": "issue-002 — Gmail Summary to WhatsApp Notifier",
+  "project_url": "https://linear.app/vijaypmworkspace/project/issue-002-gmail-summary-to-whatsapp-notifier-8eacbcad1661",
+  "root_issue_id": "VIJ-5",
+  "root_issue_identifier": "VIJ-5",
+  "root_issue_url": "https://linear.app/vijaypmworkspace/issue/VIJ-5/issue-002-gmail-summary-to-whatsapp-notifier",
+  "labels": {
+    "feature": "70095fc1-871c-427e-bc1f-2c29b8d87aa8",
+    "completed": "3d396021-0cab-46d0-8320-c10ddd72af6d"
+  },
+  "last_sync_mode": "close",
+  "last_sync_timestamp": "2026-04-01T07:24:00.000Z",
+  "pipeline_status": "completed",
+  "learning_date": "2026-03-07"
+}
