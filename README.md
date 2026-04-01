@@ -67,6 +67,10 @@ The OS enforces a sequential pipeline with quality gates. A stage cannot start u
 
 - `/docs` — Generate `CODEBASE-CONTEXT.md` for the active app
 - `/explain` — Deep-dive on a concept, pattern, or error
+- `/linear-bind` — Bind the active repo issue to a Linear team/project
+- `/linear-sync` — Sync repo artifacts and workflow status into Linear
+- `/linear-brief` — Summarize the current Linear state for the active issue
+- `/linear-close` — Close the Linear project after the repo workflow completes
 
 ---
 
@@ -82,6 +86,38 @@ The system gets smarter with every cycle. After each `/learning` run, insights f
 - [`knowledge/analytics-framework.md`](knowledge/analytics-framework.md) — PostHog event schema and funnel design
 
 Every agent reads the knowledge base before executing — preventing the same class of mistake from appearing twice.
+
+---
+
+## Linear PM Layer
+
+Linear is an optional PM-facing layer on top of the repo workflow.
+
+The source of truth remains in this repository:
+
+- `project-state.md` is the canonical workflow state
+- `experiments/` contains the canonical issue, exploration, plan, and result artifacts
+- `experiments/linear-sync/` stores durable Linear sync identities per issue
+- `commands/` defines the execution contracts
+
+Linear exists to improve:
+
+- prioritization
+- roadmap visibility
+- blocker communication
+- task tracking from execution manifests
+- release and closeout visibility
+
+Recommended usage:
+
+1. Run `/linear-bind` after `/create-issue`
+2. Run `/linear-sync issue` after the issue brief exists
+3. Run `/linear-sync plan` after `/create-plan` to publish plan artifacts and child tasks
+4. Run `/linear-sync status` after review gates to reflect blockers or approvals
+5. Run `/linear-sync release` after `/deploy-check`
+6. Run `/linear-close` after `/learning`
+
+If Linear is unavailable, the Linear utility command should fail explicitly. The 12-step pipeline remains usable because Linear is not the workflow engine.
 
 ---
 

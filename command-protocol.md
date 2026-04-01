@@ -90,6 +90,10 @@ Utility Commands (run anytime, outside the sequential pipeline):
 docs — Generate AI-native CODEBASE-CONTEXT.md for the active app
 explain — Targeted PM learning session via 80/20 rule
 eval — Score a completed issue's pipeline output against its spec using assertion-based grading
+linear-bind — Bind the active repo issue to a Linear team/project
+linear-sync — Sync repo artifacts and workflow state into Linear
+linear-brief — Summarize the current Linear view for the active issue
+linear-close — Close the Linear project after repo workflow completion
 
 ---
 
@@ -233,6 +237,29 @@ After /explain:
 - Does not update pipeline stage
 - No state change required
 
+After /linear-bind:
+
+- Does not update pipeline stage
+- Writes only Linear metadata fields in `project-state.md`
+- Must not create duplicate Linear projects for the same active issue
+
+After /linear-sync:
+
+- Does not update pipeline stage
+- Updates `linear_last_sync` and `linear_sync_status`
+- Must upsert Linear objects instead of duplicating them
+
+After /linear-brief:
+
+- Does not update pipeline stage
+- No state change required unless the command explicitly records a sync-health diagnostic
+
+After /linear-close:
+
+- Does not update pipeline stage
+- Updates `linear_last_sync` and `linear_sync_status`
+- Must not close a project unless repo completion is already recorded
+
 ## New project rule
 
 When /create-issue is run with a new idea that differs from the current active project:
@@ -245,6 +272,39 @@ When /create-issue is run with a new idea that differs from the current active p
 
 If a quality gate returns fail, set status to blocked and add the blocker to the Blockers section.
 Do not proceed to the next stage until the blocker is resolved and the gate is re-run.
+
+---
+
+# Linear Sync Protocol
+
+Linear is an optional PM layer, not the workflow engine.
+
+Rules:
+
+1. Read repo state first. `project-state.md` and repo artifacts remain canonical.
+2. Linear commands must never modify the 12-step pipeline stage progression.
+3. Linear sync must be idempotent. Re-running the same sync should update existing Linear objects rather than create duplicates.
+4. Use the repo issue number as the stable foreign key across systems.
+5. Persist durable Linear ids in `experiments/linear-sync/issue-<NNN>.json`.
+6. Child Linear tasks should be derived from `manifest-<issue_number>.json` when available.
+7. If Linear is unavailable, raise an explicit error with operation context. Do not silently skip.
+
+## Recommended Checkpoints
+
+- After `create-issue`: `linear-bind`, then `linear-sync issue`
+- After `create-plan`: `linear-sync plan`
+- After `review`, `peer-review`, `qa-test`: `linear-sync status`
+- After `deploy-check`: `linear-sync release`
+- After `learning`: `linear-close`
+
+## Default State Mapping
+
+- `create-issue`, `explore` -> discovery or triage
+- `create-plan` -> planned
+- `execute-plan`, `deslop` -> in progress
+- blocked review stages -> blocked or at risk
+- successful `deploy-check` -> release ready
+- successful `learning` -> completed
 
 ---
 

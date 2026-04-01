@@ -94,6 +94,26 @@ Hypothesis
 
 ---
 
+# Post-Output Steps
+
+After writing `experiments/ideas/issue-<NNN>.md` and updating `project-state.md`:
+
+## Auto-Bind Linear
+
+Immediately run `/linear-bind` for the new issue.
+
+This ensures `linear_enabled: true` is set from the moment every issue is created — no manual bind step required.
+
+Expected outcome:
+
+- `experiments/linear-sync/issue-<NNN>.json` created with team, project, and root issue ids
+- `project-state.md` updated with `linear_enabled: true` and all linear binding fields
+- Linear root issue created in `Backlog` with label `AI Product OS/Discovery`
+
+If Linear is unavailable, log the failure explicitly and continue — do not block the pipeline.
+
+---
+
 # Next Step
 
-Send this issue to the Research Agent for validation.
+Send this issue to the Research Agent for validation via `/explore`.

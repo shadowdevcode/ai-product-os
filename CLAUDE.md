@@ -37,6 +37,10 @@ The system operates through sequential slash commands that activate specialized 
 - `/explain` - Targeted learning session: understand a concept, pattern, or error via 80/20 rule
 - `/eval` - Score a completed issue's pipeline output against its spec using assertion-based grading
 - `/assign-reviewers` - Risk-based PR reviewer routing (standalone utility, no pipeline role)
+- `/linear-bind` - Bind the active repo issue to a Linear team and project
+- `/linear-sync` - Sync repo artifacts and workflow state into Linear
+- `/linear-brief` - Read the current Linear view for the active issue
+- `/linear-close` - Close the Linear project after repo workflow completion
 
 ### Quality Gate System
 
@@ -70,6 +74,28 @@ The system operates through sequential slash commands that activate specialized 
 5. **Load app context** (for engineering commands `/execute-plan`, `/deslop`, `/review`, `/peer-review`, `/qa-test`, `/docs`):
    - `apps/<project_name>/CODEBASE-CONTEXT.md` (if exists)
 
+### Linear PM Layer
+
+Linear is optional and PM-facing only.
+
+Rules:
+
+- The repo remains the source of truth
+- `project-state.md` remains canonical for workflow state
+- `experiments/linear-sync/issue-<NNN>.json` stores durable Linear ids for idempotent re-syncs
+- Linear utility commands may read and write Linear only after reading repo state
+- Linear commands must never silently skip failed writes
+- Existing pipeline commands remain valid even if Linear is unavailable
+
+Recommended checkpoints:
+
+- **`/create-issue` auto-binds Linear** — `/linear-bind` + root issue creation run automatically at the end of every `/create-issue`. No manual bind step required.
+- After `/create-issue`: `/linear-sync issue` (brief already bound; sync the description)
+- After `/create-plan`: `/linear-sync plan`
+- After `/review`, `/peer-review`, `/qa-test`: `/linear-sync status`
+- After `/deploy-check`: `/linear-sync release`
+- After `/learning`: `/linear-close`
+
 **Never use hard-coded template examples.** All outputs must reference the active project context.
 
 ### State Management
@@ -81,6 +107,13 @@ After every command execution, update `project-state.md`:
 - Update `status` (in-progress, blocked, done, completed)
 - Set quality gate status (pass/fail) for review stages
 - Append key decisions to the Decisions Log
+
+For Linear utility commands:
+
+- Update only the Linear metadata fields
+- Persist durable Linear ids in `experiments/linear-sync/issue-<NNN>.json`
+- Never change pipeline stage progression as a side effect of a Linear command
+- Record explicit sync failures instead of silently ignoring them
 
 **Blocked State Rule**: If a quality gate fails, set `status` to `blocked` and add the blocker to the Blockers section. Do not proceed until resolved.
 
