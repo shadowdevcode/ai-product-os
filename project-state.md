@@ -2,18 +2,18 @@
 
 ## Active Project
 
-- name: none
-- repo_path:
-- owner:
-- started_on:
-- goal (1 sentence):
+- name: MoneyMirror — AI-Powered Personal Finance Coach
+- repo_path: apps/money-mirror
+- owner: Vijay Sehgal
+- started_on: 2026-04-01
+- goal (1 sentence): Build a mobile-first PWA AI financial coach that reads Indian bank statements, reveals the "perception gap" (perceived vs actual spend) via a Mirror moment, and delivers consequence-first nudges to help Gen Z Indians (₹20K–₹80K/month) reduce wasteful spend by ≥30% and initiate their first SIP within 60 days.
 
 ## Current Stage
 
-- stage: idle
-- last_command_run: /finish-off
+- stage: metric-plan
+- last_command_run: /metric-plan
 - status: done
-- active_issue: none
+- active_issue: issue-009
 
 ## Active Work
 
@@ -24,9 +24,10 @@
 
 ## Quality Gates
 
-- create_issue: done — issue-008 created. Nykaa Fashion Hyper-Personalized Discovery Feed. First-hand nykaa.com audit (12 surfaces) as primary signal. Zero personalization gap confirmed. Hypothesis: affinity-weighted 40/30/20/10 ranking engine lifts homepage-to-PDP CVR by 15–25% for logged-in cohort. Saved to experiments/ideas/issue-008.md.
-- explore: done — Recommendation: Build. Problem is critical, gap is unserved in Nykaa's context. MVP proposed: Rule-based "For You" shelf (historical affinity + real-time intent), excluding complex ML models and cold-start UX for V1. Saved to experiments/exploration/exploration-008.md.
-- create_plan: done — plan-008.md + manifest-008.json created. Architecture: Next.js 16, Neon DB (3 tables), rule-based scoring (affinity 0.6 + intent 0.4), PostHog for A/B and telemetry. 12 implementation tasks.
+- create_issue: done — issue-009 created. MoneyMirror — AI-Powered Personal Finance Coach for Gen Z India. Source: 13 @warikoo YouTube transcripts (238,000+ chars). Gap confirmed: zero budgeting/behavioral coaching tool recommended across 100+ Money Matters episodes. Hypothesis: PWA-first AI coach that parses Indian bank statements + delivers consequence-first nudges reduces avoidable spend ≥30% and drives first SIP initiation for ≥20% of users within 60 days. Money Health Score (0–100) is the North Star proxy metric. Saved to experiments/ideas/issue-009.md.
+- explore: done — Recommendation: Build. Problem is critical (Hair on fire for 22–30 segment), gap is confirmed from 13 Warikoo transcripts (238K chars, zero coaching tool recommended across 100+ Money Matters episodes). Competitive scan: no Indian product at this positioning (Walnut abandoned, ET Money investment-first, CRED rewards bad behavior, Jupiter/Fi bank-first). MVP: HDFC bank statement parse + onboarding Money Health Score + Day 7 Mirror Report + 5 advisory triggers + weekly email. WhatsApp, credit card parsing, gamification, paywall all excluded from Phase 1. North Star: second-month statement upload rate (≥60%). Primary risk: PDF parsing reliability. Saved to experiments/exploration/exploration-009.md.
+- create_plan: done — plan-009.md + manifest-009.json created. Architecture: Next.js 14, Supabase (Auth/DB), Neon DB (BigInt paisa storage), Gemini 1.5 Flash (Parsing), Resend (Email), PostHog (Telemetry). 12 implementation tasks across 4 phases. RLS enabled on all tables. 9s AI timeout guard.
+- execute_plan: done — Full apps/money-mirror implementation. T1–T9 pre-built + completed remaining gaps. Fixed: schema.sql column mismatch (transactions now uses amount_paisa/date/description/type/is_recurring, statements has total_debits_paisa/total_credits_paisa/status/perceived_spend_paisa, category CHECK uses lowercase). Fixed: dashboard auth — Supabase session token wired to parse fetch. Wired: onboarding_completed PostHog event via /api/onboarding/complete server route. Built: T11 /api/cron/weekly-recap (fan-out master) + /api/cron/weekly-recap/worker (Resend email per user). Tests: 33 passing (categorizer ×15, scoring ×5, parse API ×5, pdf-parser ×8). PostHog events: onboarding_completed, statement_parse_started, statement_parse_rate_limited, statement_parse_success, statement_parse_timeout, statement_parse_failed, weekly_recap_triggered, weekly_recap_completed, weekly_recap_email_sent, weekly_recap_email_failed. All RLS policies on 4 tables. 9s Gemini timeout guard. Zero-retention PDF (buffer nulled post-extraction). .env.local.example updated with NEXT_PUBLIC_APP_URL.
 - execute_plan: done — Phase 1 (Core Engine): apps/nykaa-personalisation built, Neon DB ready, 5 API routes, affinity scoring live. Phase 2 (P2P & Conversions): PDP UI implemented with dynamic routing ([id]), ingest-event API enhanced for `add_to_cart` tracking. **Update**: Fixed missing backend agent logic by adding `GET /api/catalog/product/[id]` route and refactoring PDP to use server-side fetch for foolproof integration.
   - deslop (issue-008): done — extracted duplicated scoreProduct into shared score-product.ts module.
   - review (issue-008): done — Fixed missing SHELF_CLICK tracking and reduced latency in rerank route.
@@ -36,7 +37,9 @@
   - postmortem (issue-008): done — 5 systemic issues identified. Root cause: architecture under-specification. Result saved to experiments/results/postmortem-008.md.
   - learning (issue-008): done — 4 engineering rules extracted. knowledge/engineering-lessons.md updated. CODEBASE-CONTEXT.md written. Full pipeline cycle for issue-008 complete.
 - deslop: done — 9 restatement comments removed, 1 dead prop removed, PostHog events parallelised
-- review: done — all items fixed, build passes
+- review (issue-009): done — 2 CRITICAL + 2 HIGH + 2 MEDIUM issues found and fixed. CRITICAL: pdf-parser pageCount wrong property (result.total), advisories route missing auth + ownership check. HIGH: perceived_spend_paisa not written to statements INSERT (PERCEPTION_GAP advisory was silently broken), PostHog singleton not reset after shutdown (dead client). MEDIUM: cron succeeded/failed counts wrong (catch swallowed fetch errors), score page setTimeout missing useEffect cleanup. All fixed. PostHog dual-emission check: PASS. Result saved to experiments/results/review-009.md.
+- peer-review (issue-009): done — APPROVED after fixes. Added authenticated `GET /api/dashboard` rehydration path and rewired dashboard to load persisted mirror data on refresh/deep links. Parse route now fails closed: `profiles.id` lookup fixed, statements start as `processing`, transaction insert failure deletes parent row and blocks success telemetry, final status flips to `processed` only after full persistence. Weekly recap now paginates beyond 1000 rows and counts failures correctly by returning non-2xx from worker email-send failures. Validation: `npm test` PASS, `npm run build` PASS. Results saved to experiments/results/peer-review-009.md and experiments/results/peer-review-009-r2.md.
+- qa_test (issue-009): done — PASS. 34 automated tests passing. 2 findings fixed: QA1 (BLOCKING) `.env.local.example` declared `NEXT_PUBLIC_POSTHOG_KEY`/`NEXT_PUBLIC_POSTHOG_HOST` but `posthog.ts` reads `POSTHOG_KEY`/`POSTHOG_HOST` — all server-side telemetry would have been dead in production; fixed. QA2 (MEDIUM) Share button rendered on desktop browsers without Web Share API support causing silent no-op; button now conditionally rendered only when `navigator.share` is available. Telemetry resilience verified: all PostHog calls fire-and-forget, no duplicate emissions. Build clean. Results saved to experiments/results/qa-test-009.md.
 - peer_review: done — all items fixed; EC1 localStorage guard on ControlGroupSimulator, PA1 split test/control orders in North Star section, RR1 DEMO_SECRET header on reorder-events, AC1 reminder_sent=false filter on dashboard query, AC2 DO NOTHING write-once cohort. Build clean.
 - qa_test: done — PASS. 2 medium findings (QA1: reminders/opened unguarded DB call, QA2: PostHog failure causes worker 500 + undercount). No high-risk blockers. Fix QA1+QA2 before demo run. Results saved to experiments/results/qa-test-006.md.
 - metric_plan: done — metric-plan-006.md created. North Star: 21-day repeat purchase rate lift (test vs. control, +10pp target). 7 events verified wired. 3 missing error-path events flagged for production. Ground-truth queries defined against reorder_events + experiment_cohorts tables.
@@ -124,6 +127,11 @@
 - 2026-03-28: Executed /metric-plan for issue-008. North Star: Add-to-Cart Rate Lift defined.
 - 2026-03-28: Executed /deploy-check for issue-008. Resolved README missing details and configured Sentry for error tracking. Automated PR #7 created successfully.
 - 2026-03-28: [ARCHIVED] Nykaa Hyper-Personalized Style Concierge (issue-008) — Full pipeline cycle complete. Final fix: added backend PDP API route and server-side fetch logic. All quality gates passed. Pipeline reset to idle.
+- 2026-04-02: Executed /deslop for issue-009 (MoneyMirror). Removed template copy headers from posthog.ts, db.ts, error-handler.ts (dead boilerplate from libs/shared). Removed {/_ Bar _/} restatement comment from MirrorCard.tsx. Fixed critical hallucination in pdf-parser.ts — replaced non-existent default export with correct named { PDFParse } class from pdf-parse v2 (constructor takes LoadParameters, getText() returns TextResult with .text/.pages). Moved inline foodRegex/subRegex to module-level FOOD_REGEX/SUBSCRIPTION_REGEX in advisories/route.ts. Fixed unsafe CategorySummary cast with exclusion guards. Added .limit(1000) to transactions query. Ready for /review.
+- 2026-04-02: Executed /review for issue-009 (MoneyMirror). 2 CRITICAL + 2 HIGH + 2 MEDIUM issues found and fixed. CRITICAL-1: pdf-parser.ts used result.pages?.length instead of result.total on TextResult from pdf-parse v2 PDFParse class. CRITICAL-2: /api/dashboard/advisories missing Supabase JWT auth + ownership filter — any UUID could access another user's financial data. HIGH-1: perceived_spend_paisa never written to statements INSERT — PERCEPTION_GAP advisory was permanently broken (always 0). Fixed by fetching from profiles table before INSERT. HIGH-2: PostHog singleton \_posthogServer not reset to null after shutdown() — dead client reused on subsequent calls, silently dropping events. MEDIUM-1: cron master succeeded/failed counts wrong — .catch() swallowed errors making all results appear fulfilled. Fixed by throwing on non-2xx responses. MEDIUM-2: score/page.tsx setTimeout in useEffect missing cleanup — setState on unmounted component risk. PostHog dual-emission check: PASS. Review result saved to experiments/results/review-009.md.
+- 2026-04-02: Executed /peer-review for issue-009 (MoneyMirror). BLOCKED. 4 MUST-FIX items: A1 `/dashboard` has no persisted rehydration path and does not implement the planned `GET /api/dashboard`, so refreshes and weekly email deep links lose the mirror state; R1 `/api/statement/parse` returns success and emits `statement_parse_success` even when `transactions` insert fails, creating partial-write corruption; R2 `/api/cron/weekly-recap/worker` returns HTTP 200 on Resend failure, so master success counts and `weekly_recap_completed` telemetry remain wrong; P1 `dashboard/page.tsx` calls `/api/dashboard/advisories` without Authorization header, so the core coaching feed never renders. MEDIUM: A2 weekly recap fan-out is capped by `.limit(1000)` on statement rows. Result saved to experiments/results/peer-review-009.md.
+- 2026-04-02: Executed /peer-review round 2 for issue-009 (MoneyMirror). APPROVED. Verified all prior findings fixed: A1 authenticated persisted dashboard rehydration path added via `/api/dashboard` and dashboard page now hydrates on first load; R1 statement parse persistence is now fail-closed with `processing` → `processed` transition only after transactions save; R2 weekly recap worker now returns 502 on email failure and master rejects unsuccessful worker responses; P1 dashboard no longer loses advisories due to missing auth because post-upload flow hydrates from authenticated dashboard data; A2 recap fan-out paginates through processed statements in 1000-row batches. Additional build-safety fixes: lazy Supabase client init in `src/lib/db.ts`, Resend client moved inside request handler. Validation: `npm test` PASS, `npm run build` PASS. Result saved to experiments/results/peer-review-009-r2.md.
+- 2026-04-02: Executed /qa-test for issue-009 (MoneyMirror). PASS. 34 automated tests passing. QA1 (BLOCKING) fixed: `.env.local.example` declared `NEXT_PUBLIC_POSTHOG_KEY`/`NEXT_PUBLIC_POSTHOG_HOST` but `src/lib/posthog.ts` reads `POSTHOG_KEY`/`POSTHOG_HOST` — would have caused all server-side telemetry to be silently dead in production; corrected to server-only names (no NEXT*PUBLIC* prefix). QA2 (MEDIUM) fixed: "Share My Mirror" button conditionally rendered only when `navigator.share` is available — no longer a silent no-op on desktop. Telemetry resilience verified: all PostHog calls fire-and-forget. No duplicate event emissions. Result saved to experiments/results/qa-test-009.md.
 
 ## Links
 
@@ -132,15 +140,15 @@
 - linear_enabled: true <!-- set to true by /linear-bind; false = Linear layer inactive -->
 - linear_team_id: 70aea0d1-a706-481f-a0b7-3e636709ba77 <!-- immutable after bind -->
 - linear_team: Vijaypmworkspace
-- linear_project_id: <!-- populated by /linear-bind when project is created -->
-- linear_project: <!-- human-readable project name in Linear -->
-- linear_project_url: <!-- direct link to the Linear project page -->
-- linear_root_issue_id: <!-- id of the root issue created in Linear -->
-- linear_root_issue_identifier: <!-- e.g. VIJ-42 — display identifier for the root issue -->
+- linear_project_id: c0052da3-a2c3-4c24-aba0-bf833e122c2d
+- linear_project: issue-009 — MoneyMirror — AI-Powered Personal Finance Coach for Gen Z India
+- linear_project_url: https://linear.app/vijaypmworkspace/project/issue-009-moneymirror-ai-powered-personal-finance-coach-for-gen-z-8464834e8c78
+- linear_root_issue_id: VIJ-11 <!-- id of the root issue created in Linear -->
+- linear_root_issue_identifier: VIJ-11 <!-- display identifier for the root issue -->
 - linear_cycle: <!-- Linear cycle/sprint, if assigned -->
-- linear_sync_map_path: <!-- path to experiments/linear-sync/issue-NNN.json (durable id map) -->
-- linear_last_sync: 2026-04-01T07:41:00.000Z <!-- ISO timestamp of last successful /linear-sync -->
-- linear_sync_status: retroactive-sync-complete — issues 002–006 + 008 synced to Linear (Done). Sync maps written to experiments/linear-sync/. Issue 007 skipped (exploration-only, no sprint). <!-- last sync mode or failure reason -->
+- linear_sync_map_path: experiments/linear-sync/issue-009.json <!-- path to durable id map -->
+- linear_last_sync: 2026-04-02T08:01:02Z <!-- ISO timestamp of last successful /linear-sync -->
+- linear_sync_status: status — VIJ-11 state updated to In Review; label updated to Review + Feature; qa-test PASS comment posted (id: 6c7a878e-4dc3-45f5-a909-04dcc245cccf). <!-- last sync mode or failure reason -->
 - docs_home: experiments/ideas/issue-007.md
 - demo:
 - analytics_dashboard:

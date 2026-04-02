@@ -1,0 +1,32 @@
+{
+  "issue_number": "009",
+  "issue_title": "MoneyMirror — AI-Powered Personal Finance Coach for Gen Z India",
+  "team_id": "70aea0d1-a706-481f-a0b7-3e636709ba77",
+  "team_name": "Vijaypmworkspace",
+  "project_id": "c0052da3-a2c3-4c24-aba0-bf833e122c2d",
+  "project_name": "issue-009 — MoneyMirror — AI-Powered Personal Finance Coach for Gen Z India",
+  "project_url": "https://linear.app/vijaypmworkspace/project/issue-009-moneymirror-ai-powered-personal-finance-coach-for-gen-z-8464834e8c78",
+  "root_issue_id": "VIJ-11",
+  "root_issue_identifier": "VIJ-11",
+  "root_issue_url": "https://linear.app/vijaypmworkspace/issue/VIJ-11/issue-009-moneymirror-ai-powered-personal-finance-coach-for-gen-z",
+  "labels": {
+    "discovery": "b05592c1-47a6-4fdd-9a08-7a6287d4f1f8",
+    "planning": "c115a797-9a9a-4474-aec9-977473efa69a",
+    "execution": "7c533cde-cb79-4377-a158-9807bc567ebc",
+    "review": "2a0f0e88-6e46-4b24-8456-6020a76150a1",
+    "blocked": "51308c88-4551-4fad-a286-c5dbdc735abc",
+    "release_ready": "3f059d92-75e0-4412-90f6-0fe1bcfc2a1e",
+    "completed": "3d396021-0cab-46d0-8320-c10ddd72af6d",
+    "feature": "70095fc1-871c-427e-bc1f-2c29b8d87aa8"
+  },
+  "documents": {},
+  "tasks": {},
+  "last_sync_mode": "status",
+  "last_sync_timestamp": "2026-04-02T08:01:02Z",
+  "pipeline_status": "qa-test",
+  "linear_status": "In Review",
+  "comments": {
+    "execute_plan_status": "d765a19d-0486-419e-ae0e-8a2dab21afad",
+    "qa_test_status": "6c7a878e-4dc3-45f5-a909-04dcc245cccf"
+  }
+}

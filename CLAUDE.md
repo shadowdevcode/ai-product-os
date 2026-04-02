@@ -87,16 +87,31 @@ Rules:
 - Linear commands must never silently skip failed writes
 - Existing pipeline commands remain valid even if Linear is unavailable
 
-Recommended checkpoints:
+**Mandatory checkpoints (not optional — every pipeline run must execute these):**
 
 - **`/create-issue` auto-binds Linear** — `/linear-bind` + root issue creation run automatically at the end of every `/create-issue`. No manual bind step required.
-- After `/create-issue`: `/linear-sync issue` (brief already bound; sync the description)
-- After `/create-plan`: `/linear-sync plan`
-- After `/review`, `/peer-review`, `/qa-test`: `/linear-sync status`
-- After `/deploy-check`: `/linear-sync release`
-- After `/learning`: `/linear-close`
+- After `/create-issue`: `/linear-sync issue` — sync the brief description
+- After `/create-plan`: `/linear-sync plan` — sync PRD + child tasks
+- After `/review`, `/peer-review`, `/qa-test`: `/linear-sync status` — sync gate outcomes
+- After `/deploy-check`: `/linear-sync release` — sync PR/deployment links
+- After `/learning`: `/linear-close` — finalize and archive the Linear project
+
+**Enforcement**: If a Linear sync is skipped at a checkpoint, the next command must begin by running the missed sync before proceeding. Do not silently skip.
 
 **Never use hard-coded template examples.** All outputs must reference the active project context.
+
+### Real-Time Feedback Capture (CRITICAL)
+
+When the PM gives corrective feedback during any pipeline stage, apply it **immediately** — do not defer to `/learning`:
+
+1. **Update the relevant agent file** (`agents/<agent-name>-agent.md`) with the new rule, formatted as a hard constraint (not a suggestion)
+2. **Update the relevant command file** (`commands/<command-name>.md`) if the rule applies to the command protocol
+3. **Update `CHANGELOG.md`** with a dated entry describing what changed and why
+4. **Update `project-state.md`** Decisions Log with the correction
+
+The `/learning` command at end-of-cycle should **reinforce** these rules, not be the first time they are captured. If feedback is not captured in real time, it will be lost if the pipeline cycle is abandoned or compacted.
+
+**Rule**: Every mid-pipeline correction from the PM = immediate write to agent/command file + CHANGELOG entry. No exceptions.
 
 ### State Management
 

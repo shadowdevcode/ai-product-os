@@ -1,5 +1,56 @@
 # Changelog
 
+## 2026-04-02 — Proactive DB Schema + ENV Verification in /deploy-check
+
+**What:** Upgraded `/deploy-check` so that database schema application and ENV completeness are enforced as **blocking gates** during the command, not left as unchecked items in the PR body for a reviewer to discover.
+
+- **New §3a** (Database Schema Verification): Agent reads `schema.sql`, extracts all `CREATE TABLE` table names, then either queries `information_schema.tables` via MCP (Supabase/Neon) to verify each table exists, or — if MCP is unavailable — prints a blocking prompt listing every required table and instructs the user to apply the schema before continuing. Deployment is blocked if any table is missing or the user hasn't confirmed.
+- **Updated §2** (ENV Completeness Check): Agent greps `apps/<project>/src/` for all `process.env.*` references and diffs against `.env.local.example`. Any var in code but missing from the example file is a **BLOCKING violation** that stops the command.
+- **Updated §8 PR body**: Removed `[ ] Apply schema.sql` and `[ ] Set env vars` as reviewer TODOs — replaced with pre-checked `[x] Schema verified` and `[x] ENV verified` lines, because these are now confirmed before PR creation.
+
+**Why:** Across multiple pipeline cycles (issues 002–006, 009), the schema and ENV steps were only surfaced as PR checklist items that reviewers were expected to catch. This caused silent deploy failures: the PR was merged, the app was pushed, and only then did the missing tables or missing env vars surface. The gate must fire _before_ the PR is created.
+
+**Anti-pattern fixed**: "Schema applied post-PR = silent deploy failure" (engineering-lessons.md, issue-002 entry).
+
+**Files:** `commands/deploy-check.md` (§2 ENV check added, §3a schema verification added, §8 PR body updated), `CHANGELOG.md`
+
+---
+
+## 2026-04-02 — Real-Time Feedback Capture + Mandatory Linear Sync
+
+**What:** Added two hard rules to the system that were previously missing: (1) PM feedback during any pipeline stage must be captured immediately into the relevant agent/command file and CHANGELOG — not deferred to `/learning`. (2) Linear sync checkpoints are now mandatory, not "recommended" — if a sync is skipped, the next command must run it before proceeding.
+
+**Why:** PM feedback during issue-009's pipeline was not being captured into the agent files in real time, creating risk that corrections would be lost if the cycle was abandoned or compacted. Linear syncs were being skipped because the language in CLAUDE.md and command-protocol.md said "recommended" rather than enforcing them.
+
+**Files:** `CLAUDE.md` (Real-Time Feedback Capture section added, Linear checkpoints changed from Recommended to Mandatory), `command-protocol.md` (Real-Time Feedback Capture Protocol section added, CHANGELOG Discipline section added, Linear checkpoints made mandatory)
+
+---
+
+## 2026-04-02 — /review Command + Code Review Agent Upgrade (Zevi Gap Analysis)
+
+**What:** Strengthened `/review` command and `code-review-agent.md` based on a benchmark against Zevi Arnovitz's (Meta PM, Lenny's Podcast) code review command. Added what was genuinely better; kept our competitive advantages.
+
+**Added to both files:**
+
+- Formal severity ladder: CRITICAL / HIGH / MEDIUM / LOW with project-specific definitions (PostHog dual-emission explicitly labeled CRITICAL)
+- Structured output format: `Looks Clean` pass-list + `Issues Found` with `file:line` format + `Summary` block with issue counts and recommendation
+- Explicit production readiness checks: no `console.log`, no TODOs/FIXMEs, no hardcoded secrets, no `@ts-ignore`
+- React/Hooks review step (scoped strictly to `"use client"` files): effect cleanup, dependency arrays, infinite loop patterns
+- Client-side performance sub-checks under Step 5 (`useMemo`, `useCallback`, unnecessary re-renders) — also scoped to Client Components only
+
+**Preserved (our advantages Zevi doesn't have):**
+
+- PostHog dual-emission check as a named CRITICAL block with exact grep instructions
+- Architecture check diffs against the actual plan doc (not generic "follows patterns")
+- Knowledge file loading (`engineering-lessons.md` keeps postmortem rules active)
+- Pipeline gate integration and quality gate enforcement
+
+**What we did NOT copy:** emoji formatting, generic architecture check, project-agnostic output.
+
+**Files:** `commands/review.md` (updated), `agents/code-review-agent.md` (updated)
+
+---
+
 ## 2026-04-01 — Linear PM Layer (Retroactive Sync + Auto-Bind)
 
 **What:** Full Linear integration layer added as a PM-facing workflow mirror. The repo remains the source of truth; Linear reflects state for stakeholder visibility.

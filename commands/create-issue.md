@@ -40,9 +40,31 @@ Follow this structure.
 
 ---
 
+## 0 Pre-Flight Questions
+
+Before generating the issue, assess whether the raw idea is thin (missing user, behavior, or outcome).
+
+**If thin**: Ask 2–3 targeted questions in a single message. Wait for answers before proceeding.
+
+Questions to ask when needed:
+
+- What's the current behavior / pain point?
+- What does the desired outcome look like?
+- Who is the primary user?
+
+**If fully formed**: Skip questions and generate directly.
+
+Keep questions brief — one message, max 3 questions, no back-and-forth.
+
+---
+
 ## 1 Problem Statement
 
 Describe the problem clearly.
+
+**Current State**: What is happening today / what pain exists.
+
+**Desired Outcome**: What should be true after this is solved.
 
 ---
 
@@ -74,6 +96,18 @@ Example:
 
 ---
 
+## 6 Risks / Open Questions
+
+Call out anything that could block this or make it hard to build.
+
+- Dependencies on external systems, APIs, or other issues
+- Regulatory, technical, or product unknowns
+- Questions that `/explore` should resolve
+
+Omit this section if nothing notable applies.
+
+---
+
 # Output Format
 
 Return the result in this structure.
@@ -82,7 +116,7 @@ Return the result in this structure.
 
 Issue Title
 
-Problem
+Problem (Current State → Desired Outcome)
 
 User
 
@@ -91,6 +125,8 @@ Why it Matters
 Opportunity
 
 Hypothesis
+
+Risks / Open Questions (omit if none)
 
 ---
 

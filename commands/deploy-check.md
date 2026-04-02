@@ -68,6 +68,15 @@ AI model credentials
 
 Ensure secrets are not exposed.
 
+**ENV Completeness Check (blocking)**:
+
+1. Scan `apps/<project-name>/src/` for all `process.env.*` references using grep.
+2. Compare the full list against `.env.local.example`.
+3. Report any variable present in code but missing from `.env.local.example` as a **BLOCKING violation**.
+4. If any missing vars are found: stop here and require them to be added to `.env.local.example` before continuing.
+
+# Added: 2026-04-02 — ENV completeness must be a gate, not a checklist item
+
 ---
 
 ## 3 Infrastructure Readiness
@@ -79,6 +88,45 @@ Examples:
 database instance exists
 storage service configured
 API server environment ready
+
+---
+
+## 3a Database Schema Verification (blocking)
+
+Before proceeding, verify the database schema has been applied to the remote instance.
+
+**Step 1**: Read `apps/<project-name>/schema.sql` and extract all `CREATE TABLE` table names.
+
+**Step 2**: Attempt verification using MCP tools if available:
+
+- Query `information_schema.tables WHERE table_schema = 'public'`
+- Check each expected table exists
+- Report pass/fail per table
+
+**Step 3**: If MCP is unavailable, print a blocking prompt to the user:
+
+```
+⚠️  DATABASE SCHEMA CHECK REQUIRED
+
+The following tables must exist in your Supabase/Neon instance before deployment:
+  - [table_1]
+  - [table_2]
+  - ...
+
+To apply:
+  1. Open Supabase SQL Editor (or Neon console)
+  2. Run the full contents of apps/<project-name>/schema.sql
+  3. Verify tables appear in the Table Editor
+
+Confirm tables are applied before proceeding. Do not continue until this is done.
+```
+
+**Block deployment if**:
+
+- MCP query shows any expected table is missing
+- User has not confirmed tables are applied when MCP is unavailable
+
+# Added: 2026-04-02 — Schema verification must be a blocking gate, not a PR reviewer TODO
 
 ---
 
@@ -203,8 +251,8 @@ If all checks pass (Build, Environment, Infrastructure, Monitoring, README, Sent
 
    ## Test Plan
    - [ ] Run `npm test` — all tests pass
-   - [ ] Apply `schema.sql` to Supabase
-   - [ ] Set env vars from `.env.local.example`
+   - [x] Schema verified (all tables confirmed present before PR creation)
+   - [x] ENV verified (.env.local.example complete, all process.env.* vars accounted for)
    - [ ] Run `npm run dev` and verify user journey
 
    🤖 Generated with AI Product OS

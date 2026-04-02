@@ -1,0 +1,104 @@
+{
+  "issue": "issue-009",
+  "project": "MoneyMirror",
+  "phases": [
+    {
+      "id": "phase-1",
+      "name": "Foundation",
+      "parallel": false,
+      "depends_on": [],
+      "tasks": [
+        {
+          "id": "T1",
+          "name": "Initialize Next.js 14 project",
+          "agent": "frontend-engineer",
+          "files_to_create": ["package.json", "tailwind.config.js"],
+          "files_to_modify": [],
+          "verification": "npm run build",
+          "test_file": "__tests__/init.test.ts"
+        },
+        {
+          "id": "T2",
+          "name": "Setup Supabase Auth & Neon Schema",
+          "agent": "backend-architect",
+          "files_to_create": ["schema.sql"],
+          "files_to_modify": [],
+          "verification": "psql -c '\\dt'",
+          "test_file": "__tests__/schema.test.ts"
+        },
+        {
+          "id": "T3",
+          "name": "Implement Onboarding & Scoring",
+          "agent": "product-agent",
+          "files_to_create": ["src/app/onboarding/page.tsx", "src/lib/scoring.ts"],
+          "files_to_modify": [],
+          "verification": "npm run test src/lib/scoring.test.ts",
+          "test_file": "src/lib/scoring.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "phase-2",
+      "name": "Parsing Engine",
+      "parallel": false,
+      "depends_on": ["phase-1"],
+      "tasks": [
+        {
+          "id": "T4",
+          "name": "PDF Text Extraction Service",
+          "agent": "backend-engineer",
+          "files_to_create": ["src/lib/pdf-parser.ts"],
+          "files_to_modify": [],
+          "verification": "npm run test src/lib/pdf-parser.test.ts",
+          "test_file": "src/lib/pdf-parser.test.ts"
+        },
+        {
+          "id": "T5",
+          "name": "Gemini HDFC Parser",
+          "agent": "backend-engineer",
+          "files_to_create": ["src/app/api/statement/parse/route.ts"],
+          "files_to_modify": [],
+          "verification": "curl -X POST http://localhost:3000/api/statement/parse",
+          "test_file": "__tests__/api/parse.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "name": "The Mirror Dashboard",
+      "parallel": true,
+      "depends_on": ["phase-2"],
+      "tasks": [
+        {
+          "id": "T8",
+          "name": "Mirror Card & Dashboard UI",
+          "agent": "frontend-engineer",
+          "files_to_create": ["src/app/dashboard/page.tsx", "src/components/MirrorCard.tsx"],
+          "files_to_modify": [],
+          "verification": "npm run build",
+          "test_file": "__tests__/ui/dashboard.test.tsx"
+        },
+        {
+          "id": "T9",
+          "name": "Advisory Engine Triggers",
+          "agent": "backend-engineer",
+          "files_to_create": ["src/lib/advisory-engine.ts"],
+          "files_to_modify": [],
+          "verification": "npm run test src/lib/advisory.test.ts",
+          "test_file": "src/lib/advisory.test.ts"
+        }
+      ]
+    }
+  ],
+  "env_vars": [
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "GEMINI_API_KEY",
+    "RESEND_API_KEY",
+    "POSTHOG_KEY",
+    "CRON_SECRET"
+  ],
+  "schema_tables": ["profiles", "statements", "transactions", "advisory_feed"],
+  "posthog_events": ["onboarding_completed", "statement_uploaded", "mirror_report_shared"]
+}
