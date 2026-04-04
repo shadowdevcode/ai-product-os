@@ -114,6 +114,26 @@ If found: block approval and require removal of the client-side re-fire (server-
 
 # Added: 2026-03-21 — Ozi Reorder Experiment
 
+**Authenticated Route → Caller Cross-Verification** (required for every review):
+
+For every API route confirmed to require authentication:
+
+- Search all `fetch()`, `axios`, and `useSWR` calls in client components (`"use client"` files) targeting that route path.
+- If any caller omits the `Authorization` header (or equivalent auth mechanism), flag as **CRITICAL**.
+- A route auth fix without updating all callers is an incomplete fix — both sides must be verified in the same review pass.
+
+# Added: 2026-04-03 — MoneyMirror (issue-009)
+
+**Parent/Child Write Sequence** (required for every review):
+
+For every API route that writes a parent record followed by child records:
+
+- Verify the route cannot enter a success state (`processed`, `completed`, `201`) before child writes succeed.
+- If parent status is set to a success terminal state before child insert completes, flag as **CRITICAL**.
+- Verify that a child write failure either rolls back the parent or transitions it to a `failed` state — never silently logs and continues.
+
+# Added: 2026-04-03 — MoneyMirror (issue-009)
+
 ---
 
 ## 5 Performance Risks
