@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-04-04 — Security: Neon MCP API key removed from repository
+
+**What:** A Neon API key was committed in project-root `.mcp.json`. That key must be treated as compromised.
+
+**Required (human, Neon Console):**
+
+1. **Revoke** the leaked key immediately: [Neon Console](https://console.neon.tech) → Account settings → API keys (or organization keys, depending on where `napi_…` keys are managed).
+2. **Create a new key** for local use only. Never commit it.
+
+**Repository changes:**
+
+- Removed tracked [`.mcp.json`](.mcp.json) and added [`.mcp.json`](.mcp.json) to [`.gitignore`](.gitignore) so local MCP config stays out of Git.
+- Added [`.mcp.json.example`](.mcp.json.example) as a template (placeholder only, no secrets).
+
+**How to configure Cursor safely:**
+
+- Prefer the **Neon Postgres** Cursor plugin (already enabled under [`.cursor/settings.json`](.cursor/settings.json)) and complete auth in **Cursor → Settings → MCP**.
+- If you need a manual HTTP MCP entry: copy `.mcp.json.example` → `.mcp.json`, paste your **new** key, and keep `.mcp.json` local (gitignored).
+
+**Git history:** Old commits may still contain the leaked secret. Revoking the key in Neon closes the practical risk. To remove the blob from history (e.g. public fork), use `git filter-repo` or similar on a coordinated branch and force-push, understanding collaborator impact.
+
+---
+
 ## 2026-04-04 — MoneyMirror Vercel Deploy Attempt: Runtime Fix Applied, Release Still Blocked
 
 **What:** Executed the `VIJ-20` production deploy attempt for `apps/money-mirror`, fixed one Vercel runtime incompatibility in code, created the Vercel project, and captured the remaining production blocker.

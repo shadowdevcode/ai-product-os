@@ -34,6 +34,9 @@ next-env.d.ts
 # IDE / Editor
 .vscode/
 .idea/
+
+# Cursor MCP — local only (never commit API keys; use .mcp.json.example as template)
+.mcp.json
 *.swp
 *.swo
 *~
