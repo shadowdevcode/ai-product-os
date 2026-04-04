@@ -1,5 +1,53 @@
 # Changelog
 
+## 2026-04-04 — GitHub PR #15 + project state (repo hygiene)
+
+**What:** Pushed `feat/linear-workflow-sync` (commits `9f483ed`, `dced451`) and opened [**PR #15**](https://github.com/shadowdevcode/ai-product-os/pull/15) for review: Neon MCP secret removal, `.codex/config.toml`, CHANGELOG updates.
+
+**Docs:** [project-state.md](project-state.md) updated — `last_commit` `dced451`, `open_pr_link` → PR #15, decisions log entry for MCP/Codex hygiene.
+
+**Linear:** [VIJ-11](https://linear.app/vijaypmworkspace/issue/VIJ-11/issue-009-moneymirror-ai-powered-personal-finance-coach-for-gen-z) is **Done** (API check 2026-04-04). [experiments/linear-sync/issue-009.json](experiments/linear-sync/issue-009.json) still reflects last pipeline sync **2026-04-04T08:22:36Z** (`phase-1-rollout-closeout`); no new `/linear-sync` run for MCP-only commits (PM milestone unchanged). `pr_link` in the JSON map points to PR #15 as the active review link.
+
+---
+
+## 2026-04-04 — Codex MCP: project-scoped Neon (config.toml)
+
+**What:** OpenAI Codex does not read `.mcp.json`; it uses TOML under [`.codex/config.toml`](.codex/config.toml). Added a **committed-safe** project config that wires Neon’s streamable HTTP MCP via **`bearer_token_env_var = "NEON_API_KEY"`** (no secrets in Git).
+
+**Setup:**
+
+1. Create or rotate a Neon API key in [Neon Console](https://console.neon.tech).
+2. Export the key where Codex runs, e.g. `export NEON_API_KEY="napi_…"` in `~/.zshrc` / `~/.bashrc`, or configure your terminal/IDE env so Codex inherits it.
+3. In Codex, mark this repo as a **trusted project** so project-scoped MCP loads (see Codex docs).
+4. **Cursor / Claude Code** still use a **local gitignored** [`.mcp.json`](.mcp.json) from [`.mcp.json.example`](.mcp.json.example) if you need manual HTTP MCP; you can paste the same key there or rely on the Neon Cursor plugin + MCP UI.
+
+**Other MCP servers (Linear, Vercel, etc.):** Add via `codex mcp add …` or extra `[mcp_servers.*]` tables per [Codex MCP docs](https://developers.openai.com/codex/mcp); do not commit bearer tokens—use `bearer_token_env_var` or OAuth (`codex mcp login`) where supported.
+
+---
+
+## 2026-04-04 — Security: Neon MCP API key removed from repository
+
+**What:** A Neon API key was committed in project-root `.mcp.json`. That key must be treated as compromised.
+
+**Required (human, Neon Console):**
+
+1. **Revoke** the leaked key immediately: [Neon Console](https://console.neon.tech) → Account settings → API keys (or organization keys, depending on where `napi_…` keys are managed).
+2. **Create a new key** for local use only. Never commit it.
+
+**Repository changes:**
+
+- Removed tracked [`.mcp.json`](.mcp.json) and added [`.mcp.json`](.mcp.json) to [`.gitignore`](.gitignore) so local MCP config stays out of Git.
+- Added [`.mcp.json.example`](.mcp.json.example) as a template (placeholder only, no secrets).
+
+**How to configure Cursor safely:**
+
+- Prefer the **Neon Postgres** Cursor plugin (already enabled under [`.cursor/settings.json`](.cursor/settings.json)) and complete auth in **Cursor → Settings → MCP**.
+- If you need a manual HTTP MCP entry: copy `.mcp.json.example` → `.mcp.json`, paste your **new** key, and keep `.mcp.json` local (gitignored).
+
+**Git history:** Old commits may still contain the leaked secret. Revoking the key in Neon closes the practical risk. To remove the blob from history (e.g. public fork), use `git filter-repo` or similar on a coordinated branch and force-push, understanding collaborator impact.
+
+---
+
 ## 2026-04-04 — MoneyMirror Vercel Deploy Attempt: Runtime Fix Applied, Release Still Blocked
 
 **What:** Executed the `VIJ-20` production deploy attempt for `apps/money-mirror`, fixed one Vercel runtime incompatibility in code, created the Vercel project, and captured the remaining production blocker.
