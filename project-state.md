@@ -11,9 +11,9 @@
 ## Current Stage
 
 - stage: execute_plan
-- last_command_run: MoneyMirror Phase 1 rollout — Vercel routing/protection fix + production verify (VIJ-22, VIJ-20, VIJ-13 closed)
-- status: completed
-- active_issue: issue-009 / VIJ-13 (Phase 1 rollout validation Done in Linear)
+- last_command_run: MoneyMirror Phase 2 — full roadmap mirrored to Linear (Sprints 1–4 + Epics A–H, VIJ-23–36 + VIJ-24 ops) (2026-04-05)
+- status: in_progress
+- active_issue: issue-009 — Phase 2 code shipped; **VIJ-24** Neon ALTER if label columns missing; **VIJ-25** Sprint 4 backlog
 
 ## Active Work
 
@@ -21,7 +21,7 @@
 - last_commit: 44eb797
 - open_pr_link: https://github.com/shadowdevcode/ai-product-os/pull/15
 - environments: local, production (`https://money-mirror-rho.vercel.app`)
-- implementation_focus: Phase 1 rollout complete — Neon schema + smokes + Vercel production verified
+- implementation_focus: Phase 2 — friendly dates, Overview/Insights/Upload tabs, `GET /api/statements`, month + statement picker, perceived vs actual mirror card, expanded advisories + categorizer, upload labels (`nickname` / `account_purpose` / `card_network`), `docs/COACHING-TONE.md`. Tests in `apps/money-mirror` via `npm test`.
 
 ## Quality Gates
 
@@ -53,9 +53,44 @@
 - postmortem: done — 7 systemic issues identified across 4 agents. Key rules: worker endpoint auth required at architecture stage, single emission source for North Star events, orderId-as-DB-key fidelity, localStorage+DB deduplication for simulation tools, PostHog Promise.allSettled with per-call catch in workers, README+.env.local.example as execute-plan deliverables (not deploy-check fixes), error-path telemetry required during execute-plan. Prompt autopsy targets: execute-plan (single emission, telemetry resilience, error-path events), backend-architect-agent (worker auth, URL ID fidelity, simulation idempotency), peer-review-agent (demo simulation tool reload guard), qa-agent (telemetry unavailability failure simulation). Result saved to experiments/results/postmortem-006.md.
 - learning: done — 7 engineering rules extracted. knowledge/engineering-lessons.md and knowledge/prompt-library.md updated. Agent files updated: backend-architect-agent.md (items 4–7 in Mandatory Pre-Approval Checklist), peer-review-agent.md (Step 5 simulation idempotency + URL ID fidelity checks), qa-agent.md (Telemetry Unavailability Test + Failure Telemetry Verification), code-review-agent.md (PostHog dual-emission critical check), commands/execute-plan.md (Sections 6–8). CODEBASE-CONTEXT.md written to apps/ozi-reorder/. Full pipeline cycle for issue-006 complete.
 
+## MoneyMirror PM roadmap — Linear map (parent [VIJ-11](https://linear.app/vijaypmworkspace/issue/VIJ-11/issue-009-moneymirror-ai-powered-personal-finance-coach-for-gen-z))
+
+All items sit in Linear project **issue-009 — MoneyMirror**. Feature work for Sprints 1–3 and Epics A–H is **Done in repo**; issues record scope and traceability.
+
+### Sprints (suggested ordering from plan)
+
+| Sprint             | Linear                                                                                                                          | Status  | Scope (plan)       |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------ |
+| Sprint 1           | [VIJ-26](https://linear.app/vijaypmworkspace/issue/VIJ-26/moneymirror-sprint-1-epic-a-b-dates-shell-mirror-card)                | Done    | Epic A + B         |
+| Sprint 2           | [VIJ-27](https://linear.app/vijaypmworkspace/issue/VIJ-27/moneymirror-sprint-2-epic-c-d-statement-library-month-filter)         | Done    | Epic C + D         |
+| Sprint 3           | [VIJ-28](https://linear.app/vijaypmworkspace/issue/VIJ-28/moneymirror-sprint-3-epic-e-f-insights-tab-wasteful-spend-advisories) | Done    | Epic E + F (F1–F2) |
+| Sprint 4 / Backlog | [VIJ-25](https://linear.app/vijaypmworkspace/issue/VIJ-25/moneymirror-sprint-4-backlog-f3-g2-g3-h3)                             | Backlog | F3, G2–G3, H3      |
+
+### Epics A–H
+
+| Epic                  | Linear                                                                                                                     | Status | Notes                       |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------ | --------------------------- |
+| A — Date polish       | [VIJ-29](https://linear.app/vijaypmworkspace/issue/VIJ-29/moneymirror-epic-a-date-and-copy-polish)                         | Done   |                             |
+| B — Dashboard shell   | [VIJ-30](https://linear.app/vijaypmworkspace/issue/VIJ-30/moneymirror-epic-b-dashboard-shell-and-information-architecture) | Done   |                             |
+| C — Statement library | [VIJ-31](https://linear.app/vijaypmworkspace/issue/VIJ-31/moneymirror-epic-c-statement-library-not-one-at-a-time)          | Done   |                             |
+| D — Filters / month   | [VIJ-32](https://linear.app/vijaypmworkspace/issue/VIJ-32/moneymirror-epic-d-filters-and-which-month-context)              | Done   | D3 compare months → backlog |
+| E — Insights surface  | [VIJ-33](https://linear.app/vijaypmworkspace/issue/VIJ-33/moneymirror-epic-e-dedicated-ai-insights-surface)                | Done   |                             |
+| F — Wasteful spend    | [VIJ-34](https://linear.app/vijaypmworkspace/issue/VIJ-34/moneymirror-epic-f-unnecessary-wasteful-spend-signals)           | Done   | F3 → VIJ-25                 |
+| G — Multi-account     | [VIJ-35](https://linear.app/vijaypmworkspace/issue/VIJ-35/moneymirror-epic-g-multi-account-multi-card-india-icp)           | Done   | G1 shipped; G2–G3 → VIJ-25  |
+| H — Coaching tone     | [VIJ-36](https://linear.app/vijaypmworkspace/issue/VIJ-36/moneymirror-epic-h-coaching-tone-and-safe-ai-narrative)          | Done   | H1 doc; H2–H3 → VIJ-25      |
+
+### Roll-up + ops
+
+| Item                         | Linear                                                                                                                         | Status      |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ----------- |
+| Phase 2 delivery summary     | [VIJ-23](https://linear.app/vijaypmworkspace/issue/VIJ-23/moneymirror-phase-2-shipped-dashboard-roadmap-a-h-baseline)          | Done        |
+| Neon ALTER for label columns | [VIJ-24](https://linear.app/vijaypmworkspace/issue/VIJ-24/moneymirror-ops-run-neon-alter-for-statement-label-columns-nickname) | Todo (High) |
+
 ## Pending Queue
 
-- Credit card PDF smoke follow-up: categorisation landed 95% "Other" for bank_account — may need categoriser tuning in a future issue
+- **VIJ-24 (High):** Run Neon `ALTER TABLE` for `statements.nickname`, `account_purpose`, `card_network` from [`apps/money-mirror/schema.sql`](apps/money-mirror/schema.sql) if those columns are missing — required for labeled uploads to persist.
+- **VIJ-25 (Backlog):** Sprint 4 — F3, G2–G3, H3 (see table above).
+- Credit card PDF smoke follow-up: categorisation can still skew high "Other" — optional F3 in backlog
 - Optional: confirm Neon Auth redirect / allowed origins for production OTP if sign-in fails (dashboard)
 
 ## Blockers
@@ -147,6 +182,8 @@
 - 2026-04-04: MoneyMirror production deploy attempt executed for VIJ-20. Created and linked Vercel project `money-mirror` in scope `vijay-sehgals-projects`, synced production env vars from app-local `.env.local` except blank Sentry values (`NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT`), and corrected `NEXT_PUBLIC_APP_URL` to `https://money-mirror-rho.vercel.app`. First deploy failed because `middleware.ts` imported `@neondatabase/auth/next/server`, which Vercel rejected in the Edge runtime. Fixed by replacing [`middleware.ts`](/Users/vijaysehgal/Downloads/02-Portfolio/ai-product-os/apps/money-mirror/middleware.ts) with [`proxy.ts`](/Users/vijaysehgal/Downloads/02-Portfolio/ai-product-os/apps/money-mirror/proxy.ts) so auth gating runs in Next 16's Node proxy runtime. Local validation after the fix: `npm test` PASS (45 tests), `npx next build --webpack` PASS, `npx tsc --noEmit` PASS after regenerating `.next/types`. Subsequent production builds succeeded and Vercel aliased the app to `https://money-mirror-rho.vercel.app`, but the release is still blocked: unauthenticated requests return Vercel Authentication `401`, and authenticated `vercel curl` requests still return `NOT_FOUND` for `/`, `/login`, `/dashboard`, and `/api/cron/weekly-recap`. Next required action: fix Vercel project/public routing configuration before VIJ-20 can be closed.
 - 2026-04-04: MoneyMirror Vercel production unblocked and Linear VIJ-22/VIJ-20/VIJ-13 closed. Vercel API `PATCH /v9/projects/money-mirror`: `rootDirectory: apps/money-mirror`, `framework: nextjs`, `sourceFilesOutsideRootDirectory: true`; `ssoProtection.deploymentType` changed from `all_except_custom_domains` to `preview` (production `.vercel.app` URLs public). Production redeploy `dpl_UrdwuBkS4qvSwgqY2PjTJvyKS8cW` READY. Verified: `GET /` and `/login` → 200 (Next.js HTML); `GET /api/cron/weekly-recap` → 401 without secret, 200 with `x-cron-secret`; `NEXT_PUBLIC_APP_URL` matches alias. Gitignored repo-root `.vercel/project.json` added so `vercel deploy --prod` runs from monorepo root (avoids doubled `apps/money-mirror` path when project `rootDirectory` is set).
 - 2026-04-04: Repo / dev-environment hygiene — removed committed Neon MCP secret (gitignore `.mcp.json`, `.mcp.json.example`), added Codex [`.codex/config.toml`](.codex/config.toml) with `NEON_API_KEY` bearer env var, documented in CHANGELOG. Opened GitHub PR [#15](https://github.com/shadowdevcode/ai-product-os/pull/15) for review. **Linear:** VIJ-11 remains **Done** (verified); `linear_last_sync` unchanged — these changes are not a MoneyMirror product milestone, so `/linear-sync` was not re-run for them.
+- 2026-04-05: MoneyMirror Phase 2 (PM roadmap in `.cursor/plans/moneymirror_pm_roadmap_*.plan.md`) **implemented in repo** — not the same as automatic Linear sprint import; roadmap sprints were engineering guidance. **Linear:** created **VIJ-23** (Done) = Phase 2 delivery record under VIJ-11; **VIJ-24** (Todo, High) = Neon ALTER for label columns; **VIJ-25** (Backlog) = F3/G2–G3/H3 follow-ups. Next Codex/Claude sessions: pick **VIJ-24** first if uploads fail on missing columns; use **VIJ-25** when planning the next sprint.
+- 2026-04-05 (later): **Full Linear mirror** of sprint + epic breakdown — **Sprints 1–3** VIJ-26–28 (Done), **Sprint 4 / Backlog** VIJ-25 (title updated), **Epics A–H** VIJ-29–36 (Done, with F3/G2–G3/H2–H3 called out in epic bodies → VIJ-25). See **MoneyMirror PM roadmap — Linear map** section in this file.
 
 ## Links
 
@@ -162,10 +199,10 @@
 - linear_root_issue_identifier: VIJ-11 <!-- display identifier for the root issue -->
 - linear_cycle: <!-- Linear cycle/sprint, if assigned -->
 - linear_sync_map_path: experiments/linear-sync/issue-009.json <!-- path to durable id map -->
-- linear_last_sync: 2026-04-04T08:22:36Z <!-- ISO timestamp of latest rollout-validation sync -->
-- linear_sync_status: success — VIJ-22, VIJ-20, VIJ-13 marked Done; Phase 1 rollout validation complete. Repo-hygiene commits (MCP/Codex, PR #15) not mirrored to Linear. <!-- last sync mode or failure reason -->
-- linear_follow_up_issue_identifier: <!-- cleared: VIJ-13 Done -->
-- linear_follow_up_issue_url: https://linear.app/vijaypmworkspace/issue/VIJ-13/moneymirror-phase-1-rollout-validation
+- linear_last_sync: 2026-04-05T16:00:00Z <!-- manual: Sprints 1–4 + Epics A–H (VIJ-23,24,25–36) in Linear MCP -->
+- linear_sync_status: success — Full roadmap map: VIJ-26–28 Sprints 1–3 Done, VIJ-25 Sprint 4 Backlog, VIJ-29–36 Epics A–H Done, VIJ-23 roll-up Done, VIJ-24 ops Todo. Not a `/linear-sync` pipeline command. <!-- last sync mode or failure reason -->
+- linear_follow_up_issue_identifier: VIJ-24
+- linear_follow_up_issue_url: https://linear.app/vijaypmworkspace/issue/VIJ-24/moneymirror-ops-run-neon-alter-for-statement-label-columns-nickname
 - docs_home: experiments/ideas/issue-007.md
 - demo:
 - analytics_dashboard:

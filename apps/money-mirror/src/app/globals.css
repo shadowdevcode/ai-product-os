@@ -95,10 +95,29 @@ h1, h2, h3 { font-family: "Space Grotesk", "Inter", sans-serif; }
   flex-direction: column;
 }
 
+.dashboard-shell {
+  max-width: 640px;
+}
+
 .content-center { flex: 1; display: flex; flex-direction: column; justify-content: center; }
 
 .progress-bar { height: 3px; background: var(--border); border-radius: 99px; overflow: hidden; }
 .progress-fill { height: 100%; background: var(--accent); border-radius: 99px; transition: width 0.4s cubic-bezier(0.4,0,0.2,1); }
+
+select {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-family: "Inter", sans-serif;
+  padding: 12px 14px;
+  width: 100%;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+select:focus { border-color: var(--border-accent); }
 
 input[type="tel"], input[type="number"], input[type="text"] {
   background: var(--bg-elevated);

@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-04-05 — MoneyMirror Phase 2 Linear + project-state
+
+**What:** Recorded MoneyMirror Phase 2 (dashboard roadmap) delivery in **Linear** and refreshed [project-state.md](project-state.md).
+
+**Linear (under [VIJ-11](https://linear.app/vijaypmworkspace/issue/VIJ-11/issue-009-moneymirror-ai-powered-personal-finance-coach-for-gen-z)):**
+
+- [VIJ-23](https://linear.app/vijaypmworkspace/issue/VIJ-23/moneymirror-phase-2-shipped-dashboard-roadmap-a-h-baseline) — **Done** — Phase 2 shipped in repo (epics A–H baseline).
+- [VIJ-24](https://linear.app/vijaypmworkspace/issue/VIJ-24/moneymirror-ops-run-neon-alter-for-statement-label-columns-nickname) — **Todo** — run Neon `ALTER TABLE` for label columns if missing (`apps/money-mirror/schema.sql`).
+- [VIJ-25](https://linear.app/vijaypmworkspace/issue/VIJ-25/moneymirror-backlog-post-roadmap-f3-g2g3-h3) — **Backlog** — F3, G2–G3, H3 follow-ups.
+
+**Repo:** [experiments/linear-sync/issue-009.json](experiments/linear-sync/issue-009.json) — `tasks` map + `last_sync_mode` updated for manual Phase 2 issue creation (not a full `/linear-sync` pipeline run).
+
+**Update (same day):** Full **Sprint 1–3** (VIJ-26–28, Done), **Sprint 4 / Backlog** (VIJ-25), **Epics A–H** (VIJ-29–36, Done) created in Linear and mirrored in [project-state.md](project-state.md) § MoneyMirror PM roadmap — Linear map.
+
+---
+
 ## 2026-04-04 — GitHub PR #15 + project state (repo hygiene)
 
 **What:** Pushed `feat/linear-workflow-sync` (commits `9f483ed`, `dced451`) and opened [**PR #15**](https://github.com/shadowdevcode/ai-product-os/pull/15) for review: Neon MCP secret removal, `.codex/config.toml`, CHANGELOG updates.

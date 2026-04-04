@@ -22,7 +22,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenAI } from '@google/genai';
 import { getSessionUser } from '@/lib/auth/session';
 import { countUserStatementsSince, ensureProfile } from '@/lib/db';
 import { extractPdfText, PdfExtractionError } from '@/lib/pdf-parser';
@@ -32,15 +31,10 @@ import {
   summarizeByCategory,
 } from '@/lib/categorizer';
 import { captureServerEvent } from '@/lib/posthog';
-import {
-  buildStatementParserPrompt,
-  parseStatementType,
-  type ParsedStatementResult,
-  validateParsedStatement,
-} from '@/lib/statements';
+import { parseStatementType } from '@/lib/statements';
+import { parseAccountPurpose, sanitizeCardNetwork, sanitizeNickname } from '@/lib/upload-metadata';
+import { runGeminiStatementParse, TIMEOUT_MS } from './gemini-statement-parse';
 import { persistStatement } from './persist-statement';
-
-const TIMEOUT_MS = 25_000;
 const MAX_UPLOADS_PER_DAY = 3;
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
@@ -82,11 +76,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   let fileBuffer: Buffer | null = null;
   let fileName = 'statement.pdf';
   let statementType = parseStatementType(null);
+  let nickname: string | null = null;
+  let accountPurpose = null as ReturnType<typeof parseAccountPurpose>;
+  let cardNetwork: string | null = null;
 
   try {
     const formData = await req.formData();
     const file = formData.get('file');
     statementType = parseStatementType(formData.get('statement_type'));
+    nickname = sanitizeNickname(formData.get('nickname'));
+    accountPurpose = parseAccountPurpose(formData.get('account_purpose'));
+    cardNetwork =
+      statementType === 'credit_card' ? sanitizeCardNetwork(formData.get('card_network')) : null;
 
     if (!file || typeof file === 'string') {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
@@ -145,55 +146,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }).catch(() => {});
 
   // ── 6. Gemini extraction with timeout ────────────────────────────
-  const genai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
-  let parsedStatement: ParsedStatementResult;
+  const geminiOutcome = await runGeminiStatementParse(pdfText, statementType);
 
-  try {
-    const geminiPromise = genai.models
-      .generateContent({
-        model: 'gemini-2.5-flash',
-        config: {
-          // Disable thinking — structured data extraction needs speed, not reasoning
-          thinkingConfig: { thinkingBudget: 0 },
-        },
-        contents: [
-          {
-            role: 'user',
-            parts: [
-              { text: buildStatementParserPrompt(statementType) },
-              {
-                text: `Parse this statement and return JSON:\n\n${pdfText.slice(0, 30_000)}`,
-              },
-            ],
-          },
-        ],
-      })
-      .then((res) => {
-        // Find the first part with text (thinking models may have thought parts first)
-        const parts = res.candidates?.[0]?.content?.parts ?? [];
-        const raw =
-          parts.find(
-            (p) => (p.text && p.text.trim().startsWith('{')) || p.text?.includes('"transactions"')
-          )?.text ??
-          parts.find((p) => p.text)?.text ??
-          '';
-        // Strip markdown code fences if present
-        const json = raw
-          .replace(/^```(?:json)?\s*/i, '')
-          .replace(/```\s*$/i, '')
-          .trim();
-        return validateParsedStatement(JSON.parse(json), statementType);
-      });
-
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('GEMINI_TIMEOUT')), TIMEOUT_MS)
-    );
-
-    parsedStatement = await Promise.race([geminiPromise, timeoutPromise]);
-  } catch (err) {
-    const isTimeout = err instanceof Error && err.message === 'GEMINI_TIMEOUT';
-
-    if (isTimeout) {
+  if (!geminiOutcome.ok) {
+    if (geminiOutcome.code === 'timeout') {
       captureServerEvent(userId, 'statement_parse_timeout', {
         timeout_ms: TIMEOUT_MS,
       }).catch(() => {});
@@ -202,17 +158,17 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         { status: 504 }
       );
     }
-
-    const geminiErrMsg = err instanceof Error ? err.message : String(err);
     captureServerEvent(userId, 'statement_parse_failed', {
       error_type: 'GEMINI_ERROR',
-      detail: geminiErrMsg.slice(0, 200),
+      detail: (geminiOutcome.detail ?? '').slice(0, 200),
     }).catch(() => {});
     return NextResponse.json(
       { error: 'Failed to extract transactions from the PDF.' },
       { status: 500 }
     );
   }
+
+  const parsedStatement = geminiOutcome.data;
 
   // ── 7. Categorize transactions ────────────────────────────────────
   const categorized = parsedStatement.transactions.map((tx) => {
@@ -246,6 +202,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       payment_due_paisa: parsedStatement.payment_due_paisa,
       minimum_due_paisa: parsedStatement.minimum_due_paisa,
       credit_limit_paisa: parsedStatement.credit_limit_paisa,
+      nickname,
+      account_purpose: accountPurpose,
+      card_network: cardNetwork,
     }
   );
 
