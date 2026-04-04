@@ -18,7 +18,7 @@
 ## Active Work
 
 - active_branch: feat/linear-workflow-sync
-- last_commit: dced451
+- last_commit: 44eb797
 - open_pr_link: https://github.com/shadowdevcode/ai-product-os/pull/15
 - environments: local, production (`https://money-mirror-rho.vercel.app`)
 - implementation_focus: Phase 1 rollout complete — Neon schema + smokes + Vercel production verified
