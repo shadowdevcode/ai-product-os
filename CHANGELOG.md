@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-04-05 — Repo sync: PR #16, VIJ-24 Done, project-state + Linear map
+
+**What:** Aligned [project-state.md](project-state.md), [experiments/linear-sync/issue-009.json](experiments/linear-sync/issue-009.json), and Linear with post-merge engineering work.
+
+**GitHub:** [PR #16](https://github.com/shadowdevcode/ai-product-os/pull/16) merged to `main` (`3cdd83a`) — Phase 2 dashboard/statements, parse-route splits, `schema.sql` label columns.
+
+**Neon / VIJ-24:** Idempotent `ALTER TABLE` for `statements.nickname`, `account_purpose`, `card_network` applied; columns verified. [VIJ-24](https://linear.app/vijaypmworkspace/issue/VIJ-24/moneymirror-ops-run-neon-alter-for-statement-label-columns-nickname) → **Done** (comment + closeout). [VIJ-23](https://linear.app/vijaypmworkspace/issue/VIJ-23/moneymirror-phase-2-shipped-dashboard-roadmap-a-h-baseline) — traceability comment (PR #16, prod URL).
+
+**Repo:** `issue-009.json` — `pr_link` → PR #16, `pr_link_superseded` → PR #15, `last_sync_mode` `manual-post-merge-vij24-pr16`. Not a slash `/linear-sync` run; Linear updated via MCP.
+
+---
+
 ## 2026-04-05 — MoneyMirror Phase 2 Linear + project-state
 
 **What:** Recorded MoneyMirror Phase 2 (dashboard roadmap) delivery in **Linear** and refreshed [project-state.md](project-state.md).
@@ -7,7 +19,7 @@
 **Linear (under [VIJ-11](https://linear.app/vijaypmworkspace/issue/VIJ-11/issue-009-moneymirror-ai-powered-personal-finance-coach-for-gen-z)):**
 
 - [VIJ-23](https://linear.app/vijaypmworkspace/issue/VIJ-23/moneymirror-phase-2-shipped-dashboard-roadmap-a-h-baseline) — **Done** — Phase 2 shipped in repo (epics A–H baseline).
-- [VIJ-24](https://linear.app/vijaypmworkspace/issue/VIJ-24/moneymirror-ops-run-neon-alter-for-statement-label-columns-nickname) — **Todo** — run Neon `ALTER TABLE` for label columns if missing (`apps/money-mirror/schema.sql`).
+- [VIJ-24](https://linear.app/vijaypmworkspace/issue/VIJ-24/moneymirror-ops-run-neon-alter-for-statement-label-columns-nickname) — superseded by **2026-04-05 — Repo sync** above (now **Done**).
 - [VIJ-25](https://linear.app/vijaypmworkspace/issue/VIJ-25/moneymirror-backlog-post-roadmap-f3-g2g3-h3) — **Backlog** — F3, G2–G3, H3 follow-ups.
 
 **Repo:** [experiments/linear-sync/issue-009.json](experiments/linear-sync/issue-009.json) — `tasks` map + `last_sync_mode` updated for manual Phase 2 issue creation (not a full `/linear-sync` pipeline run).

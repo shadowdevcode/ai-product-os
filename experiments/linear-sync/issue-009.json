@@ -36,13 +36,14 @@
     "epic_g": "VIJ-35",
     "epic_h": "VIJ-36"
   },
-  "last_sync_mode": "phase-2-roadmap-full-map-manual",
-  "last_sync_timestamp": "2026-04-05T16:00:00Z",
+  "last_sync_mode": "manual-post-merge-vij24-pr16",
+  "last_sync_timestamp": "2026-04-05T21:30:00Z",
   "pipeline_status": "learning",
   "linear_status": "Done",
   "closeout_document_id": "97bb3d9b-6f13-49c7-9f06-827d15ad6cd6",
   "closeout_document_url": "https://linear.app/vijaypmworkspace/document/issue-009-closeout-snapshot-aee923543aa2",
-  "pr_link": "https://github.com/shadowdevcode/ai-product-os/pull/15",
+  "pr_link": "https://github.com/shadowdevcode/ai-product-os/pull/16",
+  "pr_link_superseded": "https://github.com/shadowdevcode/ai-product-os/pull/15",
   "comments": {
     "execute_plan_status": "d765a19d-0486-419e-ae0e-8a2dab21afad",
     "qa_test_status": "6c7a878e-4dc3-45f5-a909-04dcc245cccf",
