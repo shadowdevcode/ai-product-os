@@ -356,9 +356,9 @@ improvement: code-review-agent: for every API route confirmed to require auth, s
 
 date: 2026-04-03
 project: MoneyMirror (issue-009)
-issue: PostHog env var name mismatch — .env.local.example declared NEXT_PUBLIC_POSTHOG_KEY but posthog.ts read POSTHOG_KEY; server-side telemetry would be silently dead in any production deployment
-root_cause: .env.local.example was written from memory during execute-plan and never mechanically verified against actual process.env._ calls in the code. Var names diverged silently.
-rule: .env.local.example must be generated from the actual process.env._ calls in the code — not from memory. Every key must exactly match the string used in source. A mismatch between the example file and the actual code reference is a deploy blocker.
+issue: PostHog env var name mismatch — .env.local.example declared NEXT*PUBLIC_POSTHOG_KEY but posthog.ts read POSTHOG_KEY; server-side telemetry would be silently dead in any production deployment
+root_cause: .env.local.example was written from memory during execute-plan and never mechanically verified against actual process.env.* calls in the code. Var names diverged silently.
+rule: .env.local.example must be generated from the actual process.env.\_ calls in the code — not from memory. Every key must exactly match the string used in source. A mismatch between the example file and the actual code reference is a deploy blocker.
 improvement: commands/execute-plan.md: add mandatory final step — grep all process.env.\* references in src/, extract variable names, and verify every name appears in .env.local.example. Any discrepancy is a blocking gap before execute-plan can be marked done. qa-agent: promote env var key name cross-check to a standalone QA dimension with explicit grep-based verification.
 
 ---
@@ -382,5 +382,27 @@ issue: pdf-parse wrong result property — pdf-parser.ts called result.pages?.le
 root_cause: execute-plan agent generated code against training knowledge of the pdf-parse API without verifying the installed package version's exported interface. The library API changed between versions.
 rule: When generating code against a third-party package whose API has changed between major versions, verify the installed version's exported types or index against the generated call pattern. Training knowledge of library APIs is not sufficient for version-sensitive properties.
 improvement: commands/execute-plan.md: after wiring any third-party library for the first time, check the installed version in package.json and verify the exported API matches the generated usage pattern.
+
+---
+
+---
+
+date: 2026-04-04
+project: MoneyMirror Phase 2 (issue-009)
+issue: Three label columns (nickname, account_purpose, card_network) added to `statements` table mid-phase via ALTER TABLE (VIJ-24); production schema lagged behind deployed code
+root_cause: Architecture spec for Epic G1 (multi-account labelling) specified the UI feature (upload form fields) but did not enumerate the DB columns those fields persist to. The gap between UI design and persistence design was not caught until the execute-phase.
+rule: Any feature that adds user-facing input fields must enumerate all required DB columns in the architecture schema before execute-plan begins. Nullable column additions are treated as schema migrations requiring a production ALTER and must be included in schema.sql before the first deploy of the feature.
+improvement: backend-architect-agent.md Mandatory Pre-Approval Checklist: for every new user input field in the spec, require a corresponding column in the schema with type, nullability, and constraint. Any feature with new form inputs but no corresponding schema column is a blocking gap.
+
+---
+
+---
+
+date: 2026-04-04
+project: MoneyMirror Phase 2 (issue-009)
+issue: UploadPanel sends free-text metadata (nickname, account_purpose, card_network) to the parse API; server sanitizes invalid values to null silently; user believes label was saved but it was dropped
+root_cause: Architecture defined server-side sanitization helpers but did not define the client-server validation contract. No explicit rule required client-side enum pickers or server-side 4xx rejection for invalid enum values.
+rule: Any new input field that stores an enum value must use a client-side picker or select (not free text) AND the server must return a 4xx response on invalid enum input, not silently sanitize. Silent sanitization masks data quality failures and gives the user false confidence their input was saved.
+improvement: commands/execute-plan.md: for any new input field persisting an enum column, require (1) client picker/select enumeration, (2) server-side explicit validation with 4xx on invalid value, (3) schema CHECK constraint on the column. backend-architect-agent.md: when designing input fields, classify each field as free-text or enum and specify the validation contract for each.
 
 ---

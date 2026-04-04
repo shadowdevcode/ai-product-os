@@ -9,10 +9,15 @@ For AI- and agent-oriented architecture, data model, and API reference, see [`CO
 ## What it does
 
 1. User signs in with Neon Auth email OTP and lands in a private onboarding flow.
-2. User completes 5 onboarding questions and the app calculates a Money Health Score.
-3. User uploads a password-free bank-account or credit-card statement PDF and Gemini extracts and categorizes transactions entirely in memory.
-4. Dashboard hydrates the latest processed statement and shows the Mirror Moment plus advisory cards.
-5. Every Monday at 8:00 AM IST, a Vercel cron fan-out sends a weekly recap email to each eligible user via Resend.
+2. User completes 5 onboarding questions (including monthly income) and the app calculates a Money Health Score.
+3. User uploads a password-free bank-account or credit-card statement PDF, optionally tagging it with a nickname, account purpose, and card network. Gemini extracts and categorizes transactions entirely in memory.
+4. Dashboard shows three tabs:
+   - **Overview** — Mirror card (perceived vs actual spend side-by-side), summary breakdown by needs/wants/investments/debt.
+   - **Insights** — AI-generated category insights and expanded consequence-first advisory cards.
+   - **Upload** — Upload new statements; statement library lists all past uploads with month and institution labels.
+5. Month picker and statement picker let users filter the dashboard across multiple months and accounts.
+6. Multi-account support: bank accounts and credit cards are tracked separately; credit-card-safe math prevents card payments from inflating income.
+7. Every Monday at 8:00 AM IST, a Vercel cron fan-out sends a weekly recap email to each eligible user via Resend.
 
 ## Stack
 
@@ -159,6 +164,14 @@ Accepts `multipart/form-data` with a `file` field and optional `statement_type`,
 }
 ```
 
+### `GET /api/statements`
+
+Returns all processed statements for the authenticated user, sorted by creation date descending. Used by the statement library and month picker.
+
+**Auth**: Neon Auth session cookie required.
+
+**Returns**: Array of statement records including `statement_id`, `institution_name`, `statement_type`, `period_start`, `period_end`, `nickname`, `account_purpose`, `card_network`.
+
 ### `GET /api/dashboard?statement_id=<uuid>`
 
 Returns the full dashboard state for the authenticated user.
@@ -212,7 +225,30 @@ Sends one recap email for one user.
 - **Single-transaction statement persistence**: statement row creation, transaction inserts, and status finalization run in one Neon transaction to avoid partial writes.
 - **Zero-retention PDF parsing**: uploaded PDFs are processed in memory and nulled immediately after text extraction.
 
+## Docs
+
+- [`docs/COACHING-TONE.md`](./docs/COACHING-TONE.md) — Coaching language guide: consequence-first nudge patterns, safe AI narrative rules, tone constraints for advisory copy.
+
 ## Current scope
 
-- Shipped now: email OTP sign-in, onboarding score, multi-bank bank-account parsing, credit-card parsing, dashboard rehydration, 5 advisory triggers, weekly recap email.
-- Not shipped in the current app: inbox ingestion from email, WhatsApp/WATI delivery, gamification, Warikoo Priority Ladder goal gating.
+**Shipped:**
+
+- Email OTP sign-in (Neon Auth)
+- Onboarding: 5-question Money Health Score, monthly income capture
+- Multi-bank bank-account PDF parsing (Kotak, HDFC, and others via Gemini)
+- Credit-card PDF parsing with card-safe summary math
+- Upload labels: `nickname`, `account_purpose`, `card_network`
+- 3-tab dashboard: Overview (mirror card + summary), Insights (AI advisories), Upload (statement library)
+- Mirror card: perceived vs actual spend side-by-side
+- Statement library with month picker and statement picker
+- Multi-account support (G1): separate tracking per bank account and credit card
+- 5 advisory triggers + expanded categorizer
+- Weekly recap email via Resend (Monday 8:00 AM IST Vercel cron)
+- 10 PostHog analytics events (server-side)
+
+**Not shipped (Sprint 4 backlog):**
+
+- Spend-trend comparison across months (F3)
+- Multi-account aggregated spend view (G2–G3)
+- In-app coaching tone personalization (H3)
+- Inbox ingestion from email, WhatsApp/WATI delivery, gamification, Warikoo Priority Ladder goal gating

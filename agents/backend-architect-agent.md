@@ -235,6 +235,21 @@ Before finalizing the architecture, answer all of the following. Any gap must be
     → Master uses HTTP status only for success/failure accounting — never inspects JSON body.
     → JSON error payloads with HTTP 200 are insufficient as a failure signal to the master.
 
+13. **User Input → DB Column Enumeration**: For every new user-facing input field in the spec:
+    → Enumerate the exact DB column it persists to: table name, column name, type, nullability, and CHECK constraint (if enum).
+    → A feature that specifies UI controls (form fields, pickers, inputs) without corresponding schema columns is a blocking gap — execute-plan cannot begin.
+    → Nullable column additions added after deploy are schema migrations; they must appear in schema.sql before the first deploy of the feature.
+    → For enum fields: classify the input as enum vs free-text. Specify the full set of valid values and require a CHECK constraint in schema.sql.
+
+    # Added: 2026-04-04 — MoneyMirror Phase 2
+
+14. **Enum Input Validation Contract**: For every input field that stores an enum value (status, type, network, purpose, category, etc.):
+    → Client must use a picker or select element constrained to valid values — free-text inputs for enum columns are not acceptable.
+    → Server must return HTTP 4xx on invalid enum input — not silently sanitize to null or a default. Silent sanitization gives users false confidence their input was saved.
+    → Schema must include a CHECK constraint for the column.
+    → Specify all three in the architecture spec: (1) client control type, (2) server validation response code, (3) schema CHECK constraint.
+    # Added: 2026-04-04 — MoneyMirror Phase 2
+
 # Added: 2026-03-19 — SMB Feature Bundling Engine
 
 # Updated: 2026-03-21 — Ozi Reorder Experiment (items 4–7)
@@ -242,6 +257,8 @@ Before finalizing the architecture, answer all of the following. Any gap must be
 # Updated: 2026-03-28 — Nykaa Personalisation (items 8–9)
 
 # Updated: 2026-04-03 — MoneyMirror (items 10–12)
+
+# Updated: 2026-04-04 — MoneyMirror Phase 2 (items 13–14)
 
 ---
 

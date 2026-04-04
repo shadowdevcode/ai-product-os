@@ -10,9 +10,9 @@
 
 ## Current Stage
 
-- stage: execute_plan
-- last_command_run: Repo + PM state sync — PR #16 merged to `main`, `money-mirror` prod deploy, Neon label columns verified, VIJ-24 closed in Linear (2026-04-05)
-- status: in_progress
+- stage: learning
+- last_command_run: /learning — Phase 2 MoneyMirror (issue-009 Sprints 1–3) 2026-04-04
+- status: completed
 - active_issue: issue-009 — Phase 2 shipped on `main`; **VIJ-24** Neon label columns done; **VIJ-25** Sprint 4 backlog
 
 ## Active Work
@@ -184,6 +184,7 @@ All items sit in Linear project **issue-009 — MoneyMirror**. Feature work for 
 - 2026-04-05: MoneyMirror Phase 2 (PM roadmap in `.cursor/plans/moneymirror_pm_roadmap_*.plan.md`) **implemented in repo** — not the same as automatic Linear sprint import; roadmap sprints were engineering guidance. **Linear:** created **VIJ-23** (Done) = Phase 2 delivery record under VIJ-11; **VIJ-24** (Todo, High) = Neon ALTER for label columns; **VIJ-25** (Backlog) = F3/G2–G3/H3 follow-ups. Next Codex/Claude sessions: pick **VIJ-24** first if uploads fail on missing columns; use **VIJ-25** when planning the next sprint.
 - 2026-04-05 (later): **Full Linear mirror** of sprint + epic breakdown — **Sprints 1–3** VIJ-26–28 (Done), **Sprint 4 / Backlog** VIJ-25 (title updated), **Epics A–H** VIJ-29–36 (Done, with F3/G2–G3/H2–H3 called out in epic bodies → VIJ-25). See **MoneyMirror PM roadmap — Linear map** section in this file.
 - 2026-04-05: **Post-merge engineering sync** — GitHub [PR #16](https://github.com/shadowdevcode/ai-product-os/pull/16) squash-merged to `main` (`3cdd83a`): Phase 2 dashboard/statements work, parse-route splits for file-size limits, `schema.sql` label columns. Production: `vercel deploy --prod` from monorepo root → `https://money-mirror-rho.vercel.app` (project `rootDirectory` = `apps/money-mirror`). Neon: `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` for `statements.nickname`, `account_purpose`, `card_network` applied and verified via `information_schema`. Local `main` fast-forwarded; backup dirs (`apps/money-mirror.pre-pull-backup`, `.cursor.userbak`) and redundant `git stash` removed. **Linear VIJ-24** marked Done (repo + Linear aligned).
+- 2026-04-04: **Phase 2 learning pass** — 2 new engineering rules extracted from Phase 2 (Sprints 1–3) work. E1: schema-coupling — user input fields require pre-enumerated DB columns in architecture spec before execute-plan (mid-cycle ALTER TABLE = schema migration risk). E2: validation bidirectionality — enum inputs require client picker + server 4xx + schema CHECK constraint; silent server-side sanitization to null is never acceptable. Agent files updated: `agents/backend-architect-agent.md` (items 13–14 in Mandatory Pre-Approval Checklist), `commands/execute-plan.md` (item 4 in Execute-Plan Completion Checklist). Prompt library updated with Phase 2 meta-rule: every knowledge-file lesson must have a corresponding agent prompt change in the same session. `CODEBASE-CONTEXT.md` refreshed: DashboardClient component architecture noted, `docs/COACHING-TONE.md` added to Key Files, metadata validation trap documented. Pipeline cycle for issue-009 Phase 2 complete.
 
 ## Links
 

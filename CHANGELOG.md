@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-04-05 — Docs: MoneyMirror added to root README + app README updated for Phase 2
+
+**What:** Closed remaining documentation gaps after Phase 2 ship and VIJ-24 closure.
+
+**Root [README.md](README.md):**
+
+- Added MoneyMirror (issue-009) to the Projects Built table — was missing entirely despite being live at `https://money-mirror-rho.vercel.app`.
+- Added v3 row to System Evolution table covering the MoneyMirror pipeline cycle.
+
+**[apps/money-mirror/README.md](apps/money-mirror/README.md):**
+
+- Rewrote "What it does" to reflect Phase 2: 3-tab dashboard (Overview/Insights/Upload), statement library, month picker, mirror card (perceived vs actual), upload labels, multi-account.
+- Added `GET /api/statements` to the API section.
+- Added Docs section linking to `docs/COACHING-TONE.md`.
+- Updated "Current scope" into explicit Shipped / Not shipped (Sprint 4 backlog) sections.
+
+**Linear:** VIJ-24 confirmed Done (Neon label columns verified applied). VIJ-25 remains Backlog (Sprint 4 — F3, G2–G3, H3).
+
+---
+
 ## 2026-04-05 — Repo sync: PR #16, VIJ-24 Done, project-state + Linear map
 
 **What:** Aligned [project-state.md](project-state.md), [experiments/linear-sync/issue-009.json](experiments/linear-sync/issue-009.json), and Linear with post-merge engineering work.

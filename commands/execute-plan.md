@@ -368,9 +368,18 @@ Before marking execute-plan complete, verify:
 
 If any item above is incomplete, execute-plan is **not done** — it is blocked. Infra gaps discovered at deploy-check are execute-plan failures.
 
+4. **Enum input validation contract**: For every new input field that persists an enum value (type, status, network, purpose, category, etc.):
+   - [ ] Client uses a picker, select, or radio group constrained to valid values — free-text inputs for enum columns are not acceptable
+   - [ ] Server returns HTTP 4xx on invalid enum input — silent sanitization to null is a blocking violation (it gives users false confidence their input was saved)
+   - [ ] `schema.sql` includes a CHECK constraint for the enum column
+   - **Mandatory**: All three must be present. A feature missing any one is incomplete.
+   # Added: 2026-04-04 — MoneyMirror Phase 2
+
 # Added: 2026-03-21 — Ozi Reorder Experiment
 
 # Updated: 2026-04-03 — Add infra provisioning checklist + Sentry setup as execute-plan hard deliverables (shift-left from deploy-check)
+
+# Updated: 2026-04-04 — MoneyMirror Phase 2 (item 4: enum input validation contract)
 
 ---
 
