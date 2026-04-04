@@ -61,6 +61,17 @@ async function getRoute() {
 function makeRequest(file: File) {
   const formData = new FormData();
   formData.append('file', file);
+  formData.append('statement_type', 'bank_account');
+  return new NextRequest('http://localhost/api/statement/parse', {
+    method: 'POST',
+    body: formData,
+  });
+}
+
+function makeRequestWithStatementType(file: File, statementType: 'bank_account' | 'credit_card') {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('statement_type', statementType);
   return new NextRequest('http://localhost/api/statement/parse', {
     method: 'POST',
     body: formData,
@@ -92,6 +103,7 @@ describe('POST /api/statement/parse', () => {
             parts: [
               {
                 text: JSON.stringify({
+                  institution_name: 'HDFC Bank',
                   transactions: [
                     { date: '2026-03-01', description: 'SWIGGY', amount: 450.0, type: 'debit' },
                     {
@@ -121,6 +133,8 @@ describe('POST /api/statement/parse', () => {
     expect(res.status).toBe(200);
     expect(body).toMatchObject({
       statement_id: 'stmt-abc',
+      institution_name: 'HDFC Bank',
+      statement_type: 'bank_account',
       period_start: '2026-03-01',
       period_end: '2026-03-31',
       transaction_count: 2,
@@ -167,6 +181,62 @@ describe('POST /api/statement/parse', () => {
     expect(res.status).toBe(500);
     expect(body).toMatchObject({
       error: 'Failed to save statement data.',
+    });
+  });
+
+  it('returns 200 for a credit-card statement and exposes card metadata', async () => {
+    mockGenerateContent.mockResolvedValueOnce({
+      candidates: [
+        {
+          content: {
+            parts: [
+              {
+                text: JSON.stringify({
+                  institution_name: 'SBI Card',
+                  period_start: '2026-03-01',
+                  period_end: '2026-03-31',
+                  due_date: '2026-04-18',
+                  payment_due: 12999.0,
+                  minimum_due: 1200.0,
+                  credit_limit: 150000.0,
+                  transactions: [
+                    {
+                      date: '2026-03-02',
+                      description: 'SWIGGY',
+                      amount: 450.0,
+                      type: 'debit',
+                      entry_kind: 'purchase',
+                    },
+                    {
+                      date: '2026-03-05',
+                      description: 'PAYMENT RECEIVED',
+                      amount: 5000.0,
+                      type: 'credit',
+                      entry_kind: 'payment',
+                    },
+                  ],
+                }),
+              },
+            ],
+          },
+        },
+      ],
+    });
+
+    const POST = await getRoute();
+    const res = await POST(
+      makeRequestWithStatementType(makePdfFile('credit-card.pdf', 1024), 'credit_card')
+    );
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body).toMatchObject({
+      institution_name: 'SBI Card',
+      statement_type: 'credit_card',
+      due_date: '2026-04-18',
+      payment_due_paisa: 1299900,
+      minimum_due_paisa: 120000,
+      credit_limit_paisa: 15000000,
     });
   });
 });

@@ -4,6 +4,7 @@
 
 import { describe, it, expect } from 'vitest';
 import {
+  categorizeCreditCardTransaction,
   categorizeTransaction,
   summarizeByCategory,
   type CategorizedTransaction,
@@ -140,5 +141,35 @@ describe('summarizeByCategory', () => {
   it('credits do not count toward debit buckets', () => {
     const s = summarizeByCategory(txns);
     expect(s.other).toBe(0); // credit "other" doesn't count toward debit total
+  });
+});
+
+describe('categorizeCreditCardTransaction', () => {
+  it('treats card payments as credit without counting them as income', () => {
+    const result = categorizeCreditCardTransaction(
+      'PAYMENT RECEIVED',
+      500000,
+      '2026-03-10',
+      'payment'
+    );
+    expect(result.type).toBe('credit');
+    expect(result.category).toBe('debt');
+  });
+
+  it('treats refunds as non-income credits', () => {
+    const result = categorizeCreditCardTransaction('AMAZON REFUND', 120000, '2026-03-11', 'refund');
+    expect(result.type).toBe('credit');
+    expect(result.category).toBe('other');
+  });
+
+  it('treats interest as debt', () => {
+    const result = categorizeCreditCardTransaction(
+      'FINANCE CHARGES',
+      25000,
+      '2026-03-12',
+      'interest'
+    );
+    expect(result.type).toBe('debit');
+    expect(result.category).toBe('debt');
   });
 });
