@@ -1,0 +1,11 @@
+# OpenAI Codex — project-scoped MCP (shared by Codex CLI and IDE extension).
+# Docs: https://developers.openai.com/codex/mcp
+#
+# Trust this repository in Codex so this file is loaded (project MCP is for trusted projects only).
+#
+# Neon: set NEON_API_KEY in your environment (Neon Console → API keys). Never paste tokens here.
+# Same variable name works across machines; pair with a gitignored .mcp.json for Cursor/Claude Code if you use Bearer there.
+
+[mcp_servers.neon]
+url = "https://mcp.neon.tech/mcp"
+bearer_token_env_var = "NEON_API_KEY"

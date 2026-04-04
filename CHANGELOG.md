@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-04-04 — Codex MCP: project-scoped Neon (config.toml)
+
+**What:** OpenAI Codex does not read `.mcp.json`; it uses TOML under [`.codex/config.toml`](.codex/config.toml). Added a **committed-safe** project config that wires Neon’s streamable HTTP MCP via **`bearer_token_env_var = "NEON_API_KEY"`** (no secrets in Git).
+
+**Setup:**
+
+1. Create or rotate a Neon API key in [Neon Console](https://console.neon.tech).
+2. Export the key where Codex runs, e.g. `export NEON_API_KEY="napi_…"` in `~/.zshrc` / `~/.bashrc`, or configure your terminal/IDE env so Codex inherits it.
+3. In Codex, mark this repo as a **trusted project** so project-scoped MCP loads (see Codex docs).
+4. **Cursor / Claude Code** still use a **local gitignored** [`.mcp.json`](.mcp.json) from [`.mcp.json.example`](.mcp.json.example) if you need manual HTTP MCP; you can paste the same key there or rely on the Neon Cursor plugin + MCP UI.
+
+**Other MCP servers (Linear, Vercel, etc.):** Add via `codex mcp add …` or extra `[mcp_servers.*]` tables per [Codex MCP docs](https://developers.openai.com/codex/mcp); do not commit bearer tokens—use `bearer_token_env_var` or OAuth (`codex mcp login`) where supported.
+
+---
+
 ## 2026-04-04 — Security: Neon MCP API key removed from repository
 
 **What:** A Neon API key was committed in project-root `.mcp.json`. That key must be treated as compromised.
