@@ -44,6 +44,29 @@ Follow this sequence.
 
 ---
 
+## 0 Local Smoke Test (PM runs manually before triggering /deploy-check)
+
+**This gate must pass before running the command.** If any checkbox fails, fix the infra/env issue first — do not run `/deploy-check` against a broken local environment.
+
+```
+□ `npm run dev` starts without errors (port 3000 accessible)
+□ /login loads and OTP is sent successfully (Neon Auth is provisioned + NEON_AUTH_BASE_URL filled)
+□ Onboarding completes (DB write to profiles table succeeds)
+□ Core feature works end-to-end (e.g., PDF upload parses, dashboard loads with data)
+□ No 500 errors in browser console or terminal
+□ All non-optional env vars have real values in .env.local (not empty strings)
+```
+
+If any checkbox fails → diagnose and fix before proceeding. Common causes:
+
+- `NEON_AUTH_BASE_URL` empty → provision Neon Auth on the project, copy the URL
+- Missing API keys → get them from the relevant service dashboard
+- Schema not applied → run `schema.sql` in Neon/Supabase SQL editor
+
+# Added: 2026-04-03 — Shift-left infra validation; catch env/auth gaps before PR creation
+
+---
+
 ## 1 Build Verification
 
 Ensure all components build successfully.
@@ -68,6 +91,21 @@ AI model credentials
 
 Ensure secrets are not exposed.
 
+**ENV Completeness Check (blocking)**:
+
+1. Scan `apps/<project-name>/src/` for all `process.env.*` references using grep.
+2. Compare the full list against `.env.local.example` — report any variable present in code but missing from `.env.local.example` as a **BLOCKING violation**.
+3. Read `.env.local` directly and check each variable's value. Classify each as:
+   - ✅ FILLED — has a real value
+   - ⚠️ EMPTY — present in file but value is blank (`VAR=` or `VAR=""`)
+   - ❌ MISSING — not in file at all
+4. Report EMPTY variables as a **BLOCKING violation** — a variable that exists in the file with no value is just as broken as one that's missing.
+5. Exception: variables explicitly marked `# Optional` in `.env.local.example` may be empty without blocking.
+
+# Added: 2026-04-02 — ENV completeness must be a gate, not a checklist item
+
+# Updated: 2026-04-03 — Distinguish EMPTY vs MISSING; empty values are a blocking violation
+
 ---
 
 ## 3 Infrastructure Readiness
@@ -79,6 +117,45 @@ Examples:
 database instance exists
 storage service configured
 API server environment ready
+
+---
+
+## 3a Database Schema Verification (blocking)
+
+Before proceeding, verify the database schema has been applied to the remote instance.
+
+**Step 1**: Read `apps/<project-name>/schema.sql` and extract all `CREATE TABLE` table names.
+
+**Step 2**: Attempt verification using MCP tools if available:
+
+- Query `information_schema.tables WHERE table_schema = 'public'`
+- Check each expected table exists
+- Report pass/fail per table
+
+**Step 3**: If MCP is unavailable, print a blocking prompt to the user:
+
+```
+⚠️  DATABASE SCHEMA CHECK REQUIRED
+
+The following tables must exist in your Supabase/Neon instance before deployment:
+  - [table_1]
+  - [table_2]
+  - ...
+
+To apply:
+  1. Open Supabase SQL Editor (or Neon console)
+  2. Run the full contents of apps/<project-name>/schema.sql
+  3. Verify tables appear in the Table Editor
+
+Confirm tables are applied before proceeding. Do not continue until this is done.
+```
+
+**Block deployment if**:
+
+- MCP query shows any expected table is missing
+- User has not confirmed tables are applied when MCP is unavailable
+
+# Added: 2026-04-02 — Schema verification must be a blocking gate, not a PR reviewer TODO
 
 ---
 
@@ -203,8 +280,8 @@ If all checks pass (Build, Environment, Infrastructure, Monitoring, README, Sent
 
    ## Test Plan
    - [ ] Run `npm test` — all tests pass
-   - [ ] Apply `schema.sql` to Supabase
-   - [ ] Set env vars from `.env.local.example`
+   - [x] Schema verified (all tables confirmed present before PR creation)
+   - [x] ENV verified (.env.local.example complete, all process.env.* vars accounted for)
    - [ ] Run `npm run dev` and verify user journey
 
    🤖 Generated with AI Product OS
@@ -230,9 +307,11 @@ Return output using this structure.
 
 ---
 
+Local Smoke Test (Gate 0 — PM confirmed)
+
 Build Status
 
-Environment Configuration
+Environment Configuration (FILLED / EMPTY / MISSING per var)
 
 Infrastructure Readiness
 

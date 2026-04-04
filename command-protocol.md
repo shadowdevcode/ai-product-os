@@ -289,13 +289,15 @@ Rules:
 6. Child Linear tasks should be derived from `manifest-<issue_number>.json` when available.
 7. If Linear is unavailable, raise an explicit error with operation context. Do not silently skip.
 
-## Recommended Checkpoints
+## Mandatory Checkpoints (not optional — execute after every pipeline run)
 
-- After `create-issue`: `linear-bind`, then `linear-sync issue`
+- After `create-issue`: `linear-bind` (auto), then `linear-sync issue`
 - After `create-plan`: `linear-sync plan`
 - After `review`, `peer-review`, `qa-test`: `linear-sync status`
 - After `deploy-check`: `linear-sync release`
 - After `learning`: `linear-close`
+
+If a sync is skipped at any checkpoint, the next command must run the missed sync before proceeding. Never silently skip a Linear sync.
 
 ## Default State Mapping
 
@@ -433,3 +435,44 @@ Display: "💡 Consider running /compact before the next command to free context
 
 Before peer-review or postmortem:
 Display: "💡 Run /compact now — adversarial analysis needs maximum context headroom."
+
+---
+
+# Real-Time Feedback Capture Protocol
+
+When the PM provides corrective feedback at any point during the pipeline, the system must act immediately — not defer to /learning.
+
+## Required actions (execute in order):
+
+1. Identify the agent or command file responsible for the failure
+2. Open that file and add the new rule as a hard constraint (not a note)
+3. Update CHANGELOG.md with a dated entry: what changed, why, which file
+4. Update project-state.md Decisions Log with the correction
+
+## Rule
+
+Every mid-pipeline PM correction = immediate write to agent/command file + CHANGELOG entry.
+
+The /learning command reinforces these rules at end of cycle. It is not the first capture point.
+
+If feedback is not captured immediately, it will be lost if the cycle is abandoned, compacted, or restarted.
+
+---
+
+# CHANGELOG Discipline
+
+CHANGELOG.md must be updated whenever:
+
+- Any agent file is modified (agents/\*.md)
+- Any command file is modified (commands/\*.md)
+- Any knowledge file is modified (knowledge/\*.md)
+- CLAUDE.md or command-protocol.md is modified
+- Any system-level behavior is changed based on PM feedback
+
+Format:
+
+## YYYY-MM-DD — [Short title]
+
+**What:** One or two sentences describing the change.
+**Why:** The PM feedback or postmortem finding that triggered it.
+**Files:** List of files changed.

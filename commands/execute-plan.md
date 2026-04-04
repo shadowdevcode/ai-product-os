@@ -103,6 +103,15 @@ implement service logic
 integrate database operations
 handle errors and validation
 
+**Sentry setup is a backend deliverable** — not a deploy-check task. During backend implementation:
+
+1. `npm install @sentry/nextjs`
+2. `npx @sentry/wizard@latest -i nextjs` (creates `sentry.client.config.ts`, `sentry.server.config.ts`, updates `next.config.ts`)
+3. Add `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` to `.env.local.example`
+4. Wrap at least one API error handler with `Sentry.captureException(e)`
+
+# Added: 2026-04-03 — Move Sentry setup to execute-plan; deploy-check is verification not first setup
+
 ---
 
 ## 3 Database Setup
@@ -129,6 +138,26 @@ core user journey works
 data flows correctly through system
 UI interactions behave correctly
 
+**Read path / write path checkpoint** (required for every page in the plan):
+
+For every page that displays data, verify BOTH paths are implemented before marking it complete:
+
+- **Write path**: mutation fires (POST/upload) → result displayed in same request cycle
+- **Read path**: page loads fresh (refresh, direct URL, email deep link) → same result hydrated from DB via authenticated GET endpoint
+
+If only the write path is implemented, the page is incomplete. Any page linked from an email CTA, push notification, or external URL that has no implemented read endpoint is a blocking gap.
+
+**Third-party library API verification** (required for every new npm integration):
+
+After wiring any npm package for the first time:
+
+1. Check the installed version in `package.json`.
+2. Verify the generated call pattern against the package's TypeScript types or exported index — not against training knowledge.
+3. Run `npm test` to confirm the integration behaves as expected.
+4. Training knowledge of library APIs is not sufficient for version-sensitive properties (e.g., `result.total` vs `result.pages?.length`).
+
+# Added: 2026-04-03 — MoneyMirror (issue-009)
+
 ---
 
 # Output Format
@@ -148,6 +177,22 @@ API Integration
 Implementation Notes
 
 Known Issues
+
+---
+
+## 5b File Size Budget Requirement
+
+The 300-line pre-commit limit must be applied **during code generation**, not discovered at commit time.
+
+**Rules**:
+
+- API route handlers: must stay under **200 lines**. If a route handles more than 2 logical phases (e.g., validate → AI call → DB write → telemetry), extract each phase into a named helper function in a separate file before writing the route past 150 lines.
+- Page components: must stay under **250 lines**. If a page includes multiple UI states (loading, upload, result), extract each state into a named sub-component before writing the page past 200 lines.
+- **Never write a large file and refactor later.** Identify extraction points upfront during task breakdown (Step 0). If a file is projected to exceed the limit, add an extraction task to the task list before writing any code.
+
+Violations discovered at deploy-check (pre-commit hook rejection) are execute-plan failures, not deploy-check tasks.
+
+# Added: 2026-04-03 — MoneyMirror (issue-009)
 
 ---
 
@@ -309,10 +354,23 @@ Before marking execute-plan complete, verify:
    - Key design decisions
 
 2. **`.env.local.example`** lists every `process.env.*` reference in the codebase — including any variables added during peer-review or fix cycles.
+   - **Mandatory grep verification**: Run `grep -r 'process\.env\.' src/ | grep -oP 'process\.env\.\K[A-Z_]+' | sort -u` and compare against every key in `.env.local.example`. Any key in the grep output absent from `.env.local.example` is a blocking gap. Any key name that diverges (e.g., `NEXT_PUBLIC_` added or removed) is a deploy blocker. `.env.local.example` must be generated from source, never from memory.
 
-If either is missing, execute-plan is **not complete**. A deploy-check README failure that originates here is an execute-plan prompt failure — flag it in the postmortem.
+   # Added: 2026-04-03 — MoneyMirror (issue-009)
+
+3. **Infrastructure provisioning is complete** (blocking — do not mark done until all pass):
+   - [ ] Neon/Supabase project created and `DATABASE_URL` filled in `.env.local`
+   - [ ] Database schema applied (`schema.sql` run in SQL editor; all tables verified)
+   - [ ] Auth provider provisioned (e.g., Neon Auth `NEON_AUTH_BASE_URL` obtained and filled)
+   - [ ] All non-optional env vars have real values in `.env.local` — no empty strings
+   - [ ] Sentry project created; `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` filled in `.env.local`
+   - [ ] `npm run dev` boots without errors and the core user flow works end-to-end locally
+
+If any item above is incomplete, execute-plan is **not done** — it is blocked. Infra gaps discovered at deploy-check are execute-plan failures.
 
 # Added: 2026-03-21 — Ozi Reorder Experiment
+
+# Updated: 2026-04-03 — Add infra provisioning checklist + Sentry setup as execute-plan hard deliverables (shift-left from deploy-check)
 
 ---
 

@@ -220,11 +220,28 @@ Before finalizing the architecture, answer all of the following. Any gap must be
 9. **Telemetry Latency Isolation**: For every API route with a latency SLA (P95 target), confirm that PostHog/telemetry calls are fire-and-forget (not awaited). Awaited telemetry in hot paths violates latency contracts and creates false fallback triggers in experiment flows.
    → Exception: admin/cron routes where latency SLA doesn't apply.
 
+10. **Dashboard / Report Rehydration Path**: For every dashboard, report, or results page that is linked from navigation, email CTA, push notification, or any external URL:
+    → Specify the exact authenticated read path for first-load rehydration: which API route is called, what query it runs, and what state it returns.
+    → The mutation response path (result available immediately after POST) is not sufficient — the page must hydrate from the DB on any entry point.
+    → Client-memory-only post-mutation flows are blocked for any page reachable from an email link or deep URL.
+
+11. **Parent/Child Write Atomicity**: For every user action that writes a parent record + one or more child records in sequence:
+    → Specify the atomicity strategy explicitly: if the child write fails, define whether the parent is rolled back or transitioned to a `failed` state, and confirm error telemetry fires.
+    → Partial success (parent = `processed` / `success`, children = missing) is never an acceptable terminal state.
+    → "Log and continue" on child write failure is a blocking omission in the architecture spec.
+
+12. **Fan-Out Worker HTTP Contract**: For every fan-out architecture (master cron → N worker routes):
+    → Specify the worker HTTP status contract explicitly: "Worker must return HTTP non-2xx (e.g., 502) on any failure that the master should count as failed."
+    → Master uses HTTP status only for success/failure accounting — never inspects JSON body.
+    → JSON error payloads with HTTP 200 are insufficient as a failure signal to the master.
+
 # Added: 2026-03-19 — SMB Feature Bundling Engine
 
 # Updated: 2026-03-21 — Ozi Reorder Experiment (items 4–7)
 
 # Updated: 2026-03-28 — Nykaa Personalisation (items 8–9)
+
+# Updated: 2026-04-03 — MoneyMirror (items 10–12)
 
 ---
 

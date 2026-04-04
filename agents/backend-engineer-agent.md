@@ -154,3 +154,24 @@ Optimize for MVP speed.
 Experiment Integrity & Telemetry: Ensure cryptographic salts for A/B testing are server-only (do not use NEXT_PUBLIC). Telemetry calls (e.g., PostHog `captureServerEvent`) in user-facing API routes must be fire-and-forget (`.catch(() => {})`) instead of `await`ed to prevent external latency from corrupting SLAs and experiment data. Control group API responses must return a neutral label ("default"), never the real cohort string — the true cohort is captured server-side in PostHog only.
 
 # Added: 2026-03-28 — Nykaa Personalisation (issue-008)
+
+**Authenticated Route Caller Verification**: After adding authentication to any API route, search all client-side callers of that route path and verify each sends the required auth header. A `fetch()` call to an authenticated route without an `Authorization` header is a CRITICAL bug. A route auth fix without updating all callers is an incomplete fix — both the route and every caller must be updated in the same change.
+
+# Added: 2026-04-03 — MoneyMirror (issue-009)
+
+**File Size Budget at Generation Time**: Before writing any API route or page component expected to contain multi-phase logic, identify extraction points upfront. Route handlers must stay under 200 lines; page components must stay under 250 lines. If a file would exceed these limits, extract helpers or sub-components before writing past the limit — never write a large file and refactor later.
+
+# Added: 2026-04-03 — MoneyMirror (issue-009)
+
+**Infrastructure Provisioning is a hard deliverable** — not a README suggestion. Before execute-plan can be marked DONE, the Backend Engineer must confirm all of the following are complete:
+
+1. **Database project exists** — Neon/Supabase project created and `DATABASE_URL` is a real connection string in `.env.local` (not a placeholder).
+2. **Schema applied** — `schema.sql` has been run against the live DB. Verify by querying `information_schema.tables` — every expected table must exist.
+3. **Auth provider provisioned** — If the app uses Neon Auth, `NEON_AUTH_BASE_URL` must be obtained from the Neon console Auth section and filled in `.env.local`. OTP login must work locally before execute-plan closes.
+4. **All non-optional env vars filled** — Every variable in `.env.local.example` that is not explicitly marked `# Optional` must have a real value in `.env.local`. Empty strings (`VAR=`) are a blocking violation.
+5. **Sentry project created** — Create a Sentry project (free tier), run `npx @sentry/wizard@latest -i nextjs`, and fill `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` in `.env.local`. This is a backend setup task, not a deploy-check task.
+6. **`npm run dev` boots clean** — The app starts without errors and the core user flow works end-to-end. Auth, DB reads/writes, and the primary feature must all function before the task is closed.
+
+Infra gaps discovered at `/deploy-check` are Backend Engineer failures. Ship infra, not just code.
+
+# Added: 2026-04-03 — Shift-left infra validation (issue-009 postmortem pattern)

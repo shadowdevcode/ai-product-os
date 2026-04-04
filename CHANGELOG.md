@@ -1,5 +1,190 @@
 # Changelog
 
+## 2026-04-04 — MoneyMirror Vercel Deploy Attempt: Runtime Fix Applied, Release Still Blocked
+
+**What:** Executed the `VIJ-20` production deploy attempt for `apps/money-mirror`, fixed one Vercel runtime incompatibility in code, created the Vercel project, and captured the remaining production blocker.
+
+**Vercel setup completed:**
+
+- Created project `money-mirror` under scope `vijay-sehgals-projects`
+- Linked local app directory to the Vercel project
+- Synced production env vars from `apps/money-mirror/.env.local`
+- Corrected `NEXT_PUBLIC_APP_URL` to the real assigned alias: `https://money-mirror-rho.vercel.app`
+
+**Code fix applied:**
+
+- Replaced `apps/money-mirror/middleware.ts` with `apps/money-mirror/proxy.ts`
+- Why: the initial production deploy failed because Vercel rejected `@neondatabase/auth/next/server` inside the Edge `middleware` runtime
+- Result: Next 16 auth gating now runs through the Node `proxy` file convention instead of Edge middleware
+
+**Validation after the fix:**
+
+- `npm test` PASS (45 tests)
+- `npx next build --webpack` PASS
+- `npx tsc --noEmit` PASS after regenerating `.next/types`
+- Vercel production build PASS
+
+**Remaining blocker:**
+
+- Public deployment URLs are protected by Vercel Authentication (`401 Authentication Required`)
+- Even authenticated `vercel curl` requests still return `NOT_FOUND` for `/`, `/login`, `/dashboard`, and `/api/cron/weekly-recap`
+- This indicates the release is still blocked by Vercel project/public routing configuration, not by the app build itself
+
+**Why:** The original remaining task for Phase 1 was deploy + production verification. That surfaced two separate production issues: one app/runtime issue (fixed) and one Vercel serving/protection issue (still open).
+
+---
+
+## 2026-04-04 — MoneyMirror Phase 1 Live Smoke Complete + Gemini Timeout Fix
+
+**What:** Completed full Phase 1 rollout validation against live external services (Neon Auth, Gemini, Neon DB).
+
+**Neon schema migration:**
+
+- Applied 7 `ALTER TABLE` statements to live DB `steep-meadow-97750093`
+- `profiles` gained `monthly_income_paisa BIGINT`
+- `statements` gained `institution_name`, `statement_type` (with CHECK constraint), `due_date`, `payment_due_paisa`, `minimum_due_paisa`, `credit_limit_paisa`
+
+**Smoke test results (all via Playwright against `http://localhost:3000`):**
+
+- Dev server boot: Next.js 16 Turbopack ready in ~440ms ✅
+- Cron gate: 401 unauthenticated, 200 with `x-cron-secret` ✅
+- OTP login: email submitted, OTP entered, session established ✅
+- Bank account upload (Kotak Feb 2026): 24 transactions, ₹31,926 debits — DB confirmed `status=processed` ✅
+- Credit card upload (HDFC Feb–Mar 2026): 18 transactions, ₹16,245 spent, credit card fields rendered — DB confirmed ✅
+
+**Bug fix — Gemini 2.5 Flash timeout:**
+
+- `gemini-2.5-flash` has thinking enabled by default in 2026. On 10K-char PDF text, this exceeded the 25s route timeout.
+- Fixed in `apps/money-mirror/src/app/api/statement/parse/route.ts`: added `config: { thinkingConfig: { thinkingBudget: 0 } }` to the `generateContent` call.
+- Response time reduced from >25s (timeout) to ~8s.
+
+**Linear cleanup (VIJ-11 children):**
+
+- VIJ-12 → Duplicate, VIJ-14 → Cancelled, VIJ-15 → Duplicate
+- VIJ-13 restructured as `[MoneyMirror] Phase 1 Rollout Validation`, In Progress
+- 6 child sub-issues created: VIJ-16 (schema, Done), VIJ-17 (OTP, Done), VIJ-18 (bank upload, Done), VIJ-19 (CC upload, Done), VIJ-20 (Vercel deploy, Todo), VIJ-21 (cron gate, Done)
+
+**Why:** DB schema drift blocked all live smoke. Gemini thinking mode silently broke PDF parsing on the happy path.
+
+---
+
+## 2026-04-03 — MoneyMirror Phase 1 Rollout Validation Started
+
+**What:** Started the real rollout-validation pass for `apps/money-mirror` and synced the findings into Linear and repo state.
+
+- Created dedicated Linear follow-up issue `VIJ-13` for the live smoke and rollout checklist.
+- Marked duplicate follow-up `VIJ-14` as Duplicate to keep one canonical validation thread.
+- Verified local runtime behavior:
+  - `npm run dev` boots successfully outside the sandbox
+  - unauthenticated `GET /api/cron/weekly-recap` returns `401`
+  - authenticated `GET /api/cron/weekly-recap` with `x-cron-secret` returns `200 {"ok":true,"total":0,"succeeded":0,"failed":0}`
+- Verified the target Neon DB is still behind the repo schema:
+  - `profiles` is missing `monthly_income_paisa`
+  - `statements` still uses `bank_name`
+  - `statements` is missing `institution_name`, `statement_type`, and the new credit-card due metadata columns
+
+**Why:** The repo now contains Phase 1 expansion code for explicit `bank_account` and `credit_card` flows, but the live DB has not yet been migrated. Until `apps/money-mirror/schema.sql` is applied, the real OTP/onboarding/upload smoke cannot validate the current app behavior.
+
+---
+
+## 2026-04-03 — /learning Issue-009: 7 Engineering Rules Extracted + 5 Agent Files Updated
+
+**What:** Completed the /learning command for MoneyMirror (issue-009). Extracted 7 durable engineering rules from the postmortem and applied Prompt Autopsy changes to 5 agent/command files.
+
+**Engineering rules written to `knowledge/engineering-lessons.md`:**
+
+1. Dashboard/report pages linked from email CTAs must specify a first-load rehydration path (read path) — the post-mutation result path is insufficient.
+2. Parent + child write sequences must declare an explicit atomicity strategy — partial success (`parent = processed, children = missing`) is never a terminal state.
+3. Fan-out worker HTTP contracts must use non-2xx status for failure — master must not inspect JSON body for success/failure accounting.
+4. Auth route fixes must update all callers in the same change — a route auth fix without caller verification is an incomplete fix.
+5. `.env.local.example` must be generated by grepping `process.env.*` in source — not from memory. Key name divergence is a deploy blocker.
+6. File size limits (route < 200 lines, page < 250 lines) must be applied during code generation — not discovered at pre-commit hook rejection.
+7. Third-party library API must be verified against installed version before marking integration complete — training knowledge is not sufficient.
+
+**Agent/command files updated per Prompt Autopsy:**
+
+- `agents/backend-architect-agent.md`: 3 new Mandatory Pre-Approval Checklist items (10: rehydration path, 11: write atomicity, 12: fan-out HTTP contract)
+- `agents/backend-engineer-agent.md`: 2 hard rules (auth caller cross-verification, file size budget at generation time)
+- `agents/code-review-agent.md`: 2 new checks (authenticated route caller verification = CRITICAL, parent/child write sequence check = CRITICAL)
+- `agents/qa-agent.md`: env var key name cross-check added as standalone QA dimension with grep-based verification
+- `commands/execute-plan.md`: env var grep step in §8 completion checklist; read/write path checkpoint + third-party library verification in §5; file size budget rule as §5b
+
+**Also written:** `apps/money-mirror/CODEBASE-CONTEXT.md` — full AI context file for future agent sessions.
+
+**Why:** Recurring failure patterns from issue-009 (2nd consecutive parent/child write atomicity gap, 3rd consecutive env var naming issue, file size violations deferred 3 stages). Upstream enforcement needed to break these cycles.
+
+---
+
+## 2026-04-03 — Shift-Left Infra Validation: Gate 0 + Empty ENV Detection + Execute-Plan Provisioning Checklist
+
+**What:** Three coordinated changes to eliminate the "tests pass, app broken locally" failure pattern discovered during issue-009 analysis.
+
+**Change 1 — `/deploy-check` Gate 0 (manual smoke test):**
+Added a pre-flight checklist (Gate 0) that the PM runs manually before triggering `/deploy-check`. Six checkboxes: dev server boots, OTP login works, onboarding writes to DB, core feature works end-to-end, no 500 errors, no empty env vars. If any fail, fix before running the command. Updated the Output Format to include "Local Smoke Test (Gate 0 — PM confirmed)" as the first line.
+
+**Change 2 — `/deploy-check` ENV gate upgrade (empty value detection):**
+The existing ENV gate only checked that variable names appeared in `.env.local.example`. Upgraded it to read `.env.local` directly and classify each variable as FILLED / EMPTY / MISSING. Empty values (`VAR=` or `VAR=""`) are now a blocking violation — previously they passed as "present". Variables explicitly marked `# Optional` are exempt.
+
+**Change 3 — `/execute-plan` + `backend-engineer-agent.md` infra provisioning:**
+Added a 6-item infrastructure provisioning checklist to the execute-plan completion criteria. DB project created, schema applied and verified, auth provider provisioned (e.g., Neon Auth URL obtained), all non-optional env vars filled, Sentry project created and configured, `npm run dev` boots clean. These are now **hard deliverables** — not README suggestions. Also moved Sentry setup from deploy-check into execute-plan's Backend Implementation section: `npm install @sentry/nextjs`, wizard run, all 4 Sentry vars filled. The backend-engineer-agent.md `# Rules` section now lists all 6 as explicit hard constraints.
+
+**Why:** Issue-009 analysis revealed that `NEON_AUTH_BASE_URL` was empty in `.env.local` — OTP login would have failed immediately on local test. `RESEND_API_KEY` was also empty, meaning recap emails silently fail (returning 200 but not sending). The current ENV gate in deploy-check passed both because it only checked variable name presence in `.env.local.example`, not actual values. The root cause: infra setup (Neon Auth provisioning, Sentry project creation) has no enforcement point in the pipeline — it lives only as prose in README.md. Deploy-check discovered these gaps too late (after PR creation). The fix shifts this validation to execute-plan, where the engineer is still in implementation mode.
+
+**Files:** `commands/deploy-check.md` (Gate 0 added, §2 ENV gate upgraded, output format updated), `commands/execute-plan.md` (§2 Sentry setup added, §8 infra provisioning checklist added), `agents/backend-engineer-agent.md` (# Rules section updated with 6-item infra checklist)
+
+---
+
+## 2026-04-02 — Proactive DB Schema + ENV Verification in /deploy-check
+
+**What:** Upgraded `/deploy-check` so that database schema application and ENV completeness are enforced as **blocking gates** during the command, not left as unchecked items in the PR body for a reviewer to discover.
+
+- **New §3a** (Database Schema Verification): Agent reads `schema.sql`, extracts all `CREATE TABLE` table names, then either queries `information_schema.tables` via MCP (Supabase/Neon) to verify each table exists, or — if MCP is unavailable — prints a blocking prompt listing every required table and instructs the user to apply the schema before continuing. Deployment is blocked if any table is missing or the user hasn't confirmed.
+- **Updated §2** (ENV Completeness Check): Agent greps `apps/<project>/src/` for all `process.env.*` references and diffs against `.env.local.example`. Any var in code but missing from the example file is a **BLOCKING violation** that stops the command.
+- **Updated §8 PR body**: Removed `[ ] Apply schema.sql` and `[ ] Set env vars` as reviewer TODOs — replaced with pre-checked `[x] Schema verified` and `[x] ENV verified` lines, because these are now confirmed before PR creation.
+
+**Why:** Across multiple pipeline cycles (issues 002–006, 009), the schema and ENV steps were only surfaced as PR checklist items that reviewers were expected to catch. This caused silent deploy failures: the PR was merged, the app was pushed, and only then did the missing tables or missing env vars surface. The gate must fire _before_ the PR is created.
+
+**Anti-pattern fixed**: "Schema applied post-PR = silent deploy failure" (engineering-lessons.md, issue-002 entry).
+
+**Files:** `commands/deploy-check.md` (§2 ENV check added, §3a schema verification added, §8 PR body updated), `CHANGELOG.md`
+
+---
+
+## 2026-04-02 — Real-Time Feedback Capture + Mandatory Linear Sync
+
+**What:** Added two hard rules to the system that were previously missing: (1) PM feedback during any pipeline stage must be captured immediately into the relevant agent/command file and CHANGELOG — not deferred to `/learning`. (2) Linear sync checkpoints are now mandatory, not "recommended" — if a sync is skipped, the next command must run it before proceeding.
+
+**Why:** PM feedback during issue-009's pipeline was not being captured into the agent files in real time, creating risk that corrections would be lost if the cycle was abandoned or compacted. Linear syncs were being skipped because the language in CLAUDE.md and command-protocol.md said "recommended" rather than enforcing them.
+
+**Files:** `CLAUDE.md` (Real-Time Feedback Capture section added, Linear checkpoints changed from Recommended to Mandatory), `command-protocol.md` (Real-Time Feedback Capture Protocol section added, CHANGELOG Discipline section added, Linear checkpoints made mandatory)
+
+---
+
+## 2026-04-02 — /review Command + Code Review Agent Upgrade (Zevi Gap Analysis)
+
+**What:** Strengthened `/review` command and `code-review-agent.md` based on a benchmark against Zevi Arnovitz's (Meta PM, Lenny's Podcast) code review command. Added what was genuinely better; kept our competitive advantages.
+
+**Added to both files:**
+
+- Formal severity ladder: CRITICAL / HIGH / MEDIUM / LOW with project-specific definitions (PostHog dual-emission explicitly labeled CRITICAL)
+- Structured output format: `Looks Clean` pass-list + `Issues Found` with `file:line` format + `Summary` block with issue counts and recommendation
+- Explicit production readiness checks: no `console.log`, no TODOs/FIXMEs, no hardcoded secrets, no `@ts-ignore`
+- React/Hooks review step (scoped strictly to `"use client"` files): effect cleanup, dependency arrays, infinite loop patterns
+- Client-side performance sub-checks under Step 5 (`useMemo`, `useCallback`, unnecessary re-renders) — also scoped to Client Components only
+
+**Preserved (our advantages Zevi doesn't have):**
+
+- PostHog dual-emission check as a named CRITICAL block with exact grep instructions
+- Architecture check diffs against the actual plan doc (not generic "follows patterns")
+- Knowledge file loading (`engineering-lessons.md` keeps postmortem rules active)
+- Pipeline gate integration and quality gate enforcement
+
+**What we did NOT copy:** emoji formatting, generic architecture check, project-agnostic output.
+
+**Files:** `commands/review.md` (updated), `agents/code-review-agent.md` (updated)
+
+---
+
 ## 2026-04-01 — Linear PM Layer (Retroactive Sync + Auto-Bind)
 
 **What:** Full Linear integration layer added as a PM-facing workflow mirror. The repo remains the source of truth; Linear reflects state for stakeholder visibility.

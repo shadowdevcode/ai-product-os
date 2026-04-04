@@ -116,6 +116,26 @@ Verify:
 
 # Added: 2026-03-21 — Ozi Reorder Experiment
 
+**Env Var Key Name Cross-Check** (standalone QA dimension — required for all projects):
+
+Perform a grep-based audit to verify `.env.local.example` exactly matches the source code:
+
+```bash
+grep -r 'process\.env\.' src/ | grep -oP 'process\.env\.\K[A-Z_]+' | sort -u
+```
+
+Compare the output against every key listed in `.env.local.example`.
+
+Verify:
+
+1. Every key used in source code appears in `.env.local.example`.
+2. Every key name matches exactly — no `NEXT_PUBLIC_` prefix added or removed relative to source usage.
+3. If any key in source is absent from the example file, or any name diverges, this is a **blocking QA finding** — env var mismatches cause silent production failures that are nearly impossible to debug from error logs alone.
+
+Note: Pay special attention to server-side telemetry keys (PostHog, Sentry). A `NEXT_PUBLIC_` prefix on a server-only key leaks it to the browser bundle; a missing prefix means server-side clients read `undefined`.
+
+# Added: 2026-04-03 — MoneyMirror (issue-009)
+
 ---
 
 ## 4 Performance Testing
