@@ -11,17 +11,17 @@
 ## Current Stage
 
 - stage: execute_plan
-- last_command_run: manual implementation — Phase 1 rollout validation + live smoke complete
-- status: in-progress
-- active_issue: issue-009 / VIJ-13
+- last_command_run: MoneyMirror Phase 1 rollout — Vercel routing/protection fix + production verify (VIJ-22, VIJ-20, VIJ-13 closed)
+- status: completed
+- active_issue: issue-009 / VIJ-13 (Phase 1 rollout validation Done in Linear)
 
 ## Active Work
 
 - active_branch: feat/linear-workflow-sync
-- last_commit: 71d3e66
-- open_pr_link: https://github.com/shadowdevcode/ai-product-os/pull/14
-- environments: local
-- implementation_focus: Phase 1 rollout validation — live schema sync + OTP/upload/cron smoke
+- last_commit: dced451
+- open_pr_link: https://github.com/shadowdevcode/ai-product-os/pull/15
+- environments: local, production (`https://money-mirror-rho.vercel.app`)
+- implementation_focus: Phase 1 rollout complete — Neon schema + smokes + Vercel production verified
 
 ## Quality Gates
 
@@ -29,7 +29,7 @@
 - explore: done — Recommendation: Build. Problem is critical (Hair on fire for 22–30 segment), gap is confirmed from 13 Warikoo transcripts (238K chars, zero coaching tool recommended across 100+ Money Matters episodes). Competitive scan: no Indian product at this positioning (Walnut abandoned, ET Money investment-first, CRED rewards bad behavior, Jupiter/Fi bank-first). MVP: HDFC bank statement parse + onboarding Money Health Score + Day 7 Mirror Report + 5 advisory triggers + weekly email. WhatsApp, credit card parsing, gamification, paywall all excluded from Phase 1. North Star: second-month statement upload rate (≥60%). Primary risk: PDF parsing reliability. Saved to experiments/exploration/exploration-009.md.
 - create_plan: done — plan-009.md + manifest-009.json created. Historical issue-009 plan snapshot specified a Supabase-auth/RLS-oriented shape. Current MoneyMirror implementation has since drifted and is now Neon Auth + Neon Postgres with server-enforced ownership. The repo codebase is the source of truth for local testing.
 - execute_plan: done — Full apps/money-mirror implementation. Current canonical stack: Next.js 16, Neon Auth email OTP, Neon Postgres, Gemini 2.5 Flash, Resend, PostHog, Sentry. Built statement parse, dashboard rehydration, onboarding completion, weekly recap fan-out, and HDFC-only advisory flow. Historical issue-009 notes that mention Supabase JWT wiring or RLS should be read as cycle-era findings, not the current app architecture. Current automated validation target after repair: 39 tests.
-- execute_plan (issue-009 phase-1 expansion): blocked — Implemented Phase 1 scope expansion directly in `apps/money-mirror/` for the next local validation pass. Added explicit `statement_type` support (`bank_account | credit_card`), parser prompt/validation helpers in `src/lib/statements.ts`, institution metadata + optional card due fields on statement parse responses and dashboard reads, onboarding persistence of `monthly_income_paisa`, upload-mode selector UI, and credit-card-safe advisory math so card payments/refunds are not treated as income. Updated app docs/context to reflect bank-account + credit-card PDF support. Automated validation now: `npm test` PASS (45 tests), `npx tsc --noEmit` PASS, `npx next build --webpack` PASS. Live rollout validation findings: local `npm run dev` boots, unauthenticated cron returns `401`, authenticated cron with `x-cron-secret` returns `200 {"ok":true,"total":0,"succeeded":0,"failed":0}`, but the target Neon database is still on the old schema. Verified drift: `profiles` is missing `monthly_income_paisa`; `statements` still uses `bank_name` and is missing `institution_name`, `statement_type`, `due_date`, `payment_due_paisa`, `minimum_due_paisa`, and `credit_limit_paisa`. Remaining work before deploy: apply updated `apps/money-mirror/schema.sql` to Neon, re-check schema, then resume the real OTP/Gemini/Resend smoke flow on follow-up issue `VIJ-13`.
+- execute_plan (issue-009 phase-1 expansion): done — Phase 1 scope expansion shipped in `apps/money-mirror` (`statement_type`, parser helpers, card metadata, `monthly_income_paisa`, credit-card-safe advisory math). Neon schema migrated; local + production smoke complete. Linear VIJ-13/VIJ-20/VIJ-22 closed 2026-04-04. Production: `https://money-mirror-rho.vercel.app` (root directory `apps/money-mirror`, `ssoProtection` preview-only). CLI: run `vercel deploy --prod` from monorepo root (gitignored `.vercel/project.json` links project) so `rootDirectory` does not double-resolve.
 - execute_plan: done — Phase 1 (Core Engine): apps/nykaa-personalisation built, Neon DB ready, 5 API routes, affinity scoring live. Phase 2 (P2P & Conversions): PDP UI implemented with dynamic routing ([id]), ingest-event API enhanced for `add_to_cart` tracking. **Update**: Fixed missing backend agent logic by adding `GET /api/catalog/product/[id]` route and refactoring PDP to use server-side fetch for foolproof integration.
   - deslop (issue-008): done — extracted duplicated scoreProduct into shared score-product.ts module.
   - review (issue-008): done — Fixed missing SHELF_CLICK tracking and reduced latency in rerank route.
@@ -55,13 +55,12 @@
 
 ## Pending Queue
 
-- Vercel deploy + post-deploy verify (VIJ-20) — build succeeds, but production deployment is still blocked by Vercel protection/routing misconfiguration
-- Follow-up: fix MoneyMirror Vercel public routing and deployment protection so production serves real app routes
 - Credit card PDF smoke follow-up: categorisation landed 95% "Other" for bank_account — may need categoriser tuning in a future issue
+- Optional: confirm Neon Auth redirect / allowed origins for production OTP if sign-in fails (dashboard)
 
 ## Blockers
 
-- Vercel deploy (VIJ-20) blocked — Vercel project `money-mirror` now exists and production builds complete, but public aliases are protected by Vercel Authentication and authenticated `vercel curl` still returns `NOT_FOUND` for `/`, `/login`, `/dashboard`, and `/api/cron/weekly-recap`
+- (none) — MoneyMirror production deploy verified 2026-04-04 (VIJ-20/VIJ-22 resolved)
 
 ## Decisions Log (append-only)
 
@@ -146,6 +145,8 @@
 - 2026-04-03: MoneyMirror Phase 1 rollout validation started against live local/runtime infrastructure. Verified `npm run dev` boots outside the sandbox, verified cron auth contract locally (`401` without auth, `200 {"ok":true,"total":0,"succeeded":0,"failed":0}` with `x-cron-secret`), created dedicated Linear follow-up issue `VIJ-13`, and confirmed the target Neon DB is still on the old schema. Blocking drift: `profiles` lacks `monthly_income_paisa`; `statements` still uses `bank_name` and lacks `institution_name`, `statement_type`, and credit-card due metadata fields. Next required action: apply `apps/money-mirror/schema.sql` to Neon, then resume OTP/onboarding/upload/dashboard smoke on `VIJ-13`.
 - 2026-04-04: MoneyMirror Phase 1 live smoke complete. Applied 7 ALTER TABLE migrations to Neon DB `steep-meadow-97750093` (profiles + statements schema drift resolved). Linear cleanup: cancelled VIJ-12/VIJ-14/VIJ-15 (duplicates), restructured VIJ-13 as canonical Phase 1 Rollout Validation issue (In Progress), created 6 child sub-issues (VIJ-16 schema Done, VIJ-17 OTP Done, VIJ-18 bank upload Done, VIJ-19 CC upload Done, VIJ-20 Vercel deploy pending, VIJ-21 cron gate Done). Smoke results: OTP login ✅, bank account PDF parse (Kotak, 24 txns, ₹31,926) ✅ DB confirmed, credit card PDF parse (HDFC, 18 txns, ₹16,245) ✅ DB confirmed. Fixed gemini-2.5-flash timeout by disabling thinking (thinkingBudget: 0) in parse route — reduces response time from >25s to ~8s. Only remaining gate: Vercel deploy (VIJ-20).
 - 2026-04-04: MoneyMirror production deploy attempt executed for VIJ-20. Created and linked Vercel project `money-mirror` in scope `vijay-sehgals-projects`, synced production env vars from app-local `.env.local` except blank Sentry values (`NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT`), and corrected `NEXT_PUBLIC_APP_URL` to `https://money-mirror-rho.vercel.app`. First deploy failed because `middleware.ts` imported `@neondatabase/auth/next/server`, which Vercel rejected in the Edge runtime. Fixed by replacing [`middleware.ts`](/Users/vijaysehgal/Downloads/02-Portfolio/ai-product-os/apps/money-mirror/middleware.ts) with [`proxy.ts`](/Users/vijaysehgal/Downloads/02-Portfolio/ai-product-os/apps/money-mirror/proxy.ts) so auth gating runs in Next 16's Node proxy runtime. Local validation after the fix: `npm test` PASS (45 tests), `npx next build --webpack` PASS, `npx tsc --noEmit` PASS after regenerating `.next/types`. Subsequent production builds succeeded and Vercel aliased the app to `https://money-mirror-rho.vercel.app`, but the release is still blocked: unauthenticated requests return Vercel Authentication `401`, and authenticated `vercel curl` requests still return `NOT_FOUND` for `/`, `/login`, `/dashboard`, and `/api/cron/weekly-recap`. Next required action: fix Vercel project/public routing configuration before VIJ-20 can be closed.
+- 2026-04-04: MoneyMirror Vercel production unblocked and Linear VIJ-22/VIJ-20/VIJ-13 closed. Vercel API `PATCH /v9/projects/money-mirror`: `rootDirectory: apps/money-mirror`, `framework: nextjs`, `sourceFilesOutsideRootDirectory: true`; `ssoProtection.deploymentType` changed from `all_except_custom_domains` to `preview` (production `.vercel.app` URLs public). Production redeploy `dpl_UrdwuBkS4qvSwgqY2PjTJvyKS8cW` READY. Verified: `GET /` and `/login` → 200 (Next.js HTML); `GET /api/cron/weekly-recap` → 401 without secret, 200 with `x-cron-secret`; `NEXT_PUBLIC_APP_URL` matches alias. Gitignored repo-root `.vercel/project.json` added so `vercel deploy --prod` runs from monorepo root (avoids doubled `apps/money-mirror` path when project `rootDirectory` is set).
+- 2026-04-04: Repo / dev-environment hygiene — removed committed Neon MCP secret (gitignore `.mcp.json`, `.mcp.json.example`), added Codex [`.codex/config.toml`](.codex/config.toml) with `NEON_API_KEY` bearer env var, documented in CHANGELOG. Opened GitHub PR [#15](https://github.com/shadowdevcode/ai-product-os/pull/15) for review. **Linear:** VIJ-11 remains **Done** (verified); `linear_last_sync` unchanged — these changes are not a MoneyMirror product milestone, so `/linear-sync` was not re-run for them.
 
 ## Links
 
@@ -161,10 +162,10 @@
 - linear_root_issue_identifier: VIJ-11 <!-- display identifier for the root issue -->
 - linear_cycle: <!-- Linear cycle/sprint, if assigned -->
 - linear_sync_map_path: experiments/linear-sync/issue-009.json <!-- path to durable id map -->
-- linear_last_sync: 2026-04-04T02:55:23Z <!-- ISO timestamp of latest rollout-validation sync -->
-- linear_sync_status: deploy-attempt-synced — VIJ-20 moved to In Progress, deploy evidence comment posted, and blocker issue VIJ-22 created for Vercel routing/protection failure. <!-- last sync mode or failure reason -->
-- linear_follow_up_issue_identifier: VIJ-13
-- linear_follow_up_issue_url: https://linear.app/vijaypmworkspace/issue/VIJ-13/moneymirror-phase-1-live-smoke-and-rollout-validation
+- linear_last_sync: 2026-04-04T08:22:36Z <!-- ISO timestamp of latest rollout-validation sync -->
+- linear_sync_status: success — VIJ-22, VIJ-20, VIJ-13 marked Done; Phase 1 rollout validation complete. Repo-hygiene commits (MCP/Codex, PR #15) not mirrored to Linear. <!-- last sync mode or failure reason -->
+- linear_follow_up_issue_identifier: <!-- cleared: VIJ-13 Done -->
+- linear_follow_up_issue_url: https://linear.app/vijaypmworkspace/issue/VIJ-13/moneymirror-phase-1-rollout-validation
 - docs_home: experiments/ideas/issue-007.md
 - demo:
 - analytics_dashboard:

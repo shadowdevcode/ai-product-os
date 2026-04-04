@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-04-04 — GitHub PR #15 + project state (repo hygiene)
+
+**What:** Pushed `feat/linear-workflow-sync` (commits `9f483ed`, `dced451`) and opened [**PR #15**](https://github.com/shadowdevcode/ai-product-os/pull/15) for review: Neon MCP secret removal, `.codex/config.toml`, CHANGELOG updates.
+
+**Docs:** [project-state.md](project-state.md) updated — `last_commit` `dced451`, `open_pr_link` → PR #15, decisions log entry for MCP/Codex hygiene.
+
+**Linear:** [VIJ-11](https://linear.app/vijaypmworkspace/issue/VIJ-11/issue-009-moneymirror-ai-powered-personal-finance-coach-for-gen-z) is **Done** (API check 2026-04-04). [experiments/linear-sync/issue-009.json](experiments/linear-sync/issue-009.json) still reflects last pipeline sync **2026-04-04T08:22:36Z** (`phase-1-rollout-closeout`); no new `/linear-sync` run for MCP-only commits (PM milestone unchanged). `pr_link` in the JSON map points to PR #15 as the active review link.
+
+---
+
 ## 2026-04-04 — Codex MCP: project-scoped Neon (config.toml)
 
 **What:** OpenAI Codex does not read `.mcp.json`; it uses TOML under [`.codex/config.toml`](.codex/config.toml). Added a **committed-safe** project config that wires Neon’s streamable HTTP MCP via **`bearer_token_env_var = "NEON_API_KEY"`** (no secrets in Git).
