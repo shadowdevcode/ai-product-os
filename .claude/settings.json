@@ -22,14 +22,24 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Write|Edit",
-        "hooks": ["node scripts/lib/check-gate-before-write.js"]
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/lib/check-gate-before-write.js"
+          }
+        ]
       }
     ],
     "PostToolUse": [
       {
-        "matcher": "Write|Edit",
-        "hooks": ["node scripts/lib/check-function-sizes.js"]
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node scripts/lib/check-function-sizes.js"
+          }
+        ]
       }
     ]
   }

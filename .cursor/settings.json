@@ -1,0 +1,13 @@
+{
+  "plugins": {
+    "linear": {
+      "enabled": true
+    },
+    "neon-postgres": {
+      "enabled": true
+    },
+    "vercel": {
+      "enabled": true
+    }
+  }
+}
