@@ -21,12 +21,17 @@
   },
   "documents": {},
   "tasks": {},
-  "last_sync_mode": "status",
-  "last_sync_timestamp": "2026-04-02T08:01:02Z",
-  "pipeline_status": "qa-test",
-  "linear_status": "In Review",
+  "last_sync_mode": "drift-correction",
+  "last_sync_timestamp": "2026-04-03T10:10:24Z",
+  "pipeline_status": "learning",
+  "linear_status": "Done",
+  "closeout_document_id": "97bb3d9b-6f13-49c7-9f06-827d15ad6cd6",
+  "closeout_document_url": "https://linear.app/vijaypmworkspace/document/issue-009-closeout-snapshot-aee923543aa2",
+  "pr_link": "https://github.com/shadowdevcode/ai-product-os/pull/14",
   "comments": {
     "execute_plan_status": "d765a19d-0486-419e-ae0e-8a2dab21afad",
-    "qa_test_status": "6c7a878e-4dc3-45f5-a909-04dcc245cccf"
+    "qa_test_status": "6c7a878e-4dc3-45f5-a909-04dcc245cccf",
+    "deploy_check_release": "5353d196-fa72-4977-a4cb-7c0104a77e32",
+    "drift_correction": "2c932588-28d3-4000-af4d-06eb80f35aa5"
   }
 }

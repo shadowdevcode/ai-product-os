@@ -155,7 +155,7 @@ improvement: Peer Review and QA Agents must explicitly verify that any state cha
 date: 2026-03-11
 project: Project Clarity (issue-004)
 issue: Telemetry events defined in the Metric Plan were absent in the codebase during Deploy Check.
-root_cause: The pipeline executed `/metric-plan` _after_ all implementation and QA stages, disconnecting analytics definition from the build cycle.
+root*cause: The pipeline executed `/metric-plan` \_after* all implementation and QA stages, disconnecting analytics definition from the build cycle.
 rule: Telemetry instrumentation (e.g. PostHog client) must be bundled into the feature implementation phase rather than treated as a post-QA checklist item.
 improvement: Execute Plan agent must mandate integration of telemetry trackers during the build. Metric Plan should ideally shift left conceptually.
 
@@ -305,5 +305,82 @@ issue: Missing North Star metric flow. "Add-to-Cart" lifting was defined as succ
 root_cause: The architecture agents mapped API states to existing features but did not verify whether the metrics defined could actually be measured by the requested UI.
 rule: No product or architecture plan can be approved unless every single success metric has a corresponding, explicitly designed user flow and telemetry trigger in the specification.
 improvement: backend-architect-agent now requires explicitly verifying metric verifiability.
+
+---
+
+---
+
+date: 2026-04-03
+project: MoneyMirror (issue-009)
+issue: Dashboard transient state — GET /api/dashboard rehydration path absent from execute-plan output; refresh and email deep links dropped users to blank upload screen
+root_cause: Architecture spec described the dashboard only in terms of post-mutation result. The separate first-load read path (for refresh, direct URL, email CTA) was not specified. Backend engineer satisfied "what does the dashboard show" without satisfying "how does it load on any entry point."
+rule: Every page that is linked from an email, push notification, or external URL must have its full load path specified in the architecture: which API route is called, what query it runs, and what state it returns. Implementing only the post-mutation result path is never sufficient.
+improvement: backend-architect-agent Mandatory Pre-Approval Checklist item 10: every results/dashboard/report page linked from navigation, email, or external URL must specify the authenticated read path for first-load rehydration. Client-memory-only post-mutation flows are blocked. commands/execute-plan.md: add final verification — for every page in the plan, confirm both the write path and the read path are implemented.
+
+---
+
+---
+
+date: 2026-04-03
+project: MoneyMirror (issue-009)
+issue: Partial write accepted as success — transaction insert failure did not block `processed` state; downstream reads operated on a corrupted statement
+root_cause: Architecture spec defined the parse flow as a sequence of DB writes but did not specify an atomicity strategy for the parent/child pair. Backend engineer treated transaction insert failure as non-critical because there was no explicit instruction that the child write must succeed before the parent enters a success state. Second consecutive cycle with this failure (issue-006 had similar partial-write gap).
+rule: Any architecture spec that includes a parent record + child records written in the same user action must explicitly declare atomicity: if the child write fails, the parent must be rolled back or marked failed. Partial success is never acceptable as a terminal state for a user-facing data pipeline.
+improvement: backend-architect-agent Mandatory Pre-Approval Checklist item 11: for every user action that writes a parent record + one or more child records, specify the atomicity strategy. Child failure → parent rollback or failed state + error telemetry. "Partial success" terminal states are blocked. code-review-agent: flag CRITICAL if parent status is set to processed/success before child writes complete.
+
+---
+
+---
+
+date: 2026-04-03
+project: MoneyMirror (issue-009)
+issue: Fan-out worker returned HTTP 200 with { ok: false } on email failure — master cron counted it as success; weekly_recap_completed reported inflated succeeded counts with failed: 0
+root_cause: Fan-out worker HTTP contract was defined at invocation level but success/failure propagation contract was not specified. Backend engineer returned 200 with a JSON error body — a common REST convention — without verifying that the master's counting logic would interpret it correctly.
+rule: Fan-out worker HTTP contracts must be explicitly specified in the architecture: the worker must return a non-2xx status on any failure that should be counted as failed by the master. JSON error bodies alone are insufficient — the master must not need to inspect payloads to distinguish success from failure.
+improvement: backend-architect-agent fan-out architecture section must state: "Worker returns non-2xx (e.g., 502) on any failure the master should count as failed. Master uses HTTP status only — never inspects JSON body — for success/failure accounting."
+
+---
+
+---
+
+date: 2026-04-03
+project: MoneyMirror (issue-009)
+issue: Advisory feed fetch missing auth header — coaching never rendered in core flow; dashboard called GET /api/dashboard/advisories without Authorization header returning 401 silently
+root_cause: Auth was added to the advisory route during a code-review fix cycle. The dashboard component was written before that fix using a bare fetch(). The two halves were never cross-verified. A route auth fix without updating all callers is an incomplete fix.
+rule: After adding or enforcing auth on any API route, all client-side callers of that route must be updated in the same change. A route auth fix without updating all callers is an incomplete fix.
+improvement: code-review-agent: for every API route confirmed to require auth, search all fetch(), axios, and useSWR calls in client components targeting that route path. If any caller omits the Authorization header, flag as CRITICAL. commands/execute-plan.md: after wiring any authenticated route, verify all client-side callers send auth headers.
+
+---
+
+---
+
+date: 2026-04-03
+project: MoneyMirror (issue-009)
+issue: PostHog env var name mismatch — .env.local.example declared NEXT_PUBLIC_POSTHOG_KEY but posthog.ts read POSTHOG_KEY; server-side telemetry would be silently dead in any production deployment
+root_cause: .env.local.example was written from memory during execute-plan and never mechanically verified against actual process.env._ calls in the code. Var names diverged silently.
+rule: .env.local.example must be generated from the actual process.env._ calls in the code — not from memory. Every key must exactly match the string used in source. A mismatch between the example file and the actual code reference is a deploy blocker.
+improvement: commands/execute-plan.md: add mandatory final step — grep all process.env.\* references in src/, extract variable names, and verify every name appears in .env.local.example. Any discrepancy is a blocking gap before execute-plan can be marked done. qa-agent: promote env var key name cross-check to a standalone QA dimension with explicit grep-based verification.
+
+---
+
+---
+
+date: 2026-04-03
+project: MoneyMirror (issue-009)
+issue: File size violations at deploy-check — parse/route.ts (345 lines) and dashboard/page.tsx (562 lines) exceeded 300-line limit; extraction required 3 stages after implementation
+root_cause: 300-line file limit is enforced mechanically at commit time but is not an active constraint during code generation. Large files are written without budgeting for size.
+rule: The 300-line file limit must be applied during code generation, not at commit time. Any route or page expected to contain multi-phase logic must be designed with extraction points upfront. Files projected to exceed 250 lines must be split before writing.
+improvement: commands/execute-plan.md: for any API route handling more than 2 logical phases, the route handler must delegate to helpers at generation time. Target: route files under 200 lines, page files under 250 lines. backend-engineer-agent + frontend-engineer-agent: if a file is projected to exceed 250 lines during generation, extract into a helper or sub-component before writing past that limit.
+
+---
+
+---
+
+date: 2026-04-03
+project: MoneyMirror (issue-009)
+issue: pdf-parse wrong result property — pdf-parser.ts called result.pages?.length; library exposes result.total, not result.pages.length; pageCount resolved to 1 for all documents
+root_cause: execute-plan agent generated code against training knowledge of the pdf-parse API without verifying the installed package version's exported interface. The library API changed between versions.
+rule: When generating code against a third-party package whose API has changed between major versions, verify the installed version's exported types or index against the generated call pattern. Training knowledge of library APIs is not sufficient for version-sensitive properties.
+improvement: commands/execute-plan.md: after wiring any third-party library for the first time, check the installed version in package.json and verify the exported API matches the generated usage pattern.
 
 ---

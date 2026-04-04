@@ -1,6 +1,6 @@
 # MoneyMirror
 
-AI-powered personal finance coach for Gen Z Indians that uses Neon Auth plus Neon Postgres to parse HDFC bank statements, reveal the perception gap between perceived and actual spend, and deliver consequence-first nudges.
+AI-powered personal finance coach for Gen Z Indians that uses Neon Auth plus Neon Postgres to parse Indian bank-account and credit-card statements, reveal the perception gap between perceived and actual spend, and deliver consequence-first nudges.
 
 **Sign in with your email, upload a statement, and get a brutally honest view of where your money actually goes.**
 
@@ -8,9 +8,9 @@ AI-powered personal finance coach for Gen Z Indians that uses Neon Auth plus Neo
 
 1. User signs in with Neon Auth email OTP and lands in a private onboarding flow.
 2. User completes 5 onboarding questions and the app calculates a Money Health Score.
-3. User uploads an HDFC bank statement PDF and Gemini extracts and categorizes transactions entirely in memory.
+3. User uploads a password-free bank-account or credit-card statement PDF and Gemini extracts and categorizes transactions entirely in memory.
 4. Dashboard hydrates the latest processed statement and shows the Mirror Moment plus advisory cards.
-5. Every Monday, a cron fan-out sends a weekly recap email to each eligible user via Resend.
+5. Every Monday at 8:00 AM IST, a Vercel cron fan-out sends a weekly recap email to each eligible user via Resend.
 
 ## Stack
 
@@ -20,7 +20,7 @@ AI-powered personal finance coach for Gen Z Indians that uses Neon Auth plus Neo
 | Backend   | Next.js App Router route handlers          |
 | Auth      | Neon Auth (`@neondatabase/auth`)           |
 | Database  | Neon Postgres (`@neondatabase/serverless`) |
-| AI        | Google Gemini 1.5 Flash                    |
+| AI        | Google Gemini 2.5 Flash                    |
 | Analytics | PostHog (`posthog-node`)                   |
 | Email     | Resend                                     |
 | Hosting   | Vercel                                     |
@@ -42,22 +42,22 @@ cp .env.local.example .env.local
 
 Fill in these values:
 
-| Variable                  | Required | Description                            |
-| ------------------------- | -------- | -------------------------------------- |
-| `DATABASE_URL`            | Yes      | Neon Postgres connection string        |
-| `NEON_AUTH_BASE_URL`      | Yes      | Base URL for your Neon Auth project    |
-| `NEON_AUTH_COOKIE_SECRET` | Yes      | Cookie secret configured for Neon Auth |
-| `GEMINI_API_KEY`          | Yes      | Google AI Studio API key               |
-| `RESEND_API_KEY`          | Yes      | Resend API key                         |
-| `POSTHOG_KEY`             | Yes      | Server-side PostHog key                |
-| `POSTHOG_HOST`            | Yes      | PostHog host URL                       |
-| `NEXT_PUBLIC_APP_URL`     | Yes      | Public app URL used in recap links     |
-| `CRON_SECRET`             | Yes      | Shared secret for cron routes          |
-| `NEXT_PUBLIC_SENTRY_DSN`  | Yes      | Sentry DSN                             |
-| `SENTRY_AUTH_TOKEN`       | Yes      | Sentry auth token                      |
-| `SENTRY_ORG`              | Yes      | Sentry org slug                        |
-| `SENTRY_PROJECT`          | Yes      | Sentry project slug                    |
-| `CI`                      | No       | Optional CI build flag                 |
+| Variable                  | Required | Description                                                         |
+| ------------------------- | -------- | ------------------------------------------------------------------- |
+| `DATABASE_URL`            | Yes      | Neon Postgres connection string                                     |
+| `NEON_AUTH_BASE_URL`      | Yes      | Base URL for your Neon Auth project                                 |
+| `NEON_AUTH_COOKIE_SECRET` | No       | Optional only if Neon explicitly gives one for your project/runtime |
+| `GEMINI_API_KEY`          | Yes      | Google AI Studio API key                                            |
+| `RESEND_API_KEY`          | Yes      | Resend API key                                                      |
+| `POSTHOG_KEY`             | Yes      | Server-side PostHog key                                             |
+| `POSTHOG_HOST`            | Yes      | PostHog host URL                                                    |
+| `NEXT_PUBLIC_APP_URL`     | Yes      | Public app URL used in recap links                                  |
+| `CRON_SECRET`             | Yes      | Shared secret for cron routes                                       |
+| `NEXT_PUBLIC_SENTRY_DSN`  | Yes      | Sentry DSN                                                          |
+| `SENTRY_AUTH_TOKEN`       | Yes      | Sentry auth token                                                   |
+| `SENTRY_ORG`              | Yes      | Sentry org slug                                                     |
+| `SENTRY_PROJECT`          | Yes      | Sentry project slug                                                 |
+| `CI`                      | No       | Optional CI build flag                                              |
 
 ### 3. Create Neon project and enable Neon Auth
 
@@ -66,6 +66,7 @@ Fill in these values:
 3. Configure email OTP delivery in Neon Auth.
 4. Copy the Postgres connection string into `DATABASE_URL`.
 5. Copy the Neon Auth base URL into `NEON_AUTH_BASE_URL`.
+6. Only set `NEON_AUTH_COOKIE_SECRET` if Neon explicitly provides that value during auth setup.
 
 ### 4. Apply database schema
 
@@ -129,7 +130,7 @@ Persists the money health score and perceived spend for the authenticated user.
 
 ### `POST /api/statement/parse`
 
-Accepts `multipart/form-data` with a `file` field, extracts HDFC statement data, categorizes transactions, and persists a processed statement.
+Accepts `multipart/form-data` with a `file` field and optional `statement_type`, extracts statement data, categorizes transactions, and persists a processed statement.
 
 **Auth**: Neon Auth session cookie required.
 
@@ -138,6 +139,8 @@ Accepts `multipart/form-data` with a `file` field, extracts HDFC statement data,
 ```json
 {
   "statement_id": "uuid",
+  "institution_name": "Kotak Mahindra Bank",
+  "statement_type": "bank_account",
   "period_start": "2026-03-01",
   "period_end": "2026-03-31",
   "transaction_count": 47,
@@ -165,11 +168,11 @@ Returns the advisory subset for the authenticated user and statement.
 
 **Auth**: Neon Auth session cookie required.
 
-### `POST /api/cron/weekly-recap`
+### `GET /api/cron/weekly-recap`
 
-Fan-out master route that finds all users with processed statements and triggers worker jobs.
+Fan-out master route that finds all users with processed statements and triggers worker jobs. This is the scheduled entrypoint configured in [`vercel.json`](/Users/vijaysehgal/Downloads/02-Portfolio/ai-product-os/apps/money-mirror/vercel.json).
 
-**Auth**: `x-cron-secret: <CRON_SECRET>`
+**Auth**: `authorization: Bearer <CRON_SECRET>` from Vercel Cron. Local/manual triggering may also use `x-cron-secret: <CRON_SECRET>`.
 
 ### `POST /api/cron/weekly-recap/worker`
 
@@ -205,3 +208,8 @@ Sends one recap email for one user.
 - **Email-based identity**: user email is persisted in `profiles` so recap jobs do not need auth-admin lookups at send time.
 - **Single-transaction statement persistence**: statement row creation, transaction inserts, and status finalization run in one Neon transaction to avoid partial writes.
 - **Zero-retention PDF parsing**: uploaded PDFs are processed in memory and nulled immediately after text extraction.
+
+## Current scope
+
+- Shipped now: email OTP sign-in, onboarding score, multi-bank bank-account parsing, credit-card parsing, dashboard rehydration, 5 advisory triggers, weekly recap email.
+- Not shipped in the current app: inbox ingestion from email, WhatsApp/WATI delivery, gamification, Warikoo Priority Ladder goal gating.
