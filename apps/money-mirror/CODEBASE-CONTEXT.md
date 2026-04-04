@@ -1,6 +1,6 @@
 # Codebase Context: MoneyMirror
 
-Last updated: 2026-04-03
+Last updated: 2026-04-04
 
 ## What This App Does
 
@@ -8,11 +8,12 @@ MoneyMirror is a mobile-first PWA AI financial coach for Gen Z Indians (₹20K�
 
 ## Architecture Overview
 
-- **Frontend**: Next.js 16 App Router (RSC by default, `"use client"` for interactive panels). Key pages: `/` (landing), `/onboarding` (5-question flow), `/score` (Money Health Score reveal), `/dashboard` (Mirror + advisory feed + upload).
+- **Frontend**: Next.js 16 App Router (RSC by default, `"use client"` for interactive panels). Key pages: `/` (landing), `/onboarding` (5-question flow), `/score` (Money Health Score reveal), `/dashboard` (Overview with perceived vs actual + categories, **Insights** tab for AI nudges, **Upload** tab, statement picker + month filter, URL `?statement_id=`).
 - **Backend**: Next.js API routes under `src/app/api/`. Neon Auth for session auth, Neon Postgres for persistence, Gemini 2.5 Flash for PDF parse + categorization, Resend for weekly recap emails, PostHog for server-side telemetry.
-- **Database**: Neon Postgres. 4 tables: `profiles`, `statements`, `transactions`, `advisory_feed`. `profiles` persists monthly income and perceived spend; `statements` now tracks `institution_name`, `statement_type`, and optional credit-card due metadata. All monetary values are stored as `BIGINT` in paisa (₹ × 100) to avoid float precision errors.
+- **Database**: Neon Postgres. 4 tables: `profiles`, `statements`, `transactions`, `advisory_feed`. `profiles` persists monthly income and perceived spend; `statements` tracks `institution_name`, `statement_type`, optional credit-card due metadata, optional `nickname`, `account_purpose`, `card_network` for multi-account labelling. All monetary values are stored as `BIGINT` in paisa (₹ × 100) to avoid float precision errors.
 - **AI Integration**: Gemini 2.5 Flash via `@google/genai`. Used for: (1) PDF text → structured bank-account or credit-card statement JSON, (2) transaction category normalization. The statement-parse route currently enforces a 25s timeout and returns JSON 504 on timeout.
 - **Analytics**: PostHog (server-side only, `posthog-node`). 10 events tracked: `onboarding_completed`, `statement_parse_started/rate_limited/success/timeout/failed`, `weekly_recap_triggered/completed`, `weekly_recap_email_sent/failed`. All calls fire-and-forget (`.catch(() => {})`).
+- **Error tracking**: Sentry via `@sentry/nextjs` (`sentry.server.config.ts`, `sentry.edge.config.ts`, `src/instrumentation.ts`, `src/instrumentation-client.ts`). Uses `NEXT_PUBLIC_SENTRY_DSN` plus org/project/auth token vars as in app `README.md` / `.env.local.example`.
 
 ## Key Files
 
@@ -24,7 +25,9 @@ MoneyMirror is a mobile-first PWA AI financial coach for Gen Z Indians (₹20K�
 | `src/app/api/dashboard/advisories/route.ts`        | Authenticated GET — returns advisory_feed rows for the current user via the active Neon session cookie.                                                                                               |
 | `src/app/api/cron/weekly-recap/route.ts`           | Master cron: scheduled GET entrypoint for Vercel Cron; accepts Bearer `CRON_SECRET` or local `x-cron-secret`, paginates users in 1000-row batches, and fans out to the worker via Promise.allSettled. |
 | `src/app/api/cron/weekly-recap/worker/route.ts`    | Worker: sends Resend email per user. Returns HTTP 502 on failure so master counts it correctly.                                                                                                       |
-| `src/lib/advisory-engine.ts`                       | Fires 5 advisory types based on spend ratios and thresholds. Writes to `advisory_feed` table.                                                                                                         |
+| `src/lib/advisory-engine.ts`                       | Rule-based advisories (perception gap, subscriptions, food, no investment, debt ratio, high Other bucket, discretionary mix, avoidable estimate, CC minimum-due risk).                                |
+| `src/lib/format-date.ts`                           | UTC-safe date labels for statement periods (no raw ISO in UI).                                                                                                                                        |
+| `src/app/api/statements/route.ts`                  | Authenticated GET — list processed statements for picker + month filter.                                                                                                                              |
 | `src/lib/scoring.ts`                               | Computes Money Health Score (0–100) from 5 onboarding question responses.                                                                                                                             |
 | `src/lib/statements.ts`                            | Defines statement types, parser prompts, metadata validation, and shared display labels for bank-account and credit-card uploads.                                                                     |
 | `src/lib/pdf-parser.ts`                            | Extracts raw text from PDF buffer using `pdf-parse`. Uses `result.total` (not `result.pages?.length`) for page count — v2 API.                                                                        |
@@ -33,21 +36,22 @@ MoneyMirror is a mobile-first PWA AI financial coach for Gen Z Indians (₹20K�
 ## Data Model
 
 - **profiles**: One row per user. `id` = Neon Auth user id (TEXT). Stores `monthly_income_paisa`, `perceived_spend_paisa`, `target_savings_rate`, `money_health_score`.
-- **statements**: One per uploaded PDF. Tracks `institution_name`, `statement_type` (`bank_account` or `credit_card`), statement period, optional card due metadata, and `status`. Status never set to `processed` before `transactions` child insert succeeds.
+- **statements**: One per uploaded PDF. Tracks `institution_name`, `statement_type` (`bank_account` or `credit_card`), statement period, optional card due metadata, optional `nickname` / `account_purpose` / `card_network`, and `status`. Status never set to `processed` before `transactions` child insert succeeds.
 - **transactions**: Many per statement. All amounts in paisa (BIGINT). `category` CHECK: `needs | wants | investment | debt | other` (lowercase).
 - **advisory_feed**: Advisory nudges generated per statement. `trigger` identifies which advisory type fired.
 
 ## API Endpoints
 
-| Method | Path                            | Auth                                                           | Purpose                                                                                |
-| ------ | ------------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| POST   | `/api/statement/parse`          | Neon session cookie                                            | Upload PDF plus `statement_type`, parse with Gemini, persist to DB, return mirror data |
-| GET    | `/api/dashboard`                | Neon session cookie                                            | Rehydrate latest processed statement + advisory feed (refresh/deep link path)          |
-| GET    | `/api/dashboard/advisories`     | Neon session cookie                                            | Fetch advisory_feed rows for user                                                      |
-| POST   | `/api/onboarding/complete`      | Neon session cookie                                            | Save onboarding income, score, and perceived spend to profiles                         |
-| GET    | `/api/cron/weekly-recap`        | `authorization: Bearer <CRON_SECRET>` or local `x-cron-secret` | Scheduled master fan-out                                                               |
-| POST   | `/api/cron/weekly-recap/worker` | `x-cron-secret` header                                         | Worker: send one recap email; returns 502 on failure                                   |
-| ALL    | `/api/auth/[...path]`           | —                                                              | Neon Auth passthrough                                                                  |
+| Method | Path                            | Auth                                                           | Purpose                                                                                     |
+| ------ | ------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| POST   | `/api/statement/parse`          | Neon session cookie                                            | Upload PDF plus `statement_type` and optional `nickname`, `account_purpose`, `card_network` |
+| GET    | `/api/dashboard`                | Neon session cookie                                            | Rehydrate processed statement + advisories; optional `?statement_id=` for a specific upload |
+| GET    | `/api/statements`               | Neon session cookie                                            | List all processed statements for the user                                                  |
+| GET    | `/api/dashboard/advisories`     | Neon session cookie                                            | Fetch advisory_feed rows for user                                                           |
+| POST   | `/api/onboarding/complete`      | Neon session cookie                                            | Save onboarding income, score, and perceived spend to profiles                              |
+| GET    | `/api/cron/weekly-recap`        | `authorization: Bearer <CRON_SECRET>` or local `x-cron-secret` | Scheduled master fan-out                                                                    |
+| POST   | `/api/cron/weekly-recap/worker` | `x-cron-secret` header                                         | Worker: send one recap email; returns 502 on failure                                        |
+| ALL    | `/api/auth/[...path]`           | —                                                              | Neon Auth passthrough                                                                       |
 
 ## Things NOT to Change Without Reading First
 
@@ -61,11 +65,11 @@ MoneyMirror is a mobile-first PWA AI financial coach for Gen Z Indians (₹20K�
 
 ## Known Limitations
 
-- Statement history browsing not yet implemented — dashboard always shows the latest processed statement. `GET /api/dashboard` accepts `?statement_id=` as a future extension point.
+- Cross-month trend comparison and aggregated “all accounts” rollups are not implemented (single-statement view with picker only).
 - Password removal stays manual outside the app. Password-protected PDFs are rejected with a clear retry message.
 - Inbox ingestion from email is not implemented. Users must manually download the PDF and upload it.
 - PDF parsing reliability depends on the PDF being text-based (not scanned/image). Scanned PDFs return 400.
 - Rate limit for uploads is 3/day per user (in-memory, resets on server restart) — not durable across deployments.
 - Weekly recap email only triggers if the user has at least one processed statement. New users without statements are silently skipped.
 - Share button (`navigator.share`) is hidden on desktop browsers — only rendered when Web Share API is available.
-- Current automated validation count is 45 tests across route and library coverage.
+- Run `npm test` in `apps/money-mirror` for current library and API test counts.

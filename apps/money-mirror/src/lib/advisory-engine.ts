@@ -37,6 +37,8 @@ interface AdvisoryInput {
   debt_load_paisa: number;
   food_delivery_paisa: number;
   subscription_paisa: number;
+  payment_due_paisa: number | null;
+  minimum_due_paisa: number | null;
 }
 
 /**
@@ -119,6 +121,78 @@ export function generateAdvisories(input: AdvisoryInput): Advisory[] {
         headline: `${Math.round(debtRatio)}% of income goes to debt & EMIs`,
         message: `You're paying ₹${formatRupees(input.debt_load_paisa)} in EMIs, BNPL, and credit card dues. Anything above 40% of income is a red flag — consider consolidating or paying off high-interest debt first.`,
         amount_paisa: input.debt_load_paisa,
+      });
+    }
+  }
+
+  // ── 6. HIGH_OTHER_BUCKET — uncategorized / opaque spend ─────────
+  if (summary.total_debits > 0) {
+    const otherPct = (summary.other / summary.total_debits) * 100;
+    if (otherPct >= 35 && summary.total_debits >= 500_000) {
+      advisories.push({
+        id: 'high-other',
+        trigger: 'HIGH_OTHER_BUCKET',
+        severity: otherPct >= 50 ? 'warning' : 'info',
+        headline: `${Math.round(otherPct)}% of spending is "Other"`,
+        message: `₹${formatRupees(summary.other)} landed in uncategorized merchants (UPI labels, transfers, mixed narrations). Review these line items — some are likely discretionary or avoidable once you label them.`,
+        amount_paisa: summary.other,
+      });
+    }
+  }
+
+  // ── 7. DISCRETIONARY_RATIO — wants + uncategorized bulk ─────────
+  if (summary.total_debits > 0) {
+    const discretionary = summary.wants + summary.other;
+    const discPct = (discretionary / summary.total_debits) * 100;
+    if (discPct >= 50 && summary.total_debits >= 300_000) {
+      advisories.push({
+        id: 'discretionary-heavy',
+        trigger: 'DISCRETIONARY_RATIO',
+        severity: discPct >= 65 ? 'warning' : 'info',
+        headline: `~${Math.round(discPct)}% is wants + uncategorized`,
+        message: `Wants and "Other" together are ₹${formatRupees(discretionary)}. That's the main pool to cut if you need to free up cash — start with subscriptions, impulse UPI, and food delivery.`,
+        amount_paisa: discretionary,
+      });
+    }
+  }
+
+  // ── 8. AVOIDABLE_SPEND_PROXY — explicit "what to review" ────────
+  if (summary.total_debits > 0) {
+    const avoidable = summary.wants + Math.round(summary.other * 0.5);
+    const avoidPct = (avoidable / summary.total_debits) * 100;
+    if (avoidPct >= 30 && summary.wants + summary.other >= 500_000) {
+      advisories.push({
+        id: 'avoidable-spend',
+        trigger: 'AVOIDABLE_SPEND',
+        severity: 'info',
+        headline: `Roughly ₹${formatRupees(avoidable)} may be trimmable`,
+        message:
+          'This blends clear "wants" with half of uncategorized spend as a conservative guess — not exact, but a starting point to find unnecessary expenses. Cross-check "Other" before cutting.',
+        amount_paisa: avoidable,
+      });
+    }
+  }
+
+  // ── 9. CC_REVOLVING_RISK — minimum due vs statement balance ─────
+  const payDue = input.payment_due_paisa;
+  const minDue = input.minimum_due_paisa;
+  if (
+    input.statement_type === 'credit_card' &&
+    payDue !== null &&
+    minDue !== null &&
+    payDue > 0 &&
+    minDue > 0 &&
+    minDue < payDue
+  ) {
+    const minShare = minDue / payDue;
+    if (minShare <= 0.2) {
+      advisories.push({
+        id: 'cc-revolving',
+        trigger: 'CC_REVOLVING_RISK',
+        severity: 'warning',
+        headline: 'Minimum due is only a small slice of total due',
+        message: `Your minimum due is ₹${formatRupees(minDue)} on a statement balance of ₹${formatRupees(payDue)}. Paying only the minimum racks up interest on the rest — plan full or higher payments when you can.`,
+        amount_paisa: payDue - minDue,
       });
     }
   }

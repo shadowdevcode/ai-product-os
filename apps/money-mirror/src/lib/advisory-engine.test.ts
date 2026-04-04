@@ -19,6 +19,8 @@ describe('generateAdvisories', () => {
       debt_load_paisa: 0,
       food_delivery_paisa: 0,
       subscription_paisa: 0,
+      payment_due_paisa: null,
+      minimum_due_paisa: null,
     });
 
     expect(advisories.some((advisory) => advisory.trigger === 'NO_INVESTMENT')).toBe(false);
@@ -41,6 +43,8 @@ describe('generateAdvisories', () => {
       debt_load_paisa: 500000,
       food_delivery_paisa: 0,
       subscription_paisa: 0,
+      payment_due_paisa: null,
+      minimum_due_paisa: null,
     });
 
     expect(advisories.some((advisory) => advisory.trigger === 'HIGH_DEBT_RATIO')).toBe(true);

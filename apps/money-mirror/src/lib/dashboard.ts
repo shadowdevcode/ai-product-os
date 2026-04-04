@@ -28,6 +28,11 @@ export interface DashboardData {
   payment_due_paisa: number | null;
   minimum_due_paisa: number | null;
   credit_limit_paisa: number | null;
+  perceived_spend_paisa: number;
+  monthly_income_paisa: number;
+  nickname: string | null;
+  account_purpose: string | null;
+  card_network: string | null;
   transaction_count: number;
   summary: DashboardSummary;
   advisories: Advisory[];
@@ -45,6 +50,9 @@ interface StatementRow {
   credit_limit_paisa: number | null;
   perceived_spend_paisa: number;
   monthly_income_paisa: number;
+  nickname: string | null;
+  account_purpose: string | null;
+  card_network: string | null;
 }
 
 interface TransactionRow {
@@ -63,7 +71,7 @@ export async function fetchDashboardData(
 
   const statementRows = statementId
     ? ((await sql`
-        SELECT s.id, s.institution_name, s.statement_type, s.period_start, s.period_end, s.due_date, s.payment_due_paisa, s.minimum_due_paisa, s.credit_limit_paisa, s.perceived_spend_paisa, p.monthly_income_paisa
+        SELECT s.id, s.institution_name, s.statement_type, s.period_start, s.period_end, s.due_date, s.payment_due_paisa, s.minimum_due_paisa, s.credit_limit_paisa, s.perceived_spend_paisa, p.monthly_income_paisa, s.nickname, s.account_purpose, s.card_network
         FROM statements s
         LEFT JOIN profiles p ON p.id = s.user_id
         WHERE s.user_id = ${userId}
@@ -82,14 +90,17 @@ export async function fetchDashboardData(
         credit_limit_paisa: number | string | bigint | null;
         perceived_spend_paisa: number | string | bigint;
         monthly_income_paisa: number | string | bigint | null;
+        nickname: string | null;
+        account_purpose: string | null;
+        card_network: string | null;
       }[])
     : ((await sql`
-        SELECT s.id, s.institution_name, s.statement_type, s.period_start, s.period_end, s.due_date, s.payment_due_paisa, s.minimum_due_paisa, s.credit_limit_paisa, s.perceived_spend_paisa, p.monthly_income_paisa
+        SELECT s.id, s.institution_name, s.statement_type, s.period_start, s.period_end, s.due_date, s.payment_due_paisa, s.minimum_due_paisa, s.credit_limit_paisa, s.perceived_spend_paisa, p.monthly_income_paisa, s.nickname, s.account_purpose, s.card_network
         FROM statements s
         LEFT JOIN profiles p ON p.id = s.user_id
         WHERE s.user_id = ${userId}
           AND s.status = 'processed'
-        ORDER BY s.created_at DESC
+        ORDER BY s.period_end DESC NULLS LAST, s.created_at DESC
         LIMIT 1
       `) as {
         id: string;
@@ -103,6 +114,9 @@ export async function fetchDashboardData(
         credit_limit_paisa: number | string | bigint | null;
         perceived_spend_paisa: number | string | bigint;
         monthly_income_paisa: number | string | bigint | null;
+        nickname: string | null;
+        account_purpose: string | null;
+        card_network: string | null;
       }[]);
 
   const row = statementRows[0];
@@ -123,6 +137,9 @@ export async function fetchDashboardData(
     perceived_spend_paisa: toNumber(row.perceived_spend_paisa),
     monthly_income_paisa:
       row.monthly_income_paisa === null ? 0 : toNumber(row.monthly_income_paisa),
+    nickname: row.nickname ?? null,
+    account_purpose: row.account_purpose ?? null,
+    card_network: row.card_network ?? null,
   };
 
   const transactionRows = (await sql`
@@ -161,6 +178,11 @@ export async function fetchDashboardData(
     payment_due_paisa: statement.payment_due_paisa,
     minimum_due_paisa: statement.minimum_due_paisa,
     credit_limit_paisa: statement.credit_limit_paisa,
+    perceived_spend_paisa: statement.perceived_spend_paisa,
+    monthly_income_paisa: statement.monthly_income_paisa,
+    nickname: statement.nickname,
+    account_purpose: statement.account_purpose,
+    card_network: statement.card_network,
     transaction_count: transactions.length,
     summary,
     advisories,
@@ -257,5 +279,7 @@ function buildAdvisories(
         : summary.debt_paisa,
     food_delivery_paisa: foodDeliveryPaisa,
     subscription_paisa: subscriptionPaisa,
+    payment_due_paisa: statement.payment_due_paisa,
+    minimum_due_paisa: statement.minimum_due_paisa,
   });
 }

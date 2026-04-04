@@ -31,6 +31,9 @@ interface PeriodInfo {
   payment_due_paisa: number | null;
   minimum_due_paisa: number | null;
   credit_limit_paisa: number | null;
+  nickname?: string | null;
+  account_purpose?: string | null;
+  card_network?: string | null;
 }
 
 interface PersistResult {
@@ -99,6 +102,9 @@ export async function persistStatement(
           payment_due_paisa,
           minimum_due_paisa,
           credit_limit_paisa,
+          nickname,
+          account_purpose,
+          card_network,
           status
         )
         VALUES (
@@ -116,6 +122,9 @@ export async function persistStatement(
           ${period.payment_due_paisa},
           ${period.minimum_due_paisa},
           ${period.credit_limit_paisa},
+          ${period.nickname ?? null},
+          ${period.account_purpose ?? null},
+          ${period.card_network ?? null},
           'processing'
         )
       `,

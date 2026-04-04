@@ -1,13 +1,19 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import type { StatementType } from '@/lib/statements';
+
+export interface UploadFormMeta {
+  nickname: string;
+  accountPurpose: '' | 'spending' | 'savings_goals' | 'unspecified';
+  cardNetwork: string;
+}
 
 interface UploadPanelProps {
   error: string | null;
   statementType: StatementType;
   onStatementTypeChange: (statementType: StatementType) => void;
-  onUpload: (file: File, statementType: StatementType) => void;
+  onUpload: (file: File, statementType: StatementType, meta: UploadFormMeta) => void;
 }
 
 export function UploadPanel({
@@ -17,16 +23,31 @@ export function UploadPanel({
   onUpload,
 }: UploadPanelProps) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const [nickname, setNickname] = useState('');
+  const [accountPurpose, setAccountPurpose] = useState<UploadFormMeta['accountPurpose']>('');
+  const [cardNetwork, setCardNetwork] = useState('');
+
+  const runUpload = (file: File) => {
+    onUpload(file, statementType, {
+      nickname: nickname.trim(),
+      accountPurpose,
+      cardNetwork: cardNetwork.trim(),
+    });
+  };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
-    if (file) onUpload(file, statementType);
+    if (file) {
+      runUpload(file);
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) onUpload(file, statementType);
+    if (file) {
+      runUpload(file);
+    }
   };
 
   return (
@@ -39,8 +60,8 @@ export function UploadPanel({
           Upload your statement
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: '8px 0 0' }}>
-          Upload a password-free PDF from your bank account or credit card. We&apos;ll show you
-          exactly where your money is going.
+          Upload a password-free PDF from your bank account or credit card. We&apos;ll add it to
+          your dashboard so you can switch between statements anytime.
         </p>
       </div>
 
@@ -61,6 +82,48 @@ export function UploadPanel({
         </button>
       </div>
 
+      <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+        Label (optional)
+        <input
+          type="text"
+          placeholder="e.g. Salary account, Cinema Rupay"
+          value={nickname}
+          onChange={(e) => setNickname(e.target.value)}
+          maxLength={80}
+          style={{ marginTop: '6px' }}
+          autoComplete="off"
+        />
+      </label>
+
+      <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+        Account purpose (optional)
+        <select
+          value={accountPurpose}
+          onChange={(e) => setAccountPurpose(e.target.value as UploadFormMeta['accountPurpose'])}
+          style={{ marginTop: '6px' }}
+        >
+          <option value="">No preference</option>
+          <option value="spending">Main spending</option>
+          <option value="savings_goals">Savings / goals</option>
+          <option value="unspecified">Rather not say</option>
+        </select>
+      </label>
+
+      {statementType === 'credit_card' && (
+        <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+          Card type / network (optional)
+          <input
+            type="text"
+            placeholder="e.g. Rupay, Visa, Rewards"
+            value={cardNetwork}
+            onChange={(e) => setCardNetwork(e.target.value)}
+            maxLength={40}
+            style={{ marginTop: '6px' }}
+            autoComplete="off"
+          />
+        </label>
+      )}
+
       <div
         id="drop-zone"
         role="button"
@@ -69,7 +132,9 @@ export function UploadPanel({
         onDrop={handleDrop}
         onClick={() => fileRef.current?.click()}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') fileRef.current?.click();
+          if (e.key === 'Enter' || e.key === ' ') {
+            fileRef.current?.click();
+          }
         }}
         style={{
           border: '2px dashed var(--border)',

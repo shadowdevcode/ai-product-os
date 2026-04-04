@@ -29,6 +29,9 @@ CREATE TABLE IF NOT EXISTS public.statements (
     minimum_due_paisa BIGINT,
     credit_limit_paisa BIGINT,
     status TEXT NOT NULL CHECK (status IN ('processing', 'processed', 'failed')) DEFAULT 'processing',
+    nickname TEXT,
+    account_purpose TEXT,
+    card_network TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -66,3 +69,8 @@ CREATE INDEX IF NOT EXISTS idx_transactions_user_statement
 
 CREATE INDEX IF NOT EXISTS idx_advisory_feed_user_created_at
     ON public.advisory_feed(user_id, created_at DESC);
+
+-- Existing Neon DBs: add statement label columns (idempotent)
+ALTER TABLE public.statements ADD COLUMN IF NOT EXISTS nickname TEXT;
+ALTER TABLE public.statements ADD COLUMN IF NOT EXISTS account_purpose TEXT;
+ALTER TABLE public.statements ADD COLUMN IF NOT EXISTS card_network TEXT;

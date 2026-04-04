@@ -38,15 +38,15 @@ export type CreditCardEntryKind =
 
 const RULES: Record<TransactionCategory, RegExp> = {
   needs:
-    /\b(rent|electricity|water|gas|broadband|internet|grocery|grocer|zepto|blinkit|bigbasket|d-mart|dmart|reliance smart|metro|more supermarket|uber|ola|rapido|namma yatri|petrol|fuel|insurance|mediclaim|lic|health|pharmacy|chemist|doctor|hospital|clinic)\b/i,
+    /\b(rent|electricity|water|gas|broadband|internet|grocery|grocer|zepto|blinkit|bigbasket|d-mart|dmart|reliance smart|metro|more supermarket|uber|ola|rapido|namma yatri|petrol|fuel|diesel|cng|insurance|mediclaim|lic|health|pharmacy|chemist|doctor|hospital|clinic|school|fees|tuition|child|milk|dairy|vegetable|fruits)\b/i,
 
   wants:
-    /\b(swiggy|zomato|eatsure|dunzo|barbeque|starbucks|cafe|restaurant|hotel|bar|pub|food|pizza|burger|kfc|mcdonald|domino|netflix|hotstar|prime video|amazon prime|spotify|gaana|youtube premium|jiocinema|zee5|sonyliv|bookmyshow|pvr|inox|myntra|ajio|nykaa|meesho|flipkart|amazon|shopping|fashion|cosmetic|saloon|salon|parlour|gaming|ludo|steam|play store|app store|travel|makemytrip|goibibo|ixigo|cleartrip|irctc|redbus|yolo)\b/i,
+    /\b(swiggy|zomato|eatsure|dunzo|barbeque|starbucks|cafe|restaurant|hotel|bar|pub|food|pizza|burger|kfc|mcdonald|domino|netflix|hotstar|prime video|amazon prime|spotify|gaana|youtube premium|jiocinema|zee5|sonyliv|bookmyshow|pvr|inox|cinepolis|imax|myntra|ajio|nykaa|meesho|flipkart|amazon pay|shopping|fashion|cosmetic|saloon|salon|parlour|gaming|ludo|steam|play store|app store|travel|makemytrip|goibibo|ixigo|cleartrip|irctc|redbus|yolo|cred|magicpin|eazy|eazydiner)\b/i,
 
   investment:
-    /\b(sip|mutual fund|groww|zerodha|kuvera|paytm money|coin by zerodha|iifl|hdfc mutual|sbi mutual|axis mutual|icici pru|nippon|mirae|navi mutual|smallcase|stock|nse|bse|gold|sovereign gold|ppf|nps|elss|fd|fixed deposit|recurring deposit|rd)\b/i,
+    /\b(sip|mutual fund|groww|zerodha|kuvera|paytm money|coin by zerodha|iifl|hdfc mutual|sbi mutual|axis mutual|icici pru|nippon|mirae|navi mutual|smallcase|stock|nse|bse|gold|sovereign gold|ppf|nps|elss|fd|fixed deposit|recurring deposit|rd|epf|pf|provident)\b/i,
 
-  debt: /\b(emi|equated monthly|loan|credit card|payment due|minimum due|bnpl|buy now pay later|bajaj finserv|zestmoney|zest money|lazypay|lazy pay|simpl|slice|uni card|onecard|stashfin|moneyview|creditmantri|freecharge credit|paytm postpaid|flipkart pay later|amazon pay later|hdfc card|sbi card|icici card|axis card|kotak card)\b/i,
+  debt: /\b(emi|equated monthly|loan|personal loan|home loan|car loan|credit card|cc payment|payment due|minimum due|bnpl|buy now pay later|bajaj finserv|zestmoney|zest money|lazypay|lazy pay|simpl|slice|uni card|onecard|stashfin|moneyview|creditmantri|freecharge credit|paytm postpaid|flipkart pay later|amazon pay later|hdfc card|sbi card|icici card|axis card|kotak card|rupay|visa|mastercard)\b/i,
 
   // "other" is the fallback — not matched by keyword
   other: /^$/,
