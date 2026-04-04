@@ -16,6 +16,7 @@
  */
 
 import type { CategorySummary } from './categorizer';
+import type { StatementType } from './statements';
 
 export type AdvisorySeverity = 'info' | 'warning' | 'critical';
 
@@ -29,9 +30,11 @@ export interface Advisory {
 }
 
 interface AdvisoryInput {
+  statement_type: StatementType;
   summary: CategorySummary;
   perceived_spend_paisa: number;
   monthly_income_paisa: number;
+  debt_load_paisa: number;
   food_delivery_paisa: number;
   subscription_paisa: number;
 }
@@ -94,7 +97,7 @@ export function generateAdvisories(input: AdvisoryInput): Advisory[] {
   }
 
   // ── 4. NO_INVESTMENT ─────────────────────────────────────────────
-  if (summary.investment === 0) {
+  if (input.statement_type === 'bank_account' && summary.investment === 0) {
     advisories.push({
       id: 'no-investment',
       trigger: 'NO_INVESTMENT',
@@ -107,15 +110,15 @@ export function generateAdvisories(input: AdvisoryInput): Advisory[] {
 
   // ── 5. HIGH_DEBT_RATIO ───────────────────────────────────────────
   if (monthly_income_paisa > 0) {
-    const debtRatio = (summary.debt / monthly_income_paisa) * 100;
+    const debtRatio = (input.debt_load_paisa / monthly_income_paisa) * 100;
     if (debtRatio > 40) {
       advisories.push({
         id: 'high-debt',
         trigger: 'HIGH_DEBT_RATIO',
         severity: 'critical',
         headline: `${Math.round(debtRatio)}% of income goes to debt & EMIs`,
-        message: `You're paying ₹${formatRupees(summary.debt)} in EMIs, BNPL, and credit card dues. Anything above 40% of income is a red flag — consider consolidating or paying off high-interest debt first.`,
-        amount_paisa: summary.debt,
+        message: `You're paying ₹${formatRupees(input.debt_load_paisa)} in EMIs, BNPL, and credit card dues. Anything above 40% of income is a red flag — consider consolidating or paying off high-interest debt first.`,
+        amount_paisa: input.debt_load_paisa,
       });
     }
   }

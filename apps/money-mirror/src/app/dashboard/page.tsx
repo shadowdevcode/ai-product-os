@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import type { Advisory } from '@/lib/advisory-engine';
+import type { StatementType } from '@/lib/statements';
 import { UploadPanel } from './UploadPanel';
 import { ParsingPanel } from './ParsingPanel';
 import { ResultsPanel } from './ResultsPanel';
@@ -19,8 +20,14 @@ type DashboardState = 'upload' | 'parsing' | 'results';
 
 interface DashboardResult {
   statement_id: string;
+  institution_name: string;
+  statement_type: StatementType;
   period_start: string | null;
   period_end: string | null;
+  due_date: string | null;
+  payment_due_paisa: number | null;
+  minimum_due_paisa: number | null;
+  credit_limit_paisa: number | null;
   transaction_count: number;
   summary: {
     needs_paisa: number;
@@ -39,6 +46,7 @@ export default function DashboardPage() {
   const [advisories, setAdvisories] = useState<Advisory[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(true);
+  const [statementType, setStatementType] = useState<StatementType>('bank_account');
 
   const loadDashboard = useCallback(async (statementId: string | null) => {
     setIsLoadingDashboard(true);
@@ -81,7 +89,7 @@ export default function DashboardPage() {
   }, [loadDashboard]);
 
   const handleUpload = useCallback(
-    async (file: File) => {
+    async (file: File, nextStatementType: StatementType) => {
       setError(null);
 
       if (file.type && file.type !== 'application/pdf') {
@@ -98,6 +106,7 @@ export default function DashboardPage() {
       try {
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('statement_type', nextStatementType);
 
         const resp = await fetch('/api/statement/parse', { method: 'POST', body: formData });
 
@@ -181,15 +190,26 @@ export default function DashboardPage() {
       )}
 
       {state === 'upload' && !isLoadingDashboard && (
-        <UploadPanel error={error} onUpload={handleUpload} />
+        <UploadPanel
+          error={error}
+          statementType={statementType}
+          onStatementTypeChange={setStatementType}
+          onUpload={handleUpload}
+        />
       )}
 
       {state === 'parsing' && <ParsingPanel />}
 
       {state === 'results' && result && !isLoadingDashboard && (
         <ResultsPanel
+          institution_name={result.institution_name}
+          statement_type={result.statement_type}
           period_start={result.period_start}
           period_end={result.period_end}
+          due_date={result.due_date}
+          payment_due_paisa={result.payment_due_paisa}
+          minimum_due_paisa={result.minimum_due_paisa}
+          credit_limit_paisa={result.credit_limit_paisa}
           transaction_count={result.transaction_count}
           summary={result.summary}
           advisories={advisories}

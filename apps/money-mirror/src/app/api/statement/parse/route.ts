@@ -26,35 +26,25 @@ import { GoogleGenAI } from '@google/genai';
 import { getSessionUser } from '@/lib/auth/session';
 import { countUserStatementsSince, ensureProfile } from '@/lib/db';
 import { extractPdfText, PdfExtractionError } from '@/lib/pdf-parser';
-import { categorizeTransaction, summarizeByCategory } from '@/lib/categorizer';
+import {
+  categorizeCreditCardTransaction,
+  categorizeTransaction,
+  summarizeByCategory,
+} from '@/lib/categorizer';
 import { captureServerEvent } from '@/lib/posthog';
+import {
+  buildStatementParserPrompt,
+  parseStatementType,
+  type ParsedStatementResult,
+  validateParsedStatement,
+} from '@/lib/statements';
 import { persistStatement } from './persist-statement';
 
-const TIMEOUT_MS = 9_000;
+const TIMEOUT_MS = 25_000;
 const MAX_UPLOADS_PER_DAY = 3;
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
 // ─── Gemini schema for structured output ─────────────────────────────────
-
-const GEMINI_SYSTEM_PROMPT = `You are a bank statement parser for HDFC Bank India.
-Extract every debit and credit transaction from the text.
-Return ONLY valid JSON — no markdown, no explanation.
-All amounts must be in rupees as a decimal number (e.g. 500.00 for ₹500).
-Dates must be formatted as YYYY-MM-DD.
-For the description, use the normalized merchant name only (e.g. "SWIGGY" not "SWIGGY ORDER #12345").`;
-
-interface GeminiTransaction {
-  date: string;
-  description: string;
-  amount: number;
-  type: 'debit' | 'credit';
-}
-
-interface GeminiResponse {
-  transactions: GeminiTransaction[];
-  period_start: string;
-  period_end: string;
-}
 
 // ─── Route Handler ────────────────────────────────────────────────────────
 
@@ -74,11 +64,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const count = await countUserStatementsSince(userId, `${today}T00:00:00Z`);
 
   if ((count ?? 0) >= MAX_UPLOADS_PER_DAY) {
-    // Single emission source: server-side
-    await captureServerEvent(userId, 'statement_parse_rate_limited', {
+    // Single emission source: server-side — fire-and-forget, must not block response
+    captureServerEvent(userId, 'statement_parse_rate_limited', {
       uploads_today: count,
       limit: MAX_UPLOADS_PER_DAY,
-    });
+    }).catch(() => {});
     return NextResponse.json(
       {
         error: 'Upload limit reached',
@@ -91,10 +81,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // ── 3. Parse multipart form ───────────────────────────────────────
   let fileBuffer: Buffer | null = null;
   let fileName = 'statement.pdf';
+  let statementType = parseStatementType(null);
 
   try {
     const formData = await req.formData();
     const file = formData.get('file');
+    statementType = parseStatementType(formData.get('statement_type'));
 
     if (!file || typeof file === 'string') {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
@@ -131,81 +123,91 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     fileBuffer = null;
 
     const code = err instanceof PdfExtractionError ? err.code : 'PARSE_FAILED';
-    await captureServerEvent(userId, 'statement_parse_failed', {
+    captureServerEvent(userId, 'statement_parse_failed', {
       error_type: code,
       file_name: fileName,
-    });
-    return NextResponse.json(
-      {
-        error:
-          code === 'EMPTY_TEXT'
-            ? 'This PDF appears to be a scanned image. Please upload a digitally generated bank statement.'
-            : 'Failed to read the PDF. Please ensure it is a valid bank statement.',
-      },
-      { status: 422 }
-    );
+    }).catch(() => {});
+    const errorMessage =
+      code === 'EMPTY_TEXT'
+        ? 'This PDF appears to be a scanned image. Please upload a digitally generated bank statement.'
+        : code === 'PASSWORD_PROTECTED'
+          ? 'Your PDF is password-protected. Please remove the password and re-upload.'
+          : 'Failed to read the PDF. Please ensure it is a valid bank statement.';
+    return NextResponse.json({ error: errorMessage }, { status: 422 });
   }
 
   // T7 — Null the buffer immediately after text extraction
   fileBuffer = null;
 
-  // ── 5. Emit telemetry: parse started ─────────────────────────────
-  await captureServerEvent(userId, 'statement_parse_started', {
+  // ── 5. Emit telemetry: parse started — fire-and-forget ───────────
+  captureServerEvent(userId, 'statement_parse_started', {
     pdf_text_length: pdfText.length,
-  });
+  }).catch(() => {});
 
   // ── 6. Gemini extraction with timeout ────────────────────────────
   const genai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
-
-  let geminiData: GeminiResponse;
+  let parsedStatement: ParsedStatementResult;
 
   try {
     const geminiPromise = genai.models
       .generateContent({
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.5-flash',
+        config: {
+          // Disable thinking — structured data extraction needs speed, not reasoning
+          thinkingConfig: { thinkingBudget: 0 },
+        },
         contents: [
           {
             role: 'user',
             parts: [
-              { text: GEMINI_SYSTEM_PROMPT },
+              { text: buildStatementParserPrompt(statementType) },
               {
-                text: `Parse this bank statement and return JSON:\n\n${pdfText.slice(0, 30_000)}`,
+                text: `Parse this statement and return JSON:\n\n${pdfText.slice(0, 30_000)}`,
               },
             ],
           },
         ],
       })
       .then((res) => {
-        const raw = res.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+        // Find the first part with text (thinking models may have thought parts first)
+        const parts = res.candidates?.[0]?.content?.parts ?? [];
+        const raw =
+          parts.find(
+            (p) => (p.text && p.text.trim().startsWith('{')) || p.text?.includes('"transactions"')
+          )?.text ??
+          parts.find((p) => p.text)?.text ??
+          '';
         // Strip markdown code fences if present
         const json = raw
           .replace(/^```(?:json)?\s*/i, '')
           .replace(/```\s*$/i, '')
           .trim();
-        return JSON.parse(json) as GeminiResponse;
+        return validateParsedStatement(JSON.parse(json), statementType);
       });
 
     const timeoutPromise = new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error('GEMINI_TIMEOUT')), TIMEOUT_MS)
     );
 
-    geminiData = await Promise.race([geminiPromise, timeoutPromise]);
+    parsedStatement = await Promise.race([geminiPromise, timeoutPromise]);
   } catch (err) {
     const isTimeout = err instanceof Error && err.message === 'GEMINI_TIMEOUT';
 
     if (isTimeout) {
-      await captureServerEvent(userId, 'statement_parse_timeout', {
+      captureServerEvent(userId, 'statement_parse_timeout', {
         timeout_ms: TIMEOUT_MS,
-      });
+      }).catch(() => {});
       return NextResponse.json(
         { error: 'Processing took too long. Please try again.' },
         { status: 504 }
       );
     }
 
-    await captureServerEvent(userId, 'statement_parse_failed', {
+    const geminiErrMsg = err instanceof Error ? err.message : String(err);
+    captureServerEvent(userId, 'statement_parse_failed', {
       error_type: 'GEMINI_ERROR',
-    });
+      detail: geminiErrMsg.slice(0, 200),
+    }).catch(() => {});
     return NextResponse.json(
       { error: 'Failed to extract transactions from the PDF.' },
       { status: 500 }
@@ -213,14 +215,20 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   // ── 7. Categorize transactions ────────────────────────────────────
-  const categorized = geminiData.transactions.map((tx) =>
-    categorizeTransaction(
-      tx.description,
-      Math.round(tx.amount * 100), // rupees → paisa
-      tx.date,
-      tx.type
-    )
-  );
+  const categorized = parsedStatement.transactions.map((tx) => {
+    const amountPaisa = Math.round(tx.amount * 100);
+
+    if (statementType === 'credit_card') {
+      return categorizeCreditCardTransaction(
+        tx.description,
+        amountPaisa,
+        tx.date,
+        tx.entry_kind ?? 'other'
+      );
+    }
+
+    return categorizeTransaction(tx.description, amountPaisa, tx.date, tx.type);
+  });
 
   const summary = summarizeByCategory(categorized);
 
@@ -229,21 +237,32 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     userId,
     categorized,
     summary,
-    { period_start: geminiData.period_start, period_end: geminiData.period_end }
+    {
+      institution_name: parsedStatement.institution_name,
+      statement_type: parsedStatement.statement_type,
+      period_start: parsedStatement.period_start,
+      period_end: parsedStatement.period_end,
+      due_date: parsedStatement.due_date,
+      payment_due_paisa: parsedStatement.payment_due_paisa,
+      minimum_due_paisa: parsedStatement.minimum_due_paisa,
+      credit_limit_paisa: parsedStatement.credit_limit_paisa,
+    }
   );
 
   if (persistError) {
     return NextResponse.json({ error: persistError }, { status: 500 });
   }
 
-  // ── 9. Success telemetry — single emission source ─────────────────
+  // ── 9. Success telemetry — single emission source, fire-and-forget ──
   const latencyMs = Date.now() - startTime;
 
-  await captureServerEvent(userId, 'statement_parse_success', {
+  captureServerEvent(userId, 'statement_parse_success', {
     latency_ms: latencyMs,
     transaction_count: categorized.length,
-    period_start: geminiData.period_start,
-    period_end: geminiData.period_end,
+    period_start: parsedStatement.period_start,
+    period_end: parsedStatement.period_end,
+    institution_name: parsedStatement.institution_name,
+    statement_type: parsedStatement.statement_type,
     total_debits_paisa: summary.total_debits,
     needs_pct:
       summary.total_debits > 0 ? Math.round((summary.needs / summary.total_debits) * 100) : 0,
@@ -251,12 +270,18 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       summary.total_debits > 0 ? Math.round((summary.wants / summary.total_debits) * 100) : 0,
     investment_pct:
       summary.total_debits > 0 ? Math.round((summary.investment / summary.total_debits) * 100) : 0,
-  });
+  }).catch(() => {});
 
   return NextResponse.json({
     statement_id,
-    period_start: geminiData.period_start,
-    period_end: geminiData.period_end,
+    institution_name: parsedStatement.institution_name,
+    statement_type: parsedStatement.statement_type,
+    period_start: parsedStatement.period_start,
+    period_end: parsedStatement.period_end,
+    due_date: parsedStatement.due_date,
+    payment_due_paisa: parsedStatement.payment_due_paisa,
+    minimum_due_paisa: parsedStatement.minimum_due_paisa,
+    credit_limit_paisa: parsedStatement.credit_limit_paisa,
     transaction_count: categorized.length,
     summary: {
       needs_paisa: summary.needs,

@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
-import { getDb, getPerceivedSpendPaisa } from '@/lib/db';
+import { getDb, getProfileFinancialSnapshot } from '@/lib/db';
 import { captureServerEvent } from '@/lib/posthog';
+import type { StatementType } from '@/lib/statements';
 
 interface CategorizedTransaction {
   date: string;
@@ -22,8 +23,14 @@ interface StatementSummary {
 }
 
 interface PeriodInfo {
+  institution_name: string;
+  statement_type: StatementType;
   period_start: string;
   period_end: string;
+  due_date: string | null;
+  payment_due_paisa: number | null;
+  minimum_due_paisa: number | null;
+  credit_limit_paisa: number | null;
 }
 
 interface PersistResult {
@@ -46,7 +53,7 @@ export async function persistStatement(
   const statementId = randomUUID();
 
   try {
-    const perceivedSpendPaisa = await getPerceivedSpendPaisa(userId);
+    const profile = await getProfileFinancialSnapshot(userId);
     const transactionQueries = categorized.map(
       (tx) =>
         sql`
@@ -80,21 +87,35 @@ export async function persistStatement(
         INSERT INTO statements (
           id,
           user_id,
+          bank_name,
+          institution_name,
+          statement_type,
           period_start,
           period_end,
+          due_date,
           total_debits_paisa,
           total_credits_paisa,
           perceived_spend_paisa,
+          payment_due_paisa,
+          minimum_due_paisa,
+          credit_limit_paisa,
           status
         )
         VALUES (
           ${statementId},
           ${userId},
+          ${period.institution_name},
+          ${period.institution_name},
+          ${period.statement_type},
           ${period.period_start}::date,
           ${period.period_end}::date,
+          ${period.due_date}::date,
           ${summary.total_debits},
           ${summary.total_credits},
-          ${perceivedSpendPaisa},
+          ${profile.perceived_spend_paisa},
+          ${period.payment_due_paisa},
+          ${period.minimum_due_paisa},
+          ${period.credit_limit_paisa},
           'processing'
         )
       `,

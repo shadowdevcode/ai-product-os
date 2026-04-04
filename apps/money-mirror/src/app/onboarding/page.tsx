@@ -109,6 +109,7 @@ export default function OnboardingPage() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
+            monthly_income_paisa: finalAnswers.monthly_income_paisa,
             money_health_score: result.score,
             perceived_spend_paisa: finalAnswers.perceived_spend_paisa,
           }),

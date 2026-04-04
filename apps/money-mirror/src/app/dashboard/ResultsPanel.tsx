@@ -3,6 +3,7 @@
 import { MirrorCard } from '@/components/MirrorCard';
 import { AdvisoryFeed } from '@/components/AdvisoryFeed';
 import type { Advisory } from '@/lib/advisory-engine';
+import { getCreditsLabel, getStatementTypeLabel, type StatementType } from '@/lib/statements';
 
 interface ResultSummary {
   needs_paisa: number;
@@ -15,8 +16,14 @@ interface ResultSummary {
 }
 
 interface ResultsPanelProps {
+  institution_name: string;
+  statement_type: StatementType;
   period_start: string | null;
   period_end: string | null;
+  due_date: string | null;
+  payment_due_paisa: number | null;
+  minimum_due_paisa: number | null;
+  credit_limit_paisa: number | null;
   transaction_count: number;
   summary: ResultSummary;
   advisories: Advisory[];
@@ -31,14 +38,22 @@ const CATEGORY_META = [
 ];
 
 export function ResultsPanel({
+  institution_name,
+  statement_type,
   period_start,
   period_end,
+  due_date,
+  payment_due_paisa,
+  minimum_due_paisa,
+  credit_limit_paisa,
   transaction_count,
   summary,
   advisories,
 }: ResultsPanelProps) {
   const totalSpent = Math.round(summary.total_debits_paisa / 100).toLocaleString('en-IN');
   const totalIncome = Math.round(summary.total_credits_paisa / 100).toLocaleString('en-IN');
+  const creditsLabel = getCreditsLabel(statement_type);
+  const statementTypeLabel = getStatementTypeLabel(statement_type);
 
   return (
     <div
@@ -50,8 +65,8 @@ export function ResultsPanel({
           Your Money Mirror 🪞
         </h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: 0 }}>
-          {period_start ?? 'Unknown start'} → {period_end ?? 'Unknown end'} • {transaction_count}{' '}
-          transactions
+          {institution_name} • {statementTypeLabel} • {period_start ?? 'Unknown start'} →{' '}
+          {period_end ?? 'Unknown end'} • {transaction_count} transactions
         </p>
       </div>
 
@@ -89,7 +104,7 @@ export function ResultsPanel({
               marginBottom: '6px',
             }}
           >
-            Total Income
+            {creditsLabel}
           </div>
           <div
             style={{
@@ -103,6 +118,49 @@ export function ResultsPanel({
           </div>
         </div>
       </div>
+
+      {statement_type === 'credit_card' && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          {payment_due_paisa !== null && (
+            <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '6px' }}>
+                Payment Due
+              </div>
+              <div style={{ fontSize: '1rem', fontWeight: 700 }}>
+                ₹{Math.round(payment_due_paisa / 100).toLocaleString('en-IN')}
+              </div>
+            </div>
+          )}
+          {minimum_due_paisa !== null && (
+            <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '6px' }}>
+                Minimum Due
+              </div>
+              <div style={{ fontSize: '1rem', fontWeight: 700 }}>
+                ₹{Math.round(minimum_due_paisa / 100).toLocaleString('en-IN')}
+              </div>
+            </div>
+          )}
+          {due_date && (
+            <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '6px' }}>
+                Due Date
+              </div>
+              <div style={{ fontSize: '1rem', fontWeight: 700 }}>{due_date}</div>
+            </div>
+          )}
+          {credit_limit_paisa !== null && (
+            <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '6px' }}>
+                Credit Limit
+              </div>
+              <div style={{ fontSize: '1rem', fontWeight: 700 }}>
+                ₹{Math.round(credit_limit_paisa / 100).toLocaleString('en-IN')}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div>
         <h2

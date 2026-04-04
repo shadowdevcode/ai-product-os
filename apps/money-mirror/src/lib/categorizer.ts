@@ -24,6 +24,16 @@ export interface CategorizedTransaction {
   is_recurring: boolean;
 }
 
+export type CreditCardEntryKind =
+  | 'purchase'
+  | 'payment'
+  | 'refund'
+  | 'reversal'
+  | 'fee'
+  | 'interest'
+  | 'cash_advance'
+  | 'other';
+
 // ─── Keyword rule sets ─────────────────────────────────────────────────────
 
 const RULES: Record<TransactionCategory, RegExp> = {
@@ -94,6 +104,54 @@ export function categorizeTransaction(
     category,
     is_recurring,
   };
+}
+
+export function categorizeCreditCardTransaction(
+  description: string,
+  amount_paisa: number,
+  date: string,
+  entryKind: CreditCardEntryKind
+): CategorizedTransaction {
+  const normalizedEntryKind = entryKind;
+
+  if (normalizedEntryKind === 'payment') {
+    return {
+      description: description.trim(),
+      amount_paisa,
+      date,
+      type: 'credit',
+      category: 'debt',
+      is_recurring: false,
+    };
+  }
+
+  if (normalizedEntryKind === 'refund' || normalizedEntryKind === 'reversal') {
+    return {
+      description: description.trim(),
+      amount_paisa,
+      date,
+      type: 'credit',
+      category: 'other',
+      is_recurring: false,
+    };
+  }
+
+  if (
+    normalizedEntryKind === 'fee' ||
+    normalizedEntryKind === 'interest' ||
+    normalizedEntryKind === 'cash_advance'
+  ) {
+    return {
+      description: description.trim(),
+      amount_paisa,
+      date,
+      type: 'debit',
+      category: 'debt',
+      is_recurring: false,
+    };
+  }
+
+  return categorizeTransaction(description, amount_paisa, date, 'debit');
 }
 
 /**

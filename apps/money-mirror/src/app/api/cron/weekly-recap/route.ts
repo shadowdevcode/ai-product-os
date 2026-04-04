@@ -1,5 +1,5 @@
 /**
- * POST /api/cron/weekly-recap
+ * GET /api/cron/weekly-recap
  *
  * T11 — Weekly Recap Email (Fan-Out Pattern)
  *
@@ -7,7 +7,9 @@
  * Fetches all users who have uploaded at least one statement,
  * then fans out individual recap emails via Resend.
  *
- * Auth: Requires `x-cron-secret` header matching CRON_SECRET env var.
+ * Auth: Accepts either:
+ *   - `authorization: Bearer <CRON_SECRET>` from Vercel Cron
+ *   - `x-cron-secret: <CRON_SECRET>` for local/manual triggering
  *
  * Fan-out architecture (engineering lesson §2):
  *   - Master route: fetches user list, triggers per-user worker calls
@@ -25,10 +27,23 @@ import { captureServerEvent } from '@/lib/posthog';
 
 const STATEMENT_BATCH_SIZE = 1000;
 
-export async function POST(req: NextRequest): Promise<NextResponse> {
-  // ── Auth: Verify CRON_SECRET ──────────────────────────────────────
-  const cronSecret = req.headers.get('x-cron-secret');
-  if (!cronSecret || cronSecret !== process.env.CRON_SECRET) {
+function isAuthorizedCronRequest(req: NextRequest): boolean {
+  const expectedSecret = process.env.CRON_SECRET;
+  if (!expectedSecret) {
+    return false;
+  }
+
+  const bearerToken = req.headers.get('authorization');
+  if (bearerToken === `Bearer ${expectedSecret}`) {
+    return true;
+  }
+
+  const sharedSecret = req.headers.get('x-cron-secret');
+  return sharedSecret === expectedSecret;
+}
+
+async function handleCron(req: NextRequest): Promise<NextResponse> {
+  if (!isAuthorizedCronRequest(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -95,4 +110,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }).catch((e) => console.error('[weekly-recap] posthog completed failed:', e));
 
   return NextResponse.json({ ok: true, total: eligibleUserIds.length, succeeded, failed });
+}
+
+export async function GET(req: NextRequest): Promise<NextResponse> {
+  return handleCron(req);
+}
+
+export async function POST(req: NextRequest): Promise<NextResponse> {
+  return handleCron(req);
 }

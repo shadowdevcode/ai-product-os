@@ -1,6 +1,7 @@
 import { generateAdvisories, type Advisory } from '@/lib/advisory-engine';
 import type { CategorySummary } from '@/lib/categorizer';
 import { getDb, toNumber } from '@/lib/db';
+import type { StatementType } from '@/lib/statements';
 
 const FOOD_REGEX =
   /\b(swiggy|zomato|eatsure|dunzo|barbeque|starbucks|cafe|restaurant|food|pizza|burger|kfc|mcdonald|domino)\b/i;
@@ -19,8 +20,14 @@ export interface DashboardSummary {
 
 export interface DashboardData {
   statement_id: string;
+  institution_name: string;
+  statement_type: StatementType;
   period_start: string | null;
   period_end: string | null;
+  due_date: string | null;
+  payment_due_paisa: number | null;
+  minimum_due_paisa: number | null;
+  credit_limit_paisa: number | null;
   transaction_count: number;
   summary: DashboardSummary;
   advisories: Advisory[];
@@ -28,9 +35,16 @@ export interface DashboardData {
 
 interface StatementRow {
   id: string;
+  institution_name: string;
+  statement_type: StatementType;
   period_start: string | null;
   period_end: string | null;
+  due_date: string | null;
+  payment_due_paisa: number | null;
+  minimum_due_paisa: number | null;
+  credit_limit_paisa: number | null;
   perceived_spend_paisa: number;
+  monthly_income_paisa: number;
 }
 
 interface TransactionRow {
@@ -49,30 +63,46 @@ export async function fetchDashboardData(
 
   const statementRows = statementId
     ? ((await sql`
-        SELECT id, period_start, period_end, perceived_spend_paisa
-        FROM statements
-        WHERE user_id = ${userId}
-          AND status = 'processed'
-          AND id = ${statementId}
+        SELECT s.id, s.institution_name, s.statement_type, s.period_start, s.period_end, s.due_date, s.payment_due_paisa, s.minimum_due_paisa, s.credit_limit_paisa, s.perceived_spend_paisa, p.monthly_income_paisa
+        FROM statements s
+        LEFT JOIN profiles p ON p.id = s.user_id
+        WHERE s.user_id = ${userId}
+          AND s.status = 'processed'
+          AND s.id = ${statementId}
         LIMIT 1
       `) as {
         id: string;
+        institution_name: string;
+        statement_type: StatementType;
         period_start: string | null;
         period_end: string | null;
+        due_date: string | null;
+        payment_due_paisa: number | string | bigint | null;
+        minimum_due_paisa: number | string | bigint | null;
+        credit_limit_paisa: number | string | bigint | null;
         perceived_spend_paisa: number | string | bigint;
+        monthly_income_paisa: number | string | bigint | null;
       }[])
     : ((await sql`
-        SELECT id, period_start, period_end, perceived_spend_paisa
-        FROM statements
-        WHERE user_id = ${userId}
-          AND status = 'processed'
-        ORDER BY created_at DESC
+        SELECT s.id, s.institution_name, s.statement_type, s.period_start, s.period_end, s.due_date, s.payment_due_paisa, s.minimum_due_paisa, s.credit_limit_paisa, s.perceived_spend_paisa, p.monthly_income_paisa
+        FROM statements s
+        LEFT JOIN profiles p ON p.id = s.user_id
+        WHERE s.user_id = ${userId}
+          AND s.status = 'processed'
+        ORDER BY s.created_at DESC
         LIMIT 1
       `) as {
         id: string;
+        institution_name: string;
+        statement_type: StatementType;
         period_start: string | null;
         period_end: string | null;
+        due_date: string | null;
+        payment_due_paisa: number | string | bigint | null;
+        minimum_due_paisa: number | string | bigint | null;
+        credit_limit_paisa: number | string | bigint | null;
         perceived_spend_paisa: number | string | bigint;
+        monthly_income_paisa: number | string | bigint | null;
       }[]);
 
   const row = statementRows[0];
@@ -82,9 +112,17 @@ export async function fetchDashboardData(
 
   const statement: StatementRow = {
     id: row.id,
+    institution_name: row.institution_name,
+    statement_type: row.statement_type,
     period_start: row.period_start,
     period_end: row.period_end,
+    due_date: row.due_date,
+    payment_due_paisa: row.payment_due_paisa === null ? null : toNumber(row.payment_due_paisa),
+    minimum_due_paisa: row.minimum_due_paisa === null ? null : toNumber(row.minimum_due_paisa),
+    credit_limit_paisa: row.credit_limit_paisa === null ? null : toNumber(row.credit_limit_paisa),
     perceived_spend_paisa: toNumber(row.perceived_spend_paisa),
+    monthly_income_paisa:
+      row.monthly_income_paisa === null ? 0 : toNumber(row.monthly_income_paisa),
   };
 
   const transactionRows = (await sql`
@@ -111,12 +149,18 @@ export async function fetchDashboardData(
   }));
 
   const summary = buildDashboardSummary(transactions);
-  const advisories = buildAdvisories(summary, statement.perceived_spend_paisa, transactions);
+  const advisories = buildAdvisories(summary, statement, transactions);
 
   return {
     statement_id: statement.id,
+    institution_name: statement.institution_name,
+    statement_type: statement.statement_type,
     period_start: statement.period_start,
     period_end: statement.period_end,
+    due_date: statement.due_date,
+    payment_due_paisa: statement.payment_due_paisa,
+    minimum_due_paisa: statement.minimum_due_paisa,
+    credit_limit_paisa: statement.credit_limit_paisa,
     transaction_count: transactions.length,
     summary,
     advisories,
@@ -175,7 +219,7 @@ function buildDashboardSummary(transactions: TransactionRow[]): DashboardSummary
 
 function buildAdvisories(
   summary: DashboardSummary,
-  perceivedSpendPaisa: number,
+  statement: StatementRow,
   transactions: TransactionRow[]
 ): Advisory[] {
   let foodDeliveryPaisa = 0;
@@ -195,6 +239,7 @@ function buildAdvisories(
   }
 
   return generateAdvisories({
+    statement_type: statement.statement_type,
     summary: {
       needs: summary.needs_paisa,
       wants: summary.wants_paisa,
@@ -204,8 +249,12 @@ function buildAdvisories(
       total_debits: summary.total_debits_paisa,
       total_credits: summary.total_credits_paisa,
     },
-    perceived_spend_paisa: perceivedSpendPaisa,
-    monthly_income_paisa: summary.total_credits_paisa,
+    perceived_spend_paisa: statement.perceived_spend_paisa,
+    monthly_income_paisa: statement.monthly_income_paisa,
+    debt_load_paisa:
+      statement.statement_type === 'credit_card'
+        ? (statement.payment_due_paisa ?? statement.minimum_due_paisa ?? summary.debt_paisa)
+        : summary.debt_paisa,
     food_delivery_paisa: foodDeliveryPaisa,
     subscription_paisa: subscriptionPaisa,
   });

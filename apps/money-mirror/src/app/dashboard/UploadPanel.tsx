@@ -1,24 +1,32 @@
 'use client';
 
 import { useRef } from 'react';
+import type { StatementType } from '@/lib/statements';
 
 interface UploadPanelProps {
   error: string | null;
-  onUpload: (file: File) => void;
+  statementType: StatementType;
+  onStatementTypeChange: (statementType: StatementType) => void;
+  onUpload: (file: File, statementType: StatementType) => void;
 }
 
-export function UploadPanel({ error, onUpload }: UploadPanelProps) {
+export function UploadPanel({
+  error,
+  statementType,
+  onStatementTypeChange,
+  onUpload,
+}: UploadPanelProps) {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
-    if (file) onUpload(file);
+    if (file) onUpload(file, statementType);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) onUpload(file);
+    if (file) onUpload(file, statementType);
   };
 
   return (
@@ -31,9 +39,26 @@ export function UploadPanel({ error, onUpload }: UploadPanelProps) {
           Upload your statement
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: '8px 0 0' }}>
-          Drop your HDFC bank statement PDF here. We&apos;ll show you exactly where every rupee
-          went.
+          Upload a password-free PDF from your bank account or credit card. We&apos;ll show you
+          exactly where your money is going.
         </p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+        <button
+          type="button"
+          className={statementType === 'bank_account' ? 'btn-primary' : 'btn-ghost'}
+          onClick={() => onStatementTypeChange('bank_account')}
+        >
+          Bank Account Statement
+        </button>
+        <button
+          type="button"
+          className={statementType === 'credit_card' ? 'btn-primary' : 'btn-ghost'}
+          onClick={() => onStatementTypeChange('credit_card')}
+        >
+          Credit Card Statement
+        </button>
       </div>
 
       <div
@@ -63,7 +88,7 @@ export function UploadPanel({ error, onUpload }: UploadPanelProps) {
           Drag &amp; drop your PDF, or tap to browse
         </p>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', margin: '8px 0 0' }}>
-          HDFC bank statement • PDF only • Max 10 MB
+          PDF only • Password removed • Max 10 MB
         </p>
         <input
           ref={fileRef}
@@ -105,7 +130,7 @@ export function UploadPanel({ error, onUpload }: UploadPanelProps) {
         <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', lineHeight: 1.5, margin: 0 }}>
           Your PDF is processed in memory and{' '}
           <strong style={{ color: 'var(--text-secondary)' }}>deleted immediately</strong> after
-          parsing. We never store your bank statement file.
+          parsing. We never store your statement file.
         </p>
       </div>
     </div>

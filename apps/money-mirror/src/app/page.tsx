@@ -59,7 +59,8 @@ export default function LandingPage() {
             <span style={{ color: 'var(--accent)', fontWeight: 600 }}>
               brutally honest breakdown
             </span>{' '}
-            of your spending — needs vs wants vs leaks. No sugar‑coating. No judgement. Just facts.
+            of your spending — needs vs wants vs leaks. Works with Indian bank account and credit
+            card PDFs. No sugar‑coating. No judgement. Just facts.
           </p>
         </div>
 
@@ -153,7 +154,7 @@ export default function LandingPage() {
 
           {[
             { step: '01', text: 'Answer 5 quick questions about your money habits' },
-            { step: '02', text: 'Upload your HDFC bank statement (PDF)' },
+            { step: '02', text: 'Upload your bank account or credit card statement (PDF)' },
             { step: '03', text: 'See exactly where every rupee went' },
           ].map((item) => (
             <div

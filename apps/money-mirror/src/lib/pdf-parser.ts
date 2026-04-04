@@ -19,7 +19,7 @@ export interface PdfExtractionResult {
 export class PdfExtractionError extends Error {
   constructor(
     message: string,
-    public readonly code: 'EMPTY_FILE' | 'PARSE_FAILED' | 'EMPTY_TEXT'
+    public readonly code: 'EMPTY_FILE' | 'PARSE_FAILED' | 'EMPTY_TEXT' | 'PASSWORD_PROTECTED'
   ) {
     super(message);
     this.name = 'PdfExtractionError';
@@ -49,10 +49,11 @@ export async function extractPdfText(buffer: Buffer): Promise<PdfExtractionResul
     await parser.destroy();
   } catch (err) {
     if (err instanceof PdfExtractionError) throw err;
-    throw new PdfExtractionError(
-      `Failed to parse PDF: ${err instanceof Error ? err.message : String(err)}`,
-      'PARSE_FAILED'
-    );
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes('No password') || msg.includes('PasswordException')) {
+      throw new PdfExtractionError('PDF is password-protected', 'PASSWORD_PROTECTED');
+    }
+    throw new PdfExtractionError(`Failed to parse PDF: ${msg}`, 'PARSE_FAILED');
   }
 
   const trimmed = text.trim();

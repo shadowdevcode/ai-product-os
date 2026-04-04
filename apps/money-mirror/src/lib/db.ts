@@ -5,6 +5,11 @@ export interface ProfileIdentity {
   email: string;
 }
 
+export interface ProfileFinancialSnapshot {
+  monthly_income_paisa: number;
+  perceived_spend_paisa: number;
+}
+
 export interface WeeklyRecapStatementRow {
   id: string;
   period_start: string | null;
@@ -66,6 +71,7 @@ export async function ensureProfile(identity: ProfileIdentity): Promise<void> {
 
 export async function upsertProfileOnboarding(
   identity: ProfileIdentity,
+  monthlyIncomePaisa: number,
   moneyHealthScore: number,
   perceivedSpendPaisa: number,
   onboardedAtIso: string
@@ -75,6 +81,7 @@ export async function upsertProfileOnboarding(
     INSERT INTO profiles (
       id,
       email,
+      monthly_income_paisa,
       money_health_score,
       perceived_spend_paisa,
       onboarded_at
@@ -82,6 +89,7 @@ export async function upsertProfileOnboarding(
     VALUES (
       ${identity.id},
       ${identity.email},
+      ${monthlyIncomePaisa},
       ${moneyHealthScore},
       ${perceivedSpendPaisa},
       ${onboardedAtIso}::timestamptz
@@ -89,27 +97,39 @@ export async function upsertProfileOnboarding(
     ON CONFLICT (id) DO UPDATE
     SET
       email = EXCLUDED.email,
+      monthly_income_paisa = EXCLUDED.monthly_income_paisa,
       money_health_score = EXCLUDED.money_health_score,
       perceived_spend_paisa = EXCLUDED.perceived_spend_paisa,
       onboarded_at = EXCLUDED.onboarded_at
   `;
 }
 
-export async function getPerceivedSpendPaisa(userId: string): Promise<number> {
+export async function getProfileFinancialSnapshot(
+  userId: string
+): Promise<ProfileFinancialSnapshot> {
   const sql = getSqlClient();
   const rows = (await sql`
-    SELECT perceived_spend_paisa
+    SELECT monthly_income_paisa, perceived_spend_paisa
     FROM profiles
     WHERE id = ${userId}
     LIMIT 1
-  `) as { perceived_spend_paisa: number | string | bigint }[];
+  `) as {
+    monthly_income_paisa: number | string | bigint | null;
+    perceived_spend_paisa: number | string | bigint;
+  }[];
 
   const row = rows[0];
   if (!row) {
-    return 0;
+    return {
+      monthly_income_paisa: 0,
+      perceived_spend_paisa: 0,
+    };
   }
 
-  return toNumber(row.perceived_spend_paisa);
+  return {
+    monthly_income_paisa: toNumber(row.monthly_income_paisa),
+    perceived_spend_paisa: toNumber(row.perceived_spend_paisa),
+  };
 }
 
 export async function countUserStatementsSince(userId: string, fromIso: string): Promise<number> {
