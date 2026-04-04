@@ -1,6 +1,6 @@
 # Codebase Context: MoneyMirror
 
-Last updated: 2026-04-03
+Last updated: 2026-04-04
 
 ## What This App Does
 
@@ -13,6 +13,7 @@ MoneyMirror is a mobile-first PWA AI financial coach for Gen Z Indians (₹20K�
 - **Database**: Neon Postgres. 4 tables: `profiles`, `statements`, `transactions`, `advisory_feed`. `profiles` persists monthly income and perceived spend; `statements` now tracks `institution_name`, `statement_type`, and optional credit-card due metadata. All monetary values are stored as `BIGINT` in paisa (₹ × 100) to avoid float precision errors.
 - **AI Integration**: Gemini 2.5 Flash via `@google/genai`. Used for: (1) PDF text → structured bank-account or credit-card statement JSON, (2) transaction category normalization. The statement-parse route currently enforces a 25s timeout and returns JSON 504 on timeout.
 - **Analytics**: PostHog (server-side only, `posthog-node`). 10 events tracked: `onboarding_completed`, `statement_parse_started/rate_limited/success/timeout/failed`, `weekly_recap_triggered/completed`, `weekly_recap_email_sent/failed`. All calls fire-and-forget (`.catch(() => {})`).
+- **Error tracking**: Sentry via `@sentry/nextjs` (`sentry.server.config.ts`, `sentry.edge.config.ts`, `src/instrumentation.ts`, `src/instrumentation-client.ts`). Uses `NEXT_PUBLIC_SENTRY_DSN` plus org/project/auth token vars as in app `README.md` / `.env.local.example`.
 
 ## Key Files
 

@@ -4,6 +4,8 @@ AI-powered personal finance coach for Gen Z Indians that uses Neon Auth plus Neo
 
 **Sign in with your email, upload a statement, and get a brutally honest view of where your money actually goes.**
 
+For AI- and agent-oriented architecture, data model, and API reference, see [`CODEBASE-CONTEXT.md`](./CODEBASE-CONTEXT.md).
+
 ## What it does
 
 1. User signs in with Neon Auth email OTP and lands in a private onboarding flow.
@@ -22,6 +24,7 @@ AI-powered personal finance coach for Gen Z Indians that uses Neon Auth plus Neo
 | Database  | Neon Postgres (`@neondatabase/serverless`) |
 | AI        | Google Gemini 2.5 Flash                    |
 | Analytics | PostHog (`posthog-node`)                   |
+| Errors    | Sentry (`@sentry/nextjs`)                  |
 | Email     | Resend                                     |
 | Hosting   | Vercel                                     |
 
@@ -70,7 +73,7 @@ Fill in these values:
 
 ### 4. Apply database schema
 
-Run the full contents of [`schema.sql`](/Users/vijaysehgal/Downloads/02-Portfolio/ai-product-os/apps/money-mirror/schema.sql) against your Neon database.
+Run the full contents of [`schema.sql`](./schema.sql) against your Neon database.
 
 Tables created:
 
@@ -170,7 +173,7 @@ Returns the advisory subset for the authenticated user and statement.
 
 ### `GET /api/cron/weekly-recap`
 
-Fan-out master route that finds all users with processed statements and triggers worker jobs. This is the scheduled entrypoint configured in [`vercel.json`](/Users/vijaysehgal/Downloads/02-Portfolio/ai-product-os/apps/money-mirror/vercel.json).
+Fan-out master route that finds all users with processed statements and triggers worker jobs. This is the scheduled entrypoint configured in [`vercel.json`](./vercel.json).
 
 **Auth**: `authorization: Bearer <CRON_SECRET>` from Vercel Cron. Local/manual triggering may also use `x-cron-secret: <CRON_SECRET>`.
 
