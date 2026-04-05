@@ -186,3 +186,15 @@ system improvement:
 - Any feature adding user-facing input fields must enumerate all required DB columns in the architecture schema before execute-plan. Nullable column additions are schema migrations; they must appear in schema.sql before the first deploy of the feature.
 - Enum input fields require bidirectional validation: client-side picker/select (not free text) + server 4xx on invalid value + schema CHECK constraint. Silent server-side sanitization to null is never acceptable — it gives users false confidence their input was saved.
 - Meta-rule: every postmortem lesson appended to a knowledge file must have a corresponding hard constraint added to the relevant agent prompt file in the same session. A lesson with no agent prompt change has not been acted on.
+
+---
+
+## 2026-04-05 — issue-010: MoneyMirror Phase 3
+
+issue: Deploy-check initially blocked on empty optional Sentry env vars despite PM intent; financial correctness and scope-semantics bugs caught late in code review.
+root cause: Default deploy-check treats Sentry as blocking without checking project-state or deploy artifacts for documented PM exceptions. Planning did not encode financial aggregate invariants or scope-aware copy defaults.
+system improvement:
+
+- Before failing the deploy gate on monitoring keys (e.g. `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT`), read `project-state.md` Decisions Log and the deploy-check artifact for a documented PM exception. If the exception lists optional keys, do not block on those empty values.
+- For finance dashboards, architecture must require full-scope SQL aggregates for headline numbers and advisory inputs; plans must tie user-facing money/time phrases to scope shape (single month vs multi-month).
+- Frontend: URL-canonical scope must rehydrate modal/editor local state on change; scope-driven fetches need AbortController to prevent stale UI.

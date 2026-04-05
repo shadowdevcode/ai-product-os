@@ -90,3 +90,16 @@ issue: North Star metric (Add-to-Cart rate lift) was defined in the product spec
 root_cause: Product specification and architecture review did not cross-validate that every defined success metric had a corresponding user flow in the MVP scope. Metrics were defined aspirationally, not grounded in the implementation plan.
 rule: Every success metric in a product specification must map to an explicit, buildable user flow within the committed MVP scope. If a metric requires a UI action (e.g., Add to Cart, Upgrade, Purchase) that is not in scope, either (a) descope the metric and replace with a measurable proxy, or (b) expand the MVP scope to include the action. Aspirational metrics without measurement paths must be flagged as "deferred" and excluded from the experiment success criteria.
 improvement: Product Agent must include a "Metric → Flow Mapping" table in every product spec, with columns: Metric Name | Required User Action | UI Component | API Endpoint | In Scope? Any row with In Scope = No is a blocking gap that must be resolved before the plan exits /create-plan.
+
+---
+
+---
+
+date: 2026-04-05
+project: MoneyMirror Phase 3 (issue-010)
+issue: Analytics and coaching copy defaulted to monthly language while the product shipped unified multi-month and arbitrary date ranges
+root_cause: PRD and UX templates did not require period-neutral phrasing when the date range is user-configurable.
+rule: If the product supports arbitrary or multi-month ranges, default user-facing analytics copy must use period-neutral labels ("this period", "in your selected range") unless the UI is explicitly single-month scoped. Time-rate phrases (/mo, per year, this month) require explicit scope semantics in the spec.
+improvement: Product Agent and Design Agent must add a Scope → Copy contract section for any feature with configurable date ranges: which phrases are allowed per scope shape (single calendar month vs multi-month vs custom range).
+
+---

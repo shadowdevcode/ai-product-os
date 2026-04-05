@@ -136,3 +136,5 @@ input:focus { border-color: var(--border-accent); }
 .badge-danger { display: inline-flex; align-items: center; gap: 6px; background: var(--danger-dim); color: var(--danger); border: 1px solid rgba(255,77,109,0.2); border-radius: 99px; padding: 4px 12px; font-size: 0.78rem; font-weight: 600; }
 .badge-warning { display: inline-flex; align-items: center; gap: 6px; background: var(--warning-dim); color: var(--warning); border: 1px solid rgba(255,181,71,0.2); border-radius: 99px; padding: 4px 12px; font-size: 0.78rem; font-weight: 600; }
 
+
+@keyframes spin { to { transform: rotate(360deg); } }

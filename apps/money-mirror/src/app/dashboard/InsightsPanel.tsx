@@ -1,13 +1,18 @@
 'use client';
 
 import { AdvisoryFeed } from '@/components/AdvisoryFeed';
+import { MerchantRollups } from '@/components/MerchantRollups';
 import type { Advisory } from '@/lib/advisory-engine';
+import type { LayerAFacts } from '@/lib/coaching-facts';
+import type { TxnScope } from './TransactionsPanel';
 
 interface InsightsPanelProps {
   advisories: Advisory[];
+  txnScope: TxnScope | null;
+  coachingFacts: LayerAFacts | null;
 }
 
-export function InsightsPanel({ advisories }: InsightsPanelProps) {
+export function InsightsPanel({ advisories, txnScope, coachingFacts }: InsightsPanelProps) {
   return (
     <div
       className="animate-fade-up"
@@ -21,6 +26,8 @@ export function InsightsPanel({ advisories }: InsightsPanelProps) {
         </p>
       </div>
 
+      {txnScope ? <MerchantRollups txnScope={txnScope} /> : null}
+
       <h2
         style={{
           fontSize: '0.82rem',
@@ -33,7 +40,7 @@ export function InsightsPanel({ advisories }: InsightsPanelProps) {
       >
         Highlights
       </h2>
-      <AdvisoryFeed advisories={advisories} />
+      <AdvisoryFeed advisories={advisories} coachingFacts={coachingFacts} />
 
       <p
         style={{

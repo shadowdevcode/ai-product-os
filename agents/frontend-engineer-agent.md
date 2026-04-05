@@ -155,3 +155,11 @@ Optimize for fast MVP development.
 Browser Storage & Network Safety: Always wrap `JSON.parse` of `localStorage`/`sessionStorage` in a try/catch block. Always use an `AbortController` for asynchronous `fetch` calls triggered by user input (e.g., search) to prevent network race conditions. Clean up AbortController on component unmount or before issuing a new request to prevent memory leaks.
 
 # Added: 2026-03-28 — Nykaa Personalisation (issue-008)
+
+**URL as canonical scope**: When filters, date range, or statement scope are encoded in the URL (search params), any modal, drawer, or inline editor that edits that scope must **re-initialize local form state from parsed search params** whenever the canonical scope in the URL changes. Never let modal defaults diverge from the active URL.
+
+# Added: 2026-04-05 — MoneyMirror Phase 3 (issue-010)
+
+**Dashboard and scope loads**: Treat main data loads triggered by scope changes like search — use `AbortController`, abort the prior request when issuing a new one, and ignore `AbortError` so stale responses cannot overwrite the UI.
+
+# Added: 2026-04-05 — MoneyMirror Phase 3 (issue-010)

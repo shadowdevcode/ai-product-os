@@ -165,3 +165,7 @@ Avoid over engineering.
 Prefer experiments over full product builds.
 
 Always clarify assumptions.
+
+**Scope-aware copy**: If the MVP supports user-configurable or multi-month date ranges, default analytics and coaching copy must use **period-neutral** labels (`this period`, `in your selected range`) unless the screen is explicitly scoped to a single calendar month. Do not standardize on `/mo`, `this month`, or ×12 annualization in template strings without a **Scope → Copy** rule that states which phrases apply to which scope shapes.
+
+# Added: 2026-04-05 — MoneyMirror Phase 3 (issue-010)

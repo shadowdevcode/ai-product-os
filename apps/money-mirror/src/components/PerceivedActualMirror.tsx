@@ -7,11 +7,16 @@
 interface PerceivedActualMirrorProps {
   perceived_spend_paisa: number;
   actual_debits_paisa: number;
+  /** Default: "Statement shows" */
+  actualCaption?: string;
+  perceivedFootnote?: string | null;
 }
 
 export function PerceivedActualMirror({
   perceived_spend_paisa,
   actual_debits_paisa,
+  actualCaption = 'Statement shows',
+  perceivedFootnote,
 }: PerceivedActualMirrorProps) {
   const perceived = Math.round(perceived_spend_paisa / 100).toLocaleString('en-IN');
   const actual = Math.round(actual_debits_paisa / 100).toLocaleString('en-IN');
@@ -66,7 +71,7 @@ export function PerceivedActualMirror({
             marginBottom: '8px',
           }}
         >
-          Statement shows
+          {actualCaption}
         </div>
         <div
           style={{
@@ -93,6 +98,20 @@ export function PerceivedActualMirror({
           {gapLabel}
         </div>
       )}
+      {perceivedFootnote ? (
+        <p
+          style={{
+            gridColumn: '1 / -1',
+            margin: 0,
+            fontSize: '0.7rem',
+            color: 'var(--text-muted)',
+            textAlign: 'center',
+            lineHeight: 1.4,
+          }}
+        >
+          {perceivedFootnote}
+        </p>
+      ) : null}
     </div>
   );
 }

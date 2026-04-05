@@ -248,7 +248,25 @@ Before finalizing the architecture, answer all of the following. Any gap must be
     → Server must return HTTP 4xx on invalid enum input — not silently sanitize to null or a default. Silent sanitization gives users false confidence their input was saved.
     → Schema must include a CHECK constraint for the column.
     → Specify all three in the architecture spec: (1) client control type, (2) server validation response code, (3) schema CHECK constraint.
+
     # Added: 2026-04-04 — MoneyMirror Phase 2
+
+15. **Financial headline metrics (aggregates vs lists)**: For any finance dashboard, advisory pipeline, or AI facts layer:
+    → The plan must state that totals, category sums, and inputs to rules/AI are computed from **database aggregates** over the full user scope (`SUM` / `COUNT` with the same filters as scope), **not** from `LIMIT`-capped row scans.
+    → List/pagination queries for UI tables are separate from aggregate queries for headline numbers — never reuse the list query result as the source of summed totals.
+
+    # Added: 2026-04-05 — MoneyMirror Phase 3 (issue-010)
+
+16. **Batch repair / backfill termination**: For any maintenance route that fixes nullable derived fields in batches (cursor + loop):
+    → Document **termination proof**: cursor advances monotonically; rows that cannot be processed in one pass (e.g., normalization returns null permanently) are skipped or marked so they are not re-selected forever.
+    → "Process until no rows" without poison-row handling is a blocking omission.
+
+    # Added: 2026-04-05 — MoneyMirror Phase 3 (issue-010)
+
+17. **Heavy authenticated read APIs**: For any authenticated endpoint that scans large row sets, runs expensive `GROUP BY`, or could be abused by rapid UI actions:
+    → State an explicit strategy: pagination/cursor guarantees, per-user rate limits, query caps, or an explicit **MVP / trusted-client** assumption with documented risk acceptance.
+    → Auth + ownership alone are not sufficient when the query is O(n) in user data.
+    # Added: 2026-04-05 — MoneyMirror Phase 3 (issue-010)
 
 # Added: 2026-03-19 — SMB Feature Bundling Engine
 
@@ -259,6 +277,8 @@ Before finalizing the architecture, answer all of the following. Any gap must be
 # Updated: 2026-04-03 — MoneyMirror (items 10–12)
 
 # Updated: 2026-04-04 — MoneyMirror Phase 2 (items 13–14)
+
+# Updated: 2026-04-05 — MoneyMirror Phase 3 (items 15–17)
 
 ---
 

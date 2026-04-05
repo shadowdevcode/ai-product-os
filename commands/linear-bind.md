@@ -92,14 +92,23 @@ Rules:
 - resolve the team by explicit argument, or default to the sole team if exactly one exists
 - ensure the parent label group `AI Product OS` exists
 - ensure child labels exist: `Discovery`, `Planning`, `Execution`, `Review`, `Blocked`, `Release Ready`, `Completed`
+- ensure issue type labels exist at the team level: `Feature`, `Enhancement`, `Bug`
 - ensure one Linear project exists for the repo issue
 - ensure one root Linear issue exists under that project
+
+Issue type label mapping (read `issue_type` from the issue file header):
+
+| `issue_type` in issue file | Linear label to apply |
+| -------------------------- | --------------------- |
+| `Feature`                  | `Feature`             |
+| `Enhancement`              | `Enhancement`         |
+| `Bug Fix`                  | `Bug`                 |
 
 Default object shape:
 
 - project title: `issue-<NNN> — <repo issue title>`
 - root issue title: `issue-<NNN> — <repo issue title>`
-- root issue labels: `Feature` and `AI Product OS/Discovery`
+- root issue labels: `<mapped issue type label>` and `AI Product OS/Discovery`
 - root issue status: `Backlog`
 
 ## Step 3 — Persist Binding Metadata
@@ -123,7 +132,8 @@ Also write `experiments/linear-sync/issue-<NNN>.json` with:
 - team id and name
 - project id, name, and URL
 - root issue id, identifier, and title
-- label ids
+- label ids (stage labels + `feature`, `enhancement`, `bug` type labels)
+- `issue_type` field matching the value from the issue file (`Feature`, `Enhancement`, or `Bug Fix`)
 - empty `documents` object
 - empty `tasks` object
 - last sync mode `bind`

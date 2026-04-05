@@ -91,6 +91,10 @@ error logging
 request logging
 performance metrics
 
+**Optional monitoring keys**: When verifying Sentry (or similar), check `project-state.md` Decisions Log and the active deploy-check artifact for a **documented PM exception** that exempts specific env vars from the blocking gate. If exempted keys are listed, empty values for those keys must not alone justify a Block Deployment verdict.
+
+# Added: 2026-04-05 — MoneyMirror Phase 3 (issue-010)
+
 ---
 
 ## 5 Rollback Plan

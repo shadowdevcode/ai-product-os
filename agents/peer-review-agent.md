@@ -67,6 +67,10 @@ large user growth
 heavy AI processing
 database bottlenecks
 
+**Heavy authenticated reads**: For APIs that scan large per-user tables or run expensive aggregations (`GROUP BY`, unbounded filters), verify the architecture documents a strategy per **backend-architect-agent** Mandatory Pre-Approval Checklist item 17 (pagination, rate limits, caps, or explicit MVP trusted-client assumption). If none is stated, file a scalability finding — non-blocking only if the review explicitly accepts MVP risk with documented rationale.
+
+# Added: 2026-04-05 — MoneyMirror Phase 3 (issue-010)
+
 ---
 
 ## 3 Edge Case Analysis
@@ -210,14 +214,15 @@ Each stance must produce at least one finding. If a stance produces no findings,
 **Step 4 — Prompt Autopsy Check**
 
 For each agent prompt gap identified:
+
 - Name the exact agent file (e.g., agents/backend-architect-agent.md)
 - Name the exact section to modify (e.g., ## 6 Technical Risks)
 - Write the exact text to add — not a direction, but the actual sentence or rule
 
 Format as:
-  File: agents/[agent-name]-agent.md
-  Section: [section name]
-  Add: "[exact text]"
+File: agents/[agent-name]-agent.md
+Section: [section name]
+Add: "[exact text]"
 
 This output is consumed directly by /learning to update agent files.
 Vague directions ("add a timeout rule") are not acceptable outputs.

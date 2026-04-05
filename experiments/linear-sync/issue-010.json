@@ -1,0 +1,62 @@
+{
+  "issue_number": "010",
+  "issue_title": "MoneyMirror Phase 3 — Unified multi-source dashboard, transaction-native insights, and expert AI coaching",
+  "issue_type": "Enhancement",
+  "team_id": "70aea0d1-a706-481f-a0b7-3e636709ba77",
+  "team_name": "Vijaypmworkspace",
+  "project_id": "418bfd75-bf67-47e1-8cb3-dd48c6bd9cb3",
+  "project_name": "issue-010 — MoneyMirror Phase 3 — Unified dashboard, txns, expert AI",
+  "project_url": "https://linear.app/vijaypmworkspace/project/issue-010-moneymirror-phase-3-unified-dashboard-txns-expert-ai-ca986df457a4",
+  "root_issue_id": "VIJ-37",
+  "root_issue_identifier": "VIJ-37",
+  "root_issue_url": "https://linear.app/vijaypmworkspace/issue/VIJ-37/issue-010-moneymirror-phase-3-unified-multi-source-dashboard",
+  "labels": {
+    "discovery": "b05592c1-47a6-4fdd-9a08-7a6287d4f1f8",
+    "improvement": "24fb89fb-dd24-4e23-9741-bf5def3dce29"
+  },
+  "tasks": {
+    "T1_transactions_api": "VIJ-38",
+    "T2_unified_scope": "VIJ-39",
+    "T3_merchant_insights": "VIJ-40",
+    "T4_ai_coaching": "VIJ-41"
+  },
+  "related_issues": {
+    "prior_root_issue_009": "VIJ-11",
+    "sprint_4_backlog_superseded": "VIJ-25 — marked Duplicate of VIJ-37 2026-04-05; F3/G2–G3/H3 mapped to VIJ-38–VIJ-41 in VIJ-25 description"
+  },
+  "documents": {
+    "plan_snapshot": {
+      "id": "380c47b4-6d39-4e98-becc-d7c355669b45",
+      "title": "issue-010 Plan Snapshot",
+      "url": "https://linear.app/vijaypmworkspace/document/issue-010-plan-snapshot-bea55d2ac741"
+    },
+    "closeout_snapshot": {
+      "id": "d3452711-a5d7-45c9-8dcc-d0dff03424e3",
+      "title": "issue-010 Closeout Snapshot",
+      "url": "https://linear.app/vijaypmworkspace/document/issue-010-closeout-snapshot-5ef07c9db6ee"
+    }
+  },
+  "last_sync_mode": "close",
+  "last_sync_timestamp": "2026-04-05T15:40:12Z",
+  "pipeline_status": "learning_complete",
+  "linear_status": "Done",
+  "project_status": "Completed",
+  "last_status_comment_id": "03ba364f-8bb8-4c82-99b5-b162a8ed0d3b",
+  "closeout_comment_id": "8d7639f5-820f-4ddc-8f8c-7acc4b93fa2b",
+  "review_artifacts": {
+    "codex": "experiments/results/review-010.md",
+    "peer_review": "experiments/results/peer-review-010.md"
+  },
+  "qa_artifacts": {
+    "codex": "experiments/results/qa-test-010.md"
+  },
+  "metric_plan_artifacts": {
+    "codex": "experiments/results/metric-plan-010.md"
+  },
+  "manifest_task_issue_map": {
+    "phase-t1": "VIJ-38",
+    "phase-t2": "VIJ-39",
+    "phase-t3": "VIJ-40",
+    "phase-t4": "VIJ-41"
+  }
+}

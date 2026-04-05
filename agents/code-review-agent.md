@@ -134,6 +134,23 @@ For every API route that writes a parent record followed by child records:
 
 # Added: 2026-04-03 — MoneyMirror (issue-009)
 
+**Financial copy vs active scope** (required when reviewing money-related UI, advisories, or analytics strings):
+
+- Verify phrases like `/mo`, `per year`, `this month`, and any ×12 annualization match the **active date scope** (single calendar month vs multi-month vs arbitrary range).
+- Flag **HIGH** if copy implies a monthly frame when the scope is not a single month, unless the string explicitly derives from a monthly estimate stated in the spec.
+
+# Added: 2026-04-05 — MoneyMirror Phase 3 (issue-010)
+
+**Competing async loads on scope/filter change** (required for `"use client"` data loads):
+
+- For any `fetch` driven by scope, date range, or filter changes that can fire in quick succession, verify `AbortController` (or equivalent stale-response guard) so an older response cannot overwrite newer UI state. Ignore `AbortError` in handlers.
+
+# Added: 2026-04-05 — MoneyMirror Phase 3 (issue-010)
+
+**Repair / backfill loops**: For any `while` or `for` loop that batches DB updates until "done," verify rows that cannot be processed are skipped or marked so the loop cannot run until timeout on the same poison rows.
+
+# Added: 2026-04-05 — MoneyMirror Phase 3 (issue-010)
+
 ---
 
 ## 5 Performance Risks

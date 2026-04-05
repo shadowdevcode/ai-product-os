@@ -30,6 +30,8 @@ interface ResultsPanelProps {
   nickname: string | null;
   account_purpose: string | null;
   card_network: string | null;
+  scopeKind?: 'single_statement' | 'unified';
+  perceived_is_profile_baseline?: boolean;
 }
 
 const CATEGORY_META = [
@@ -71,6 +73,8 @@ export function ResultsPanel({
   nickname,
   account_purpose,
   card_network,
+  scopeKind = 'single_statement',
+  perceived_is_profile_baseline = false,
 }: ResultsPanelProps) {
   const totalSpent = Math.round(summary.total_debits_paisa / 100).toLocaleString('en-IN');
   const totalIncome = Math.round(summary.total_credits_paisa / 100).toLocaleString('en-IN');
@@ -109,7 +113,7 @@ export function ResultsPanel({
             border: '1px solid var(--border-accent)',
           }}
         >
-          Statement period: {periodChip}
+          {scopeKind === 'unified' ? 'Selected range' : 'Statement period'}: {periodChip}
         </p>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: 0, lineHeight: 1.45 }}>
           {metaBits.join(' • ')} • {periodRange} • {transaction_count} transactions
@@ -124,6 +128,12 @@ export function ResultsPanel({
       <PerceivedActualMirror
         perceived_spend_paisa={perceived_spend_paisa}
         actual_debits_paisa={summary.total_debits_paisa}
+        actualCaption={scopeKind === 'unified' ? 'Selected range shows' : 'Statement shows'}
+        perceivedFootnote={
+          perceived_is_profile_baseline
+            ? '“You thought” is your self-reported monthly spend from onboarding (one profile estimate, not per account).'
+            : null
+        }
       />
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>

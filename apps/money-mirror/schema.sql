@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS public.transactions (
     type TEXT NOT NULL CHECK (type IN ('debit', 'credit')),
     category TEXT NOT NULL CHECK (category IN ('needs', 'wants', 'investment', 'debt', 'other')),
     is_recurring BOOLEAN NOT NULL DEFAULT false,
+    merchant_key TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -67,6 +68,13 @@ CREATE INDEX IF NOT EXISTS idx_statements_user_created_at
 CREATE INDEX IF NOT EXISTS idx_transactions_user_statement
     ON public.transactions(user_id, statement_id);
 
+CREATE INDEX IF NOT EXISTS idx_transactions_user_date
+    ON public.transactions(user_id, date DESC);
+
+CREATE INDEX IF NOT EXISTS idx_transactions_user_merchant
+    ON public.transactions(user_id, merchant_key)
+    WHERE merchant_key IS NOT NULL;
+
 CREATE INDEX IF NOT EXISTS idx_advisory_feed_user_created_at
     ON public.advisory_feed(user_id, created_at DESC);
 
@@ -74,3 +82,5 @@ CREATE INDEX IF NOT EXISTS idx_advisory_feed_user_created_at
 ALTER TABLE public.statements ADD COLUMN IF NOT EXISTS nickname TEXT;
 ALTER TABLE public.statements ADD COLUMN IF NOT EXISTS account_purpose TEXT;
 ALTER TABLE public.statements ADD COLUMN IF NOT EXISTS card_network TEXT;
+
+ALTER TABLE public.transactions ADD COLUMN IF NOT EXISTS merchant_key TEXT;

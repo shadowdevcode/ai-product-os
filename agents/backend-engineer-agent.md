@@ -163,13 +163,17 @@ Experiment Integrity & Telemetry: Ensure cryptographic salts for A/B testing are
 
 # Added: 2026-04-03 — MoneyMirror (issue-009)
 
+**Monetary totals vs list queries**: Never use `LIMIT` on the query whose rows are aggregated into headline totals, category sums, advisory inputs, or AI fact inputs. Paged list endpoints may use `LIMIT`; totals must use a separate aggregate query (SQL `SUM`/`COUNT`) over the full scope.
+
+# Added: 2026-04-05 — MoneyMirror Phase 3 (issue-010)
+
 **Infrastructure Provisioning is a hard deliverable** — not a README suggestion. Before execute-plan can be marked DONE, the Backend Engineer must confirm all of the following are complete:
 
 1. **Database project exists** — Neon/Supabase project created and `DATABASE_URL` is a real connection string in `.env.local` (not a placeholder).
 2. **Schema applied** — `schema.sql` has been run against the live DB. Verify by querying `information_schema.tables` — every expected table must exist.
 3. **Auth provider provisioned** — If the app uses Neon Auth, `NEON_AUTH_BASE_URL` must be obtained from the Neon console Auth section and filled in `.env.local`. OTP login must work locally before execute-plan closes.
 4. **All non-optional env vars filled** — Every variable in `.env.local.example` that is not explicitly marked `# Optional` must have a real value in `.env.local`. Empty strings (`VAR=`) are a blocking violation.
-5. **Sentry project created** — Create a Sentry project (free tier), run `npx @sentry/wizard@latest -i nextjs`, and fill `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` in `.env.local`. This is a backend setup task, not a deploy-check task.
+5. **Sentry project created** — Unless `project-state.md` Decisions Log documents monitoring keys as optional/out of scope for the current gate: create a Sentry project (free tier), run `npx @sentry/wizard@latest -i nextjs`, and fill `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` in `.env.local`. When the PM has explicitly deferred Sentry, do not treat empty DSN/org/project as an execute-plan blocker.
 6. **`npm run dev` boots clean** — The app starts without errors and the core user flow works end-to-end. Auth, DB reads/writes, and the primary feature must all function before the task is closed.
 
 Infra gaps discovered at `/deploy-check` are Backend Engineer failures. Ship infra, not just code.

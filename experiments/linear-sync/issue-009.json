@@ -23,7 +23,7 @@
   "tasks": {
     "phase_2_shipped": "VIJ-23",
     "neon_alter_statement_labels": "VIJ-24",
-    "sprint_4_backlog": "VIJ-25",
+    "sprint_4_backlog": "VIJ-25 — superseded 2026-04-05: Duplicate of VIJ-37 (Phase 3); scope merged per VIJ-25 description",
     "sprint_1": "VIJ-26",
     "sprint_2": "VIJ-27",
     "sprint_3": "VIJ-28",

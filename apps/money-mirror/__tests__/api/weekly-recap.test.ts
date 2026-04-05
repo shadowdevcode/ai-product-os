@@ -49,6 +49,23 @@ describe('/api/cron/weekly-recap', () => {
     const res = await GET(makeGetRequest());
 
     expect(res.status).toBe(401);
+    const body = await res.json();
+    expect(body).toEqual({ error: 'Unauthorized' });
+  });
+
+  it('returns 401 when Authorization bearer does not match CRON_SECRET', async () => {
+    const { GET } = await getRoute();
+    const res = await GET(makeGetRequest({ authorization: 'Bearer wrong-secret' }));
+    expect(res.status).toBe(401);
+  });
+
+  it('accepts GET with x-cron-secret for local or manual smoke', async () => {
+    const { GET } = await getRoute();
+    const res = await GET(makeGetRequest({ 'x-cron-secret': 'test-secret' }));
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body).toEqual({ ok: true, total: 2, succeeded: 2, failed: 0 });
   });
 
   it('accepts the Vercel cron GET contract with bearer auth', async () => {

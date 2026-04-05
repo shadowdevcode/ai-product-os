@@ -140,3 +140,7 @@ Minimize number of screens.
 Avoid unnecessary UI complexity.
 
 Focus on fast user success.
+
+**Date range and labels**: When wireframes or component copy include money or time rates (`/mo`, `per year`, `this month`), specify whether the screen assumes a **single month** or a **variable range**. For variable ranges, prefer neutral period language in mocks so engineering does not inherit a misleading monthly frame.
+
+# Added: 2026-04-05 — MoneyMirror Phase 3 (issue-010)

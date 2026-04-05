@@ -222,6 +222,10 @@ Check:
 
 If Sentry is not configured, add it as a deployment blocker. Post-deploy debugging without error tracking is blind.
 
+**PM-documented exceptions**: Before failing the gate on empty or missing Sentry-related variables (`NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT`, or similar), read `project-state.md` **Decisions Log** and this cycle’s deploy-check result file (e.g. `experiments/results/deploy-check-NNN.md`). If either records an explicit PM exception that lists those keys as optional for this app or cycle, **do not block** on those keys being unset. The exception must name the variable(s) exempted; vague waivers are not acceptable.
+
+# Added: 2026-04-05 — MoneyMirror Phase 3 (issue-010)
+
 **Minimum setup**:
 
 ```bash
