@@ -24,6 +24,7 @@ export function DashboardClient() {
     error,
     setError,
     isLoadingDashboard,
+    isLoadingNarratives,
     isParsing,
     statementType,
     setStatementType,
@@ -144,6 +145,7 @@ export function DashboardClient() {
             advisories={advisories}
             txnScope={txnScope}
             coachingFacts={coachingFacts}
+            isLoadingNarratives={isLoadingNarratives}
           />
         </>
       )}

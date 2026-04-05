@@ -36,8 +36,18 @@
       "url": "https://linear.app/vijaypmworkspace/document/issue-010-closeout-snapshot-5ef07c9db6ee"
     }
   },
-  "last_sync_mode": "close",
-  "last_sync_timestamp": "2026-04-05T15:40:12Z",
+  "last_sync_mode": "release",
+  "last_sync_timestamp": "2026-04-06T20:35:30Z",
+  "production_readiness_issue": {
+    "identifier": "VIJ-42",
+    "title": "MoneyMirror — Production readiness sync (post–VIJ-37 closeout)",
+    "url": "https://linear.app/vijaypmworkspace/issue/VIJ-42/moneymirror-production-readiness-sync-post-vij-37-closeout",
+    "state": "Done",
+    "purpose": "PM/ops mirror for post-close hardening + launch checklist; not a reopened pipeline cycle"
+  },
+  "vij37_production_sync_comment_id": "c595274e-311d-4990-afda-3cf7afc9b243",
+  "ops_followup_comment_id": "9137c798-bdbc-488c-b243-089dee8911aa",
+  "ops_followup_note": "2026-04-06 comment on VIJ-37 — post-close hardening, launch checklist, production push guidance",
   "pipeline_status": "learning_complete",
   "linear_status": "Done",
   "project_status": "Completed",

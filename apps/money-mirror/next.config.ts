@@ -1,8 +1,22 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { NextConfig } from 'next';
 import { withSentryConfig } from '@sentry/nextjs';
 
+const appDir = path.dirname(fileURLToPath(import.meta.url));
+
 const nextConfig: NextConfig = {
-  serverExternalPackages: ['pdf-parse'],
+  // Monorepo: pin Turbopack root to this app so it does not pick the repo-root lockfile.
+  // Without resolveAlias, `@import "tailwindcss"` resolves from `apps/` and fails; alias to this app's node_modules.
+  turbopack: {
+    root: appDir,
+    resolveAlias: {
+      tailwindcss: path.join(appDir, 'node_modules/tailwindcss'),
+    },
+  },
+  // OTEL/Sentry use these hook packages; Turbopack must not bundle them as hashed externals or dev fails with
+  // "Cannot find module 'require-in-the-middle-…'".
+  serverExternalPackages: ['pdf-parse', 'require-in-the-middle', 'import-in-the-middle'],
   // Enable PWA headers
   headers: async () => [
     {

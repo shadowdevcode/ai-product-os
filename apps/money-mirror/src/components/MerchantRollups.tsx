@@ -48,8 +48,17 @@ export function MerchantRollups({ txnScope }: MerchantRollupsProps) {
       const qs = merchantsQuery(txnScope);
       const resp = await fetch(`/api/insights/merchants?${qs}`);
       if (!resp.ok) {
-        const body = await resp.json().catch(() => ({}));
-        throw new Error(body.error ?? `Load failed (${resp.status})`);
+        const body = (await resp.json().catch(() => ({}))) as {
+          error?: string;
+          detail?: string;
+          code?: string;
+        };
+        const base = body.error ?? `Load failed (${resp.status})`;
+        if (body.code === 'SCHEMA_DRIFT' && body.detail) {
+          throw new Error(body.detail);
+        }
+        const showDetail = process.env.NODE_ENV === 'development' && body.detail;
+        throw new Error(showDetail ? `${base}: ${body.detail}` : base);
       }
       const data = (await resp.json()) as {
         merchants: MerchantRow[];

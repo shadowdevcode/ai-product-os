@@ -21,7 +21,7 @@ export default function LandingPage() {
             style={{
               fontSize: '2rem',
               fontWeight: 800,
-              fontFamily: 'Space Grotesk, sans-serif',
+              fontFamily: 'var(--font-space), sans-serif',
               letterSpacing: '-0.03em',
               color: 'var(--accent)',
               margin: 0,
@@ -82,7 +82,7 @@ export default function LandingPage() {
                 fontSize: '1.5rem',
                 fontWeight: 800,
                 color: 'var(--danger)',
-                fontFamily: 'Space Grotesk, sans-serif',
+                fontFamily: 'var(--font-space), sans-serif',
               }}
             >
               67%
@@ -99,7 +99,7 @@ export default function LandingPage() {
                 fontSize: '1.5rem',
                 fontWeight: 800,
                 color: 'var(--warning)',
-                fontFamily: 'Space Grotesk, sans-serif',
+                fontFamily: 'var(--font-space), sans-serif',
               }}
             >
               ₹12k
@@ -116,7 +116,7 @@ export default function LandingPage() {
                 fontSize: '1.5rem',
                 fontWeight: 800,
                 color: 'var(--accent)',
-                fontFamily: 'Space Grotesk, sans-serif',
+                fontFamily: 'var(--font-space), sans-serif',
               }}
             >
               2 min
@@ -170,7 +170,7 @@ export default function LandingPage() {
                   fontSize: '0.75rem',
                   fontWeight: 700,
                   color: 'var(--accent)',
-                  fontFamily: 'Space Grotesk, sans-serif',
+                  fontFamily: 'var(--font-space), sans-serif',
                   minWidth: '24px',
                   paddingTop: '2px',
                 }}
@@ -201,10 +201,8 @@ export default function LandingPage() {
             animationDelay: '0.3s',
           }}
         >
-          <Link href="/login" style={{ textDecoration: 'none', width: '100%' }}>
-            <button id="get-started-cta" className="btn-primary">
-              Show Me The Truth →
-            </button>
+          <Link id="get-started-cta" href="/login" className="btn-primary">
+            Show Me The Truth →
           </Link>
           <p
             style={{

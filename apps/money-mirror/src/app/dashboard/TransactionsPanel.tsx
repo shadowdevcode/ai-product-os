@@ -80,8 +80,18 @@ export function TransactionsPanel({ txnScope }: TransactionsPanelProps) {
       try {
         const resp = await fetch(`/api/transactions?${q.toString()}`, { signal: ac.signal });
         if (!resp.ok) {
-          const body = await resp.json().catch(() => ({}));
-          throw new Error(body.error ?? `Load failed (${resp.status})`);
+          const body = (await resp.json().catch(() => ({}))) as {
+            error?: string;
+            detail?: string;
+            code?: string;
+          };
+          const base = body.error ?? `Load failed (${resp.status})`;
+          if (body.code === 'SCHEMA_DRIFT' && body.detail) {
+            throw new Error(body.detail);
+          }
+          const showDetail = process.env.NODE_ENV === 'development' && body.detail;
+          const msg = showDetail ? `${base}: ${body.detail}` : base;
+          throw new Error(msg);
         }
         const data = (await resp.json()) as { transactions: TxRow[]; total: number };
         setTotal(data.total);

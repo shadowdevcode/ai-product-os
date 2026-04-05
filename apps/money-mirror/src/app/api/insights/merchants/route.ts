@@ -4,9 +4,11 @@
  * Top merchants by debit spend for the authenticated user, scoped like GET /api/transactions.
  */
 
+import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/auth/session';
 import { ensureProfile, getDb } from '@/lib/db';
+import { isUndefinedColumnError, SCHEMA_UPGRADE_HINT } from '@/lib/pg-errors';
 import {
   listMerchantRollups,
   MERCHANT_ROLLUPS_MAX_LIMIT,
@@ -130,7 +132,18 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       keyed_debit_paisa: keyed_debit_sum,
     });
   } catch (e) {
+    Sentry.captureException(e);
     console.error('[insights/merchants] GET failed:', e);
+    if (isUndefinedColumnError(e)) {
+      return NextResponse.json(
+        {
+          error: "Can't load merchant insights",
+          code: 'SCHEMA_DRIFT',
+          detail: SCHEMA_UPGRADE_HINT,
+        },
+        { status: 500 }
+      );
+    }
     return NextResponse.json({ error: 'Failed to load merchant insights' }, { status: 500 });
   }
 }

@@ -13,7 +13,7 @@ export function DashboardBrandBar() {
           fontSize: '1.1rem',
           fontWeight: 800,
           color: 'var(--accent)',
-          fontFamily: 'Space Grotesk, sans-serif',
+          fontFamily: 'var(--font-space), sans-serif',
           letterSpacing: '-0.02em',
         }}
       >

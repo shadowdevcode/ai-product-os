@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import type { Advisory } from '@/lib/advisory-engine';
 import type { LayerAFacts } from '@/lib/coaching-facts';
 import type { StatementType } from '@/lib/statements';
@@ -9,28 +9,38 @@ import type { StatementListItem } from '@/lib/statements-list';
 import { monthKeyFromPeriodEnd } from '@/lib/format-date';
 import { dashboardApiPathFromSearchParams } from '@/lib/scope';
 import type { ApplyUnifiedPayload } from '@/components/ScopeBar';
-import type { UploadFormMeta } from './UploadPanel';
 import type { DashboardResult } from './dashboard-result-types';
 import { useDashboardScopeDerived } from './useDashboardScopeDerived';
+import { useDashboardUrlModel } from './useDashboardUrlModel';
+import { useDashboardInitialLoadEffect } from './useDashboardInitialLoadEffect';
+import { useStatementUploadHandler } from './useStatementUploadHandler';
 
 export { tabFromSearchParams } from './dashboard-tab-params';
 
 export function useDashboardState() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const statementIdFromUrl = searchParams.get('statement_id');
-  const isUnifiedUrl = Boolean(searchParams.get('date_from') && searchParams.get('date_to'));
+  const {
+    searchParams,
+    statementIdFromUrl,
+    tabParam,
+    isUnifiedUrl,
+    dashboardScopeKey,
+    dashboardApiPath,
+  } = useDashboardUrlModel();
 
   const [result, setResult] = useState<DashboardResult | null>(null);
   const [advisories, setAdvisories] = useState<Advisory[]>([]);
   const [coachingFacts, setCoachingFacts] = useState<LayerAFacts | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(true);
+  const [isLoadingNarratives, setIsLoadingNarratives] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
   const [statementType, setStatementType] = useState<StatementType>('bank_account');
   const [statements, setStatements] = useState<StatementListItem[] | null>(null);
   const [monthFilter, setMonthFilter] = useState<string | 'all'>('all');
   const dashboardAbortRef = useRef<AbortController | null>(null);
+  const dashboardLoadedForScopeRef = useRef<string | null>(null);
+  const narrativesFetchedForScopeRef = useRef<string | null>(null);
 
   const { filteredStatements, effectiveSelectedId, txnScope } = useDashboardScopeDerived({
     statements,
@@ -50,7 +60,6 @@ export function useDashboardState() {
 
   const loadDashboard = useCallback(
     async (override?: URLSearchParams) => {
-      // Cancel any in-flight dashboard fetch (e.g. Gemini-enriched response from old scope)
       dashboardAbortRef.current?.abort();
       const ac = new AbortController();
       dashboardAbortRef.current = ac;
@@ -59,7 +68,7 @@ export function useDashboardState() {
       setError(null);
 
       try {
-        const path = dashboardApiPathFromSearchParams(override ?? searchParams);
+        const path = override ? dashboardApiPathFromSearchParams(override) : dashboardApiPath;
         const resp = await fetch(`/api/dashboard${path}`, { signal: ac.signal });
 
         if (resp.status === 404) {
@@ -90,45 +99,74 @@ export function useDashboardState() {
         setIsLoadingDashboard(false);
       }
     },
-    [searchParams]
+    [dashboardApiPath]
   );
+
+  const loadCoachingNarratives = useCallback(async (): Promise<boolean> => {
+    setIsLoadingNarratives(true);
+    try {
+      const resp = await fetch(`/api/dashboard/advisories${dashboardApiPath}`);
+      if (!resp.ok) {
+        const body = await resp.json().catch(() => ({}));
+        throw new Error(body.error ?? `Advisories load failed (${resp.status})`);
+      }
+      const data = (await resp.json()) as { advisories: Advisory[]; coaching_facts: LayerAFacts };
+      setAdvisories(data.advisories);
+      setCoachingFacts(data.coaching_facts);
+      return true;
+    } catch (e) {
+      console.error('[loadCoachingNarratives]', e);
+      return false;
+    } finally {
+      setIsLoadingNarratives(false);
+    }
+  }, [dashboardApiPath]);
 
   useEffect(() => {
     loadStatements().catch(() => {});
   }, [loadStatements]);
 
   useEffect(() => {
-    if (statements === null) {
+    narrativesFetchedForScopeRef.current = null;
+  }, [dashboardScopeKey]);
+
+  useDashboardInitialLoadEffect({
+    statements,
+    statementIdFromUrl,
+    tabParam,
+    isUnifiedUrl,
+    dashboardScopeKey,
+    loadDashboard,
+    router,
+    dashboardLoadedForScopeRef,
+  });
+
+  useEffect(() => {
+    if (tabParam !== 'insights') {
       return;
     }
-    if (statements.length === 0) {
-      void loadDashboard(new URLSearchParams());
+    if (statements === null || statements.length === 0) {
+      return;
+    }
+    if (isLoadingDashboard || !result) {
+      return;
+    }
+    if (narrativesFetchedForScopeRef.current === dashboardScopeKey) {
       return;
     }
 
-    if (isUnifiedUrl) {
-      void loadDashboard();
-      return;
-    }
-
-    const valid =
-      statementIdFromUrl && statements.some((s) => s.id === statementIdFromUrl)
-        ? statementIdFromUrl
-        : statements[0].id;
-
-    if (valid !== statementIdFromUrl) {
-      const q = new URLSearchParams();
-      q.set('statement_id', valid);
-      const t = searchParams.get('tab');
-      if (t && (t === 'insights' || t === 'upload' || t === 'transactions')) {
-        q.set('tab', t);
+    let cancelled = false;
+    void (async () => {
+      const ok = await loadCoachingNarratives();
+      if (!cancelled && ok) {
+        narrativesFetchedForScopeRef.current = dashboardScopeKey;
       }
-      router.replace(`/dashboard?${q.toString()}`, { scroll: false });
-      return;
-    }
+    })();
 
-    void loadDashboard();
-  }, [statements, statementIdFromUrl, isUnifiedUrl, loadDashboard, router, searchParams]);
+    return () => {
+      cancelled = true;
+    };
+  }, [tabParam, statements, isLoadingDashboard, result, dashboardScopeKey, loadCoachingNarratives]);
 
   const handleMonthChange = useCallback(
     (key: string | 'all') => {
@@ -202,56 +240,15 @@ export function useDashboardState() {
     [router, searchParams]
   );
 
-  const handleUpload = useCallback(
-    async (file: File, nextStatementType: StatementType, meta: UploadFormMeta) => {
-      setError(null);
-
-      if (file.type && file.type !== 'application/pdf') {
-        setError('Please upload a PDF file.');
-        return;
-      }
-      if (file.size > 10 * 1024 * 1024) {
-        setError('File is too large. Maximum 10 MB.');
-        return;
-      }
-
-      setIsParsing(true);
-
-      try {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('statement_type', nextStatementType);
-        if (meta.nickname) {
-          formData.append('nickname', meta.nickname);
-        }
-        if (meta.accountPurpose) {
-          formData.append('account_purpose', meta.accountPurpose);
-        }
-        if (nextStatementType === 'credit_card' && meta.cardNetwork) {
-          formData.append('card_network', meta.cardNetwork);
-        }
-
-        const resp = await fetch('/api/statement/parse', { method: 'POST', body: formData });
-
-        if (!resp.ok) {
-          const body = await resp.json().catch(() => ({}));
-          throw new Error(body.error ?? body.detail ?? `Upload failed (${resp.status})`);
-        }
-
-        const data: DashboardResult = await resp.json();
-        await loadStatements();
-        const next = new URLSearchParams();
-        next.set('statement_id', data.statement_id);
-        router.replace(`/dashboard?${next.toString()}`, { scroll: false });
-        await loadDashboard(next);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong.');
-      } finally {
-        setIsParsing(false);
-      }
-    },
-    [loadDashboard, loadStatements, router]
-  );
+  const handleUpload = useStatementUploadHandler({
+    router,
+    loadDashboard,
+    loadStatements,
+    setError,
+    setIsParsing,
+    dashboardLoadedForScopeRef,
+    narrativesFetchedForScopeRef,
+  });
 
   return {
     router,
@@ -263,6 +260,7 @@ export function useDashboardState() {
     error,
     setError,
     isLoadingDashboard,
+    isLoadingNarratives,
     isParsing,
     statementType,
     setStatementType,

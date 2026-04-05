@@ -6,7 +6,20 @@ import { captureServerEvent } from '@/lib/posthog';
 export type DashboardWithCoaching = DashboardData & { coaching_facts: LayerAFacts };
 
 /**
+ * Layer A facts only (no Gemini). Use for fast `/api/dashboard` responses.
+ * AI narratives are loaded lazily via `/api/dashboard/advisories` when the Insights tab opens.
+ */
+export async function attachCoachingFactsOnly(
+  _userId: string,
+  dashboard: DashboardData
+): Promise<DashboardWithCoaching> {
+  const coaching_facts = buildLayerAFacts(dashboard);
+  return { ...dashboard, coaching_facts };
+}
+
+/**
  * Layer A facts + optional Gemini narratives (T4). Safe fallback: rule `message` stays when AI fails.
+ * Prefer `attachCoachingFactsOnly` on hot paths; call this from `/api/dashboard/advisories` only.
  */
 export async function attachCoachingLayer(
   userId: string,

@@ -72,7 +72,7 @@ function AdvisoryCard({
             fontSize: '0.9rem',
             fontWeight: 700,
             color: style.color,
-            fontFamily: 'Space Grotesk, sans-serif',
+            fontFamily: 'var(--font-space), sans-serif',
           }}
         >
           {adv.headline}

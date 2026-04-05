@@ -10,9 +10,16 @@ interface InsightsPanelProps {
   advisories: Advisory[];
   txnScope: TxnScope | null;
   coachingFacts: LayerAFacts | null;
+  /** True while Gemini coaching narratives load (after fast dashboard). */
+  isLoadingNarratives?: boolean;
 }
 
-export function InsightsPanel({ advisories, txnScope, coachingFacts }: InsightsPanelProps) {
+export function InsightsPanel({
+  advisories,
+  txnScope,
+  coachingFacts,
+  isLoadingNarratives = false,
+}: InsightsPanelProps) {
   return (
     <div
       className="animate-fade-up"
@@ -40,6 +47,11 @@ export function InsightsPanel({ advisories, txnScope, coachingFacts }: InsightsP
       >
         Highlights
       </h2>
+      {isLoadingNarratives && (
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>
+          Polishing insight copy…
+        </p>
+      )}
       <AdvisoryFeed advisories={advisories} coachingFacts={coachingFacts} />
 
       <p

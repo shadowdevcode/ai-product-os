@@ -54,7 +54,7 @@ export function PerceivedActualMirror({
           style={{
             fontSize: '1.35rem',
             fontWeight: 800,
-            fontFamily: 'Space Grotesk, sans-serif',
+            fontFamily: 'var(--font-space), sans-serif',
             color: 'var(--text-secondary)',
           }}
         >
@@ -77,7 +77,7 @@ export function PerceivedActualMirror({
           style={{
             fontSize: '1.35rem',
             fontWeight: 800,
-            fontFamily: 'Space Grotesk, sans-serif',
+            fontFamily: 'var(--font-space), sans-serif',
             color: 'var(--danger)',
           }}
         >

@@ -94,7 +94,7 @@ export default function ScoreRevealPage() {
             fontSize: '1.25rem',
             fontWeight: 800,
             color: 'var(--accent)',
-            fontFamily: 'Space Grotesk, sans-serif',
+            fontFamily: 'var(--font-space), sans-serif',
             letterSpacing: '-0.02em',
           }}
         >
@@ -131,7 +131,7 @@ export default function ScoreRevealPage() {
               style={{
                 fontSize: '3rem',
                 fontWeight: 800,
-                fontFamily: 'Space Grotesk, sans-serif',
+                fontFamily: 'var(--font-space), sans-serif',
                 color: config.color,
                 lineHeight: 1,
               }}

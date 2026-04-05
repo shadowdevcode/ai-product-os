@@ -1,5 +1,19 @@
 import type { Metadata, Viewport } from 'next';
+import { Inter, Space_Grotesk } from 'next/font/google';
 import './globals.css';
+import { WebVitalsReporter } from '@/components/WebVitalsReporter';
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-space',
+});
 
 export const metadata: Metadata = {
   title: 'MoneyMirror — See the truth about your money',
@@ -18,7 +32,7 @@ export const viewport: Viewport = {
   themeColor: '#080c10',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({
@@ -27,8 +41,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
+      <body className={inter.className}>
+        <WebVitalsReporter />
+        {children}
+      </body>
     </html>
   );
 }

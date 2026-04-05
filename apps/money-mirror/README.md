@@ -51,22 +51,25 @@ cp .env.local.example .env.local
 
 Fill in these values:
 
-| Variable                  | Required | Description                                                         |
-| ------------------------- | -------- | ------------------------------------------------------------------- |
-| `DATABASE_URL`            | Yes      | Neon Postgres connection string                                     |
-| `NEON_AUTH_BASE_URL`      | Yes      | Base URL for your Neon Auth project                                 |
-| `NEON_AUTH_COOKIE_SECRET` | No       | Optional only if Neon explicitly gives one for your project/runtime |
-| `GEMINI_API_KEY`          | Yes      | Google AI Studio API key                                            |
-| `RESEND_API_KEY`          | Yes      | Resend API key                                                      |
-| `POSTHOG_KEY`             | Yes      | Server-side PostHog key                                             |
-| `POSTHOG_HOST`            | Yes      | PostHog host URL                                                    |
-| `NEXT_PUBLIC_APP_URL`     | Yes      | Public app URL used in recap links                                  |
-| `CRON_SECRET`             | Yes      | Shared secret for cron routes                                       |
-| `NEXT_PUBLIC_SENTRY_DSN`  | No       | Client Sentry DSN — optional locally if you skip browser reporting  |
-| `SENTRY_AUTH_TOKEN`       | Yes\*    | \*Required for production builds that upload source maps to Sentry  |
-| `SENTRY_ORG`              | No       | Optional locally — used by Sentry CLI / webpack plugin for releases |
-| `SENTRY_PROJECT`          | No       | Optional locally — same as above                                    |
-| `CI`                      | No       | Optional CI build flag                                              |
+| Variable                       | Required | Description                                                                                                                     |
+| ------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                 | Yes      | Neon Postgres connection string                                                                                                 |
+| `NEON_AUTH_BASE_URL`           | Yes      | Base URL for your Neon Auth project                                                                                             |
+| `NEON_AUTH_COOKIE_SECRET`      | No       | Optional only if Neon explicitly gives one for your project/runtime                                                             |
+| `GEMINI_API_KEY`               | Yes      | Google AI Studio API key                                                                                                        |
+| `RESEND_API_KEY`               | Yes      | Resend API key                                                                                                                  |
+| `POSTHOG_KEY`                  | Yes      | Server-side PostHog key                                                                                                         |
+| `POSTHOG_HOST`                 | Yes      | PostHog host URL                                                                                                                |
+| `NEXT_PUBLIC_POSTHOG_KEY`      | No       | Same key as `POSTHOG_KEY` — enables client `web_vital` (CWV) events                                                             |
+| `NEXT_PUBLIC_POSTHOG_HOST`     | No       | Defaults to `https://app.posthog.com` if unset                                                                                  |
+| `NEXT_PUBLIC_APP_URL`          | Yes      | Public app URL used in recap links                                                                                              |
+| `CRON_SECRET`                  | Yes      | Shared secret for cron routes                                                                                                   |
+| `NEXT_PUBLIC_SENTRY_DSN`       | No       | Client Sentry DSN — optional locally if you skip browser reporting                                                              |
+| `SENTRY_AUTH_TOKEN`            | Yes\*    | \*Required for production builds that upload source maps to Sentry                                                              |
+| `SENTRY_ORG`                   | No       | Optional locally — used by Sentry CLI / webpack plugin for releases                                                             |
+| `SENTRY_PROJECT`               | No       | Optional locally — same as above                                                                                                |
+| `CI`                           | No       | Optional CI build flag                                                                                                          |
+| `MONEYMIRROR_SKIP_AUTO_SCHEMA` | No       | Set to `1` to skip automatic idempotent DDL on server boot (`instrumentation.ts`); default is to run when `DATABASE_URL` is set |
 
 ### 3. Create Neon project and enable Neon Auth
 
@@ -80,6 +83,18 @@ Fill in these values:
 ### 4. Apply database schema
 
 Run the full contents of [`schema.sql`](./schema.sql) against your Neon database.
+
+**Already have a DB from before Phase 2 / Phase 3?** Your `transactions` table may be missing `merchant_key` (and related indexes), which breaks the Transactions tab and merchant insights. From this app directory, with `DATABASE_URL` in `.env.local`:
+
+```bash
+npm run db:upgrade
+```
+
+That runs idempotent `ALTER TABLE … ADD COLUMN IF NOT EXISTS` and `CREATE INDEX IF NOT EXISTS` statements (same as the tail of `schema.sql`). Safe to run multiple times.
+
+**Automatic upgrades on server start:** When the Node server boots (`next dev` / `next start` / Vercel), MoneyMirror runs the same idempotent DDL once if `DATABASE_URL` is set and `MONEYMIRROR_SKIP_AUTO_SCHEMA` is not `1`. After pulling new code, **restart the dev server** so this runs; you usually do not need a separate migration step for missing `merchant_key` on Neon.
+
+Full **root cause, verification steps, and opt-out** for schema drift: [`docs/SCHEMA-DRIFT.md`](./docs/SCHEMA-DRIFT.md).
 
 Tables created:
 
@@ -117,6 +132,19 @@ First-run failure looks like:
 
 - `Error: DATABASE_URL is required.`
 - `Error: NEON_AUTH_BASE_URL is required`
+
+**Dev server: `uv_interface_addresses` / `getNetworkHosts` warning** — In some restricted environments Next may log an unhandled rejection while resolving the LAN URL; the app often still serves on `http://localhost:3000`. Use `npm run dev:loopback` to bind only to `127.0.0.1` and avoid that code path, or run the dev server outside a sandbox.
+
+## Testing
+
+| Command            | What it runs                                                               |
+| ------------------ | -------------------------------------------------------------------------- |
+| `npm run test`     | Vitest — API routes, libs, parsers                                         |
+| `npm run test:e2e` | Playwright — builds, serves on port **3333**, smoke-tests `/` and `/login` |
+
+First-time E2E setup: `npx playwright install chromium`. See [`docs/PERFORMANCE-REVIEW.md`](./docs/PERFORMANCE-REVIEW.md) for Lighthouse and performance notes.
+
+Optional: set `NEXT_PUBLIC_POSTHOG_KEY` (same project as `POSTHOG_KEY`) to send **Core Web Vitals** (`web_vital` events) from the browser.
 
 ## API
 
@@ -179,7 +207,7 @@ Returns all processed statements for the authenticated user, sorted by creation 
 
 ### `GET /api/dashboard`
 
-Returns the full dashboard state for the authenticated user (Overview aggregates + generated advisories + optional `coaching_facts` Layer A JSON + Gemini-enriched `narrative` / `cited_fact_ids` on each advisory when AI succeeds).
+Returns the full dashboard state for the authenticated user (Overview aggregates + generated advisories + optional `coaching_facts` Layer A JSON). **Does not** call Gemini — responses are fast for Overview and Transactions. Rule-based advisory copy is returned immediately.
 
 **Auth**: Neon Auth session cookie required.
 
@@ -190,7 +218,7 @@ Returns the full dashboard state for the authenticated user (Overview aggregates
 
 ### `GET /api/dashboard/advisories`
 
-Same query parameters as `GET /api/dashboard`. Returns `{ advisories, coaching_facts }` (same shapes as the parent dashboard payload).
+Same query parameters as `GET /api/dashboard`. Returns `{ advisories, coaching_facts }`. This endpoint runs the **Gemini coaching narrative** step (can take up to ~9s) and is what the **Insights** tab calls after the fast dashboard load.
 
 **Auth**: Neon Auth session cookie required.
 
@@ -345,6 +373,8 @@ Intentional error route to verify Sentry server-side capture (`SentryExampleAPIE
 ## Docs
 
 - [`docs/COACHING-TONE.md`](./docs/COACHING-TONE.md) — Coaching language guide: consequence-first nudge patterns, Layer A facts-only numerics, Gemini narrative guardrails, tone constraints for advisory copy.
+- [`docs/PERFORMANCE-REVIEW.md`](./docs/PERFORMANCE-REVIEW.md) — Performance review notes (fonts, lazy Insights path, Web Vitals, Lighthouse).
+- [`docs/SCHEMA-DRIFT.md`](./docs/SCHEMA-DRIFT.md) — Schema drift RCA, `SCHEMA_DRIFT` API behavior, `db:upgrade` vs boot-time DDL.
 
 ## Current scope
 

@@ -164,7 +164,7 @@ export default function OnboardingPage() {
               letterSpacing: '-0.02em',
               fontWeight: 800,
               color: 'var(--accent)',
-              fontFamily: 'Space Grotesk, sans-serif',
+              fontFamily: 'var(--font-space), sans-serif',
             }}
           >
             MoneyMirror

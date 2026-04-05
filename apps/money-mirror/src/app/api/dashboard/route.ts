@@ -2,7 +2,7 @@ import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/auth/session';
 import { ensureProfile } from '@/lib/db';
-import { attachCoachingLayer } from '@/lib/coaching-enrich';
+import { attachCoachingFactsOnly } from '@/lib/coaching-enrich';
 import { fetchDashboardData, type DashboardFetchInput } from '@/lib/dashboard';
 import { parseDashboardScopeFromSearchParams } from '@/lib/scope';
 
@@ -36,7 +36,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       return NextResponse.json({ error: 'Dashboard not found' }, { status: 404 });
     }
 
-    const enriched = await attachCoachingLayer(user.id, dashboard);
+    const enriched = await attachCoachingFactsOnly(user.id, dashboard);
     return NextResponse.json(enriched);
   } catch (err) {
     Sentry.captureException(err);

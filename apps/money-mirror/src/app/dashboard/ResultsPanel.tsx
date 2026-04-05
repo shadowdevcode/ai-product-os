@@ -153,7 +153,7 @@ export function ResultsPanel({
             style={{
               fontSize: '1.25rem',
               fontWeight: 800,
-              fontFamily: 'Space Grotesk, sans-serif',
+              fontFamily: 'var(--font-space), sans-serif',
               color: 'var(--danger)',
             }}
           >
@@ -176,7 +176,7 @@ export function ResultsPanel({
             style={{
               fontSize: '1.25rem',
               fontWeight: 800,
-              fontFamily: 'Space Grotesk, sans-serif',
+              fontFamily: 'var(--font-space), sans-serif',
               color: 'var(--success)',
             }}
           >

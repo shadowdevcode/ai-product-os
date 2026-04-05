@@ -44,7 +44,7 @@ export function MirrorCard({ label, amount_paisa, total_paisa, color, icon }: Mi
             style={{
               fontSize: '1rem',
               fontWeight: 700,
-              fontFamily: 'Space Grotesk, sans-serif',
+              fontFamily: 'var(--font-space), sans-serif',
               color: 'var(--text-primary)',
             }}
           >

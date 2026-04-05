@@ -42,3 +42,7 @@ next-env.d.ts
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Lighthouse (generated locally; see docs/PERFORMANCE-REVIEW.md)
+/docs/lighthouse-report.report.html
+/docs/lighthouse-report.report.json

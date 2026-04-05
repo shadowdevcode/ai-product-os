@@ -16,6 +16,7 @@ import {
   listTransactions,
   type ListTransactionsParams,
 } from '@/lib/transactions-list';
+import { isUndefinedColumnError, SCHEMA_UPGRADE_HINT } from '@/lib/pg-errors';
 import { parseStatementIdsParam } from '@/lib/scope';
 
 const CATEGORIES = new Set(['needs', 'wants', 'investment', 'debt', 'other']);
@@ -206,6 +207,16 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   } catch (e) {
     Sentry.captureException(e);
     console.error('[transactions] GET failed:', e);
-    return NextResponse.json({ error: 'Failed to load transactions' }, { status: 500 });
+    const payload: { error: string; detail?: string; code?: string } = {
+      error: 'Failed to load transactions',
+    };
+    if (isUndefinedColumnError(e)) {
+      payload.error = "Can't load transactions";
+      payload.code = 'SCHEMA_DRIFT';
+      payload.detail = SCHEMA_UPGRADE_HINT;
+    } else if (process.env.NODE_ENV === 'development' && e instanceof Error && e.message) {
+      payload.detail = e.message;
+    }
+    return NextResponse.json(payload, { status: 500 });
   }
 }

@@ -1,5 +1,37 @@
 # Changelog
 
+## 2026-04-06 — MoneyMirror: E2E documentation pass, `CODEBASE-CONTEXT` refresh, verification
+
+**App:** `apps/money-mirror`
+
+**What:** Refreshed [`apps/money-mirror/CODEBASE-CONTEXT.md`](apps/money-mirror/CODEBASE-CONTEXT.md) for post–issue-010 hardening: idempotent schema upgrades (`src/lib/schema-upgrades.ts`, `scripts/apply-schema-upgrades.ts`), boot-time DDL (`src/lib/run-schema-upgrade-on-boot.ts`, `src/instrumentation.ts`), Postgres error helpers (`src/lib/pg-errors.ts`) and `SCHEMA_DRIFT` JSON responses, `WebVitalsReporter`, Playwright (`playwright.config.ts`, `e2e/`). README **Docs** section links [`docs/PERFORMANCE-REVIEW.md`](apps/money-mirror/docs/PERFORMANCE-REVIEW.md) and [`docs/SCHEMA-DRIFT.md`](apps/money-mirror/docs/SCHEMA-DRIFT.md).
+
+**Verification (local):** `npm run lint`, `npm run test` (81/81), `npx playwright install chromium`, `npm run test:e2e` (2/2, from `apps/money-mirror`); `npm run check:all` (repo root); `npm run db:upgrade` (success — Neon via `.env.local`).
+
+**Learnings / corrections:** (1) **`db:upgrade` script shape** — an initial version used top-level `await`, which breaks `tsx`/`esbuild` execution; wrapping the script in `main()` fixed `npm run db:upgrade` (see earlier 2026-04-06 changelog entry). (2) **Schema drift vs “app bug”** — Neon DBs created before Phase 3 columns can throw Postgres `42703` (undefined column); API routes return `code: SCHEMA_DRIFT` with `SCHEMA_UPGRADE_HINT` so operators run `npm run db:upgrade` or rely on auto DDL on server boot (unless `MONEYMIRROR_SKIP_AUTO_SCHEMA=1`). (3) **No PM-pasted mistake list in this session** — additional bullets can be appended to `project-state.md` Decisions Log under the same date if needed.
+
+---
+
+## 2026-04-06 — MoneyMirror: `db:upgrade` + schema drift API hints
+
+**App:** `apps/money-mirror`
+
+**What:** Idempotent `npm run db:upgrade` (`scripts/apply-schema-upgrades.ts`, shared `applyIdempotentSchemaUpgrades` in `src/lib/schema-upgrades.ts`) adds `merchant_key` + partial index and statement label columns when missing. `GET /api/transactions` and `GET /api/insights/merchants` return `code: SCHEMA_DRIFT` with upgrade instructions on Postgres undefined-column errors; Transactions tab and `MerchantRollups` surface `detail` for that code. Dev dependency: `tsx`.
+
+**Follow-up:** `runAutoSchemaUpgradeOnBoot` (`src/lib/run-schema-upgrade-on-boot.ts`) runs the same DDL from `instrumentation.ts` on Node server start when `DATABASE_URL` is set (opt out with `MONEYMIRROR_SKIP_AUTO_SCHEMA=1`). UI shows a single PM-friendly paragraph for `SCHEMA_DRIFT` (no duplicated title + hint). **Docs:** `docs/SCHEMA-DRIFT.md` (RCA + local verification).
+
+**Fix:** `scripts/apply-schema-upgrades.ts` — wrap in `main()` (no top-level `await`) so `tsx`/`esbuild` can run `npm run db:upgrade`.
+
+---
+
+## 2026-04-06 — MoneyMirror: perf hardening, E2E smoke, launch checklist (post–issue-010)
+
+**App:** `apps/money-mirror`
+
+**What:** `next/font` (Inter + Space Grotesk); `WebVitalsReporter` + optional `NEXT_PUBLIC_POSTHOG_*`; viewport `maximumScale: 5`; Playwright smoke (`e2e/`, `test:e2e`); lazy Gemini on Insights (`/api/dashboard` fast path); scope-keyed dashboard refetch; dev-only transaction 500 `detail`; `dev:loopback` + README note for `uv_interface_addresses` dev noise. Docs: `docs/PERFORMANCE-REVIEW.md`, `experiments/results/production-launch-checklist-010.md`. **Linear:** ops follow-up comment on **VIJ-37** (does not reopen pipeline).
+
+---
+
 ## 2026-04-05 — MoneyMirror Phase 3 T4 (VIJ-41): facts-grounded AI coaching
 
 **App:** `apps/money-mirror`
