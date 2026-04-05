@@ -25,8 +25,13 @@ export interface Advisory {
   trigger: string;
   severity: AdvisorySeverity;
   headline: string;
+  /** Rule-based body; always present as safe fallback when Gemini is off or fails. */
   message: string;
   amount_paisa?: number;
+  /** Facts-grounded Gemini narrative (T4); UI prefers this over `message` when set. */
+  narrative?: string;
+  /** Layer A fact ids the narrative is tied to; drives Sources drawer. */
+  cited_fact_ids?: string[];
 }
 
 interface AdvisoryInput {
@@ -76,7 +81,7 @@ export function generateAdvisories(input: AdvisoryInput): Advisory[] {
       id: 'subscription-leak',
       trigger: 'SUBSCRIPTION_LEAK',
       severity: input.subscription_paisa > 500000 ? 'warning' : 'info',
-      headline: `₹${formatRupees(input.subscription_paisa)}/mo in subscriptions`,
+      headline: `₹${formatRupees(input.subscription_paisa)} in subscriptions this period`,
       message:
         'Netflix, Spotify, YouTube Premium, gym membership — they feel small individually but compound fast. Are you actively using all of them?',
       amount_paisa: input.subscription_paisa,
@@ -92,7 +97,7 @@ export function generateAdvisories(input: AdvisoryInput): Advisory[] {
         trigger: 'FOOD_DELIVERY',
         severity: foodPct > 25 ? 'critical' : 'warning',
         headline: `${Math.round(foodPct)}% of your spending is food delivery`,
-        message: `You spent ₹${formatRupees(input.food_delivery_paisa)} on Swiggy, Zomato, and restaurants. That's ₹${formatRupees(input.food_delivery_paisa * 12)} per year just on convenience.`,
+        message: `You spent ₹${formatRupees(input.food_delivery_paisa)} on Swiggy, Zomato, and restaurants this period. Review how much of this was genuine necessity vs convenience.`,
         amount_paisa: input.food_delivery_paisa,
       });
     }
@@ -104,7 +109,7 @@ export function generateAdvisories(input: AdvisoryInput): Advisory[] {
       id: 'no-investment',
       trigger: 'NO_INVESTMENT',
       severity: 'warning',
-      headline: 'No investments detected this month',
+      headline: 'No investments detected in this period',
       message:
         'Your statement shows zero SIP, mutual fund, or recurring investment transactions. Even ₹500/month in an index fund compounds significantly over 10 years.',
     });

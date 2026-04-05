@@ -406,3 +406,69 @@ rule: Any new input field that stores an enum value must use a client-side picke
 improvement: commands/execute-plan.md: for any new input field persisting an enum column, require (1) client picker/select enumeration, (2) server-side explicit validation with 4xx on invalid value, (3) schema CHECK constraint on the column. backend-architect-agent.md: when designing input fields, classify each field as free-text or enum and specify the validation contract for each.
 
 ---
+
+---
+
+date: 2026-04-05
+project: MoneyMirror Phase 3 (issue-010)
+issue: Dashboard headline totals and advisory inputs were derived from row-limited transaction queries, diverging from truth for large scopes
+root_cause: Architecture did not state that monetary rollups for insights and advisories must use full-scope SQL aggregates; implementation reused list-query shapes that applied LIMIT.
+rule: For any finance dashboard, totals, category sums, and inputs to rules or AI facts must be computed with database aggregates (SUM/COUNT) over the full active user scope — never by summing a LIMIT-capped transaction scan.
+improvement: backend-architect-agent.md Mandatory Pre-Approval Checklist: financial headline metrics must name aggregate strategy. backend-engineer-agent.md: never use LIMIT on the query path whose rows are summed into headline totals or advisory inputs.
+
+---
+
+---
+
+date: 2026-04-05
+project: MoneyMirror Phase 3 (issue-010)
+issue: Merchant-key backfill loop could run until timeout when normalize returned null for rows still selected as needing keys
+root_cause: Batch repair assumed every selected row could be updated; no termination proof for permanently unresolvable rows.
+rule: Any cursor-based batch repair over rows with nullable derived fields must advance the cursor past rows that cannot be normalized in one pass, or mark them skipped, so the loop always terminates.
+improvement: backend-architect-agent.md: maintenance routes must document cursor monotonicity and poison-row handling. code-review-agent.md: flag while/for repair loops without exit on unprocessable rows.
+
+---
+
+---
+
+date: 2026-04-05
+project: MoneyMirror Phase 3 (issue-010)
+issue: Scope editor modal could overwrite active URL scope because local form state was not re-hydrated when canonical scope changed
+root_cause: Two sources of truth — URL vs local modal state — without sync on scope change.
+rule: When URL or search params define canonical scope or filters, edit dialogs and local editors must reset from parsed route state whenever the active scope changes.
+improvement: frontend-engineer-agent.md: re-initialize modal/local state from parsed search params on scope change.
+
+---
+
+---
+
+date: 2026-04-05
+project: MoneyMirror Phase 3 (issue-010)
+issue: Advisory strings used monthly language (×12 annualization, “/mo”, “this month”) when the active scope was multi-month or arbitrary
+root_cause: Copy was authored for a single-month frame without a spec rule tying phrases to scope duration.
+rule: Money and time phrases in analytics and advisories must match the active date scope. Do not annualize with ×12 unless the scope is exactly one month or copy explicitly annualizes from a monthly estimate.
+improvement: product-agent.md / design-agent.md: period-neutral defaults when range is user-configurable. code-review-agent.md: financial copy vs scope dimension.
+
+---
+
+---
+
+date: 2026-04-05
+project: MoneyMirror Phase 3 (issue-010)
+issue: Rapid scope changes could show stale dashboard data when an older fetch resolved after a newer scope
+root_cause: Competing async loads without cancellation or stale-response guard.
+rule: Any user-triggered reload that can be superseded by a newer action must use AbortController (or equivalent) and ignore AbortError.
+improvement: frontend-engineer-agent.md: explicit abort pattern for dashboard and scope-driven loads.
+
+---
+
+---
+
+date: 2026-04-05
+project: MoneyMirror Phase 3 (issue-010)
+issue: Heavy authenticated read APIs (large scans, GROUP BY rollups) had no stated cost or abuse posture
+root_cause: Architecture specified auth and ownership but not pagination, rate limits, or MVP-trusted-client assumption for expensive reads.
+rule: For authenticated heavy-read endpoints, the architecture must document pagination or cursor guarantees, per-user rate limits, or an explicit MVP trusted-client / low-risk assumption.
+improvement: backend-architect-agent.md Mandatory Pre-Approval Checklist: heavy read strategy. Peer review cross-checks that the stated strategy exists or is waived explicitly.
+
+---

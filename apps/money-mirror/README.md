@@ -11,9 +11,10 @@ For AI- and agent-oriented architecture, data model, and API reference, see [`CO
 1. User signs in with Neon Auth email OTP and lands in a private onboarding flow.
 2. User completes 5 onboarding questions (including monthly income) and the app calculates a Money Health Score.
 3. User uploads a password-free bank-account or credit-card statement PDF, optionally tagging it with a nickname, account purpose, and card network. Gemini extracts and categorizes transactions entirely in memory.
-4. Dashboard shows three tabs:
+4. Dashboard shows four tabs:
    - **Overview** — Mirror card (perceived vs actual spend side-by-side), summary breakdown by needs/wants/investments/debt.
-   - **Insights** — AI-generated category insights and expanded consequence-first advisory cards.
+   - **Insights** — Merchant rollups, consequence-first advisory cards, and (when `GEMINI_API_KEY` is set) facts-grounded Gemini narratives with a **Sources** drawer tied to Layer A server facts.
+   - **Transactions** — Paginated, filterable transaction list for the selected statement (ground truth for spend).
    - **Upload** — Upload new statements; statement library lists all past uploads with month and institution labels.
 5. Month picker and statement picker let users filter the dashboard across multiple months and accounts.
 6. Multi-account support: bank accounts and credit cards are tracked separately; credit-card-safe math prevents card payments from inflating income.
@@ -61,10 +62,10 @@ Fill in these values:
 | `POSTHOG_HOST`            | Yes      | PostHog host URL                                                    |
 | `NEXT_PUBLIC_APP_URL`     | Yes      | Public app URL used in recap links                                  |
 | `CRON_SECRET`             | Yes      | Shared secret for cron routes                                       |
-| `NEXT_PUBLIC_SENTRY_DSN`  | Yes      | Sentry DSN                                                          |
-| `SENTRY_AUTH_TOKEN`       | Yes      | Sentry auth token                                                   |
-| `SENTRY_ORG`              | Yes      | Sentry org slug                                                     |
-| `SENTRY_PROJECT`          | Yes      | Sentry project slug                                                 |
+| `NEXT_PUBLIC_SENTRY_DSN`  | No       | Client Sentry DSN — optional locally if you skip browser reporting  |
+| `SENTRY_AUTH_TOKEN`       | Yes\*    | \*Required for production builds that upload source maps to Sentry  |
+| `SENTRY_ORG`              | No       | Optional locally — used by Sentry CLI / webpack plugin for releases |
+| `SENTRY_PROJECT`          | No       | Optional locally — same as above                                    |
 | `CI`                      | No       | Optional CI build flag                                              |
 
 ### 3. Create Neon project and enable Neon Auth
@@ -91,7 +92,11 @@ Indexes created:
 
 - `idx_statements_user_created_at`
 - `idx_transactions_user_statement`
+- `idx_transactions_user_date` (user_id, date DESC)
+- `idx_transactions_user_merchant` (partial) where `merchant_key` is not null
 - `idx_advisory_feed_user_created_at`
+
+Transaction rows include optional `merchant_key` (heuristic normalization for rollups; see `src/lib/merchant-normalize.ts`). New parses persist `merchant_key` on insert; existing rows can be backfilled via `POST /api/transactions/backfill-merchant-keys` (authenticated).
 
 ### 5. Run locally
 
@@ -172,23 +177,117 @@ Returns all processed statements for the authenticated user, sorted by creation 
 
 **Returns**: Array of statement records including `statement_id`, `institution_name`, `statement_type`, `period_start`, `period_end`, `nickname`, `account_purpose`, `card_network`.
 
-### `GET /api/dashboard?statement_id=<uuid>`
+### `GET /api/dashboard`
 
-Returns the full dashboard state for the authenticated user.
+Returns the full dashboard state for the authenticated user (Overview aggregates + generated advisories + optional `coaching_facts` Layer A JSON + Gemini-enriched `narrative` / `cited_fact_ids` on each advisory when AI succeeds).
+
+**Auth**: Neon Auth session cookie required.
+
+**Query (choose one mode):**
+
+- **Legacy (single statement):** `?statement_id=<uuid>` optional — if omitted, uses the latest processed statement.
+- **Unified scope:** `?date_from=YYYY-MM-DD&date_to=YYYY-MM-DD` plus optional `statement_ids=<uuid1,uuid2,...>`. Omit `statement_ids` to include **all** processed statements in the date range. Response includes `scope` metadata and `perceived_is_profile_baseline`.
+
+### `GET /api/dashboard/advisories`
+
+Same query parameters as `GET /api/dashboard`. Returns `{ advisories, coaching_facts }` (same shapes as the parent dashboard payload).
 
 **Auth**: Neon Auth session cookie required.
 
-### `GET /api/dashboard/advisories?statement_id=<uuid>`
+### `POST /api/dashboard/coaching-facts-expanded`
 
-Returns the advisory subset for the authenticated user and statement.
+Fires PostHog `coaching_facts_expanded` when the user opens **Sources** on an advisory card (server-side, fire-and-forget).
 
 **Auth**: Neon Auth session cookie required.
+
+**Body**: `{ "advisory_id": string }`
+
+**Returns**: `{ "ok": true }`
+
+### `POST /api/dashboard/scope-changed`
+
+Body: `{ "date_preset": string | null, "source_count": number }`. Fires PostHog `scope_changed` (server-side, fire-and-forget).
+
+**Auth**: Neon Auth session cookie required.
+
+### `GET /api/transactions`
+
+Paginated transactions for the authenticated user. Joins `statements` for nickname and institution labels.
+
+**Auth**: Neon Auth session cookie required.
+
+**Query params** (all optional except pagination defaults):
+
+| Param                  | Description                                                                                           |
+| ---------------------- | ----------------------------------------------------------------------------------------------------- |
+| `limit`                | Max 100, default 50                                                                                   |
+| `offset`               | Default 0                                                                                             |
+| `date_from`, `date_to` | `YYYY-MM-DD` (inclusive range)                                                                        |
+| `statement_id`         | Single UUID; must belong to the user or **404**                                                       |
+| `statement_ids`        | Comma-separated UUIDs; each must belong to the user or **404** (takes precedence over `statement_id`) |
+| `category`             | `needs` \| `wants` \| `investment` \| `debt` \| `other`                                               |
+| `type`                 | `debit` \| `credit`                                                                                   |
+| `search`               | Substring match on description (max 200 chars)                                                        |
+| `merchant_key`         | Exact match on normalized merchant key                                                                |
+
+**Returns**: `{ transactions, total, limit, offset }`.
+
+### `POST /api/transactions/view-opened`
+
+Fires the `transactions_view_opened` PostHog event (server-side). Call once per browser session when the user opens the Transactions tab (the client uses `sessionStorage` to dedupe).
+
+**Auth**: Neon Auth session cookie required.
+
+**Returns**: `{ ok: true }`.
+
+### `POST /api/transactions/backfill-merchant-keys`
+
+Sets `merchant_key` for the current user’s rows where it is null, using `normalizeMerchantKey(description)`.
+
+**Auth**: Neon Auth session cookie required.
+
+**Returns**: `{ ok: true, updated: number }`.
+
+### `GET /api/insights/merchants`
+
+Top merchants by **debit** spend for the current user, scoped like `GET /api/transactions` (same `date_from` / `date_to` / `statement_id` / `statement_ids` rules). Aggregates `GROUP BY merchant_key` for debits with a non-null key.
+
+**Auth**: Neon Auth session cookie required.
+
+**Query params**:
+
+| Param                  | Description                                                                          |
+| ---------------------- | ------------------------------------------------------------------------------------ |
+| `limit`                | Max 50, default 12                                                                   |
+| `min_spend_paisa`      | Minimum total debit paisa per merchant row (inclusive), default 0                    |
+| `date_from`, `date_to` | `YYYY-MM-DD` (inclusive), optional when using `statement_id`-only legacy scope       |
+| `statement_id`         | Single UUID; **404** if not owned                                                    |
+| `statement_ids`        | Comma-separated UUIDs; **404** if any missing (takes precedence over `statement_id`) |
+
+**Returns**: `{ merchants: [{ merchant_key, debit_paisa, txn_count }], scope_total_debit_paisa, keyed_debit_paisa }` — `keyed_debit_paisa` is the sum of debits that have a `merchant_key` (used for reconciliation; the listed rows may be a top-N subset).
+
+### `POST /api/insights/merchant-click`
+
+Body: `{ "merchant_key": string }`. Fires PostHog `merchant_rollup_clicked` with a short **bucket** label (no raw key). Single emission source for that event.
+
+**Auth**: Neon Auth session cookie required.
+
+**Returns**: `{ ok: true }`.
 
 ### `GET /api/cron/weekly-recap`
 
 Fan-out master route that finds all users with processed statements and triggers worker jobs. This is the scheduled entrypoint configured in [`vercel.json`](./vercel.json).
 
 **Auth**: `authorization: Bearer <CRON_SECRET>` from Vercel Cron. Local/manual triggering may also use `x-cron-secret: <CRON_SECRET>`.
+
+**Operator smoke (expected behavior):**
+
+| Request                                                                 | Expected                                                                                                |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| No `Authorization` / no `x-cron-secret`                                 | **401** JSON `{ "error": "Unauthorized" }` — by design; blocks unauthenticated fan-out and email sends. |
+| `Authorization: Bearer <CRON_SECRET>` or `x-cron-secret: <CRON_SECRET>` | **200** `{ ok, total, succeeded, failed }` — `total` may be `0` if no eligible users.                   |
+
+Contract is asserted in [`__tests__/api/weekly-recap.test.ts`](./__tests__/api/weekly-recap.test.ts).
 
 ### `POST /api/cron/weekly-recap/worker`
 
@@ -201,6 +300,16 @@ Sends one recap email for one user.
 ```json
 { "userId": "user-id" }
 ```
+
+### `GET|POST|PUT|PATCH|DELETE /api/auth/[...path]`
+
+Neon Auth API catch-all (email OTP, session, callbacks). Implemented via `authApiHandler()` from `@neondatabase/auth/next/server`.
+
+**Returns**: JSON or redirects depending on subpath; not used directly by app code except through the Neon Auth client.
+
+### `GET /api/sentry-example-api`
+
+Intentional error route to verify Sentry server-side capture (`SentryExampleAPIError`). **Returns**: throws (500) — for local or staging verification only.
 
 ## Analytics
 
@@ -216,6 +325,14 @@ Sends one recap email for one user.
 | `weekly_recap_completed`       | `/api/cron/weekly-recap`                       | `total`, `succeeded`, `failed`                                                        |
 | `weekly_recap_email_sent`      | `/api/cron/weekly-recap/worker`                | `period_start`, `period_end`, `total_debits_paisa`                                    |
 | `weekly_recap_email_failed`    | `/api/cron/weekly-recap/worker`                | `error`                                                                               |
+| `transactions_view_opened`     | `/api/transactions/view-opened`                | `surface`                                                                             |
+| `transactions_filter_applied`  | `/api/transactions` (GET with any filter set)  | `filter_types`, `scope`                                                               |
+| `merchant_rollup_clicked`      | `/api/insights/merchant-click`                 | `merchant_key_bucket`, `key_length`                                                   |
+| `scope_changed`                | `POST /api/dashboard/scope-changed`            | `date_preset`, `source_count`                                                         |
+| `coaching_narrative_completed` | `/api/dashboard` (after Gemini)                | `latency_ms`, `advisory_count` (only when Gemini ran)                                 |
+| `coaching_narrative_timeout`   | `/api/dashboard`                               | `timeout_ms`                                                                          |
+| `coaching_narrative_failed`    | `/api/dashboard`                               | `error_type`, optional `detail`                                                       |
+| `coaching_facts_expanded`      | `POST /api/dashboard/coaching-facts-expanded`  | `advisory_id`                                                                         |
 
 ## Key design decisions
 
@@ -227,7 +344,7 @@ Sends one recap email for one user.
 
 ## Docs
 
-- [`docs/COACHING-TONE.md`](./docs/COACHING-TONE.md) — Coaching language guide: consequence-first nudge patterns, safe AI narrative rules, tone constraints for advisory copy.
+- [`docs/COACHING-TONE.md`](./docs/COACHING-TONE.md) — Coaching language guide: consequence-first nudge patterns, Layer A facts-only numerics, Gemini narrative guardrails, tone constraints for advisory copy.
 
 ## Current scope
 
@@ -238,13 +355,14 @@ Sends one recap email for one user.
 - Multi-bank bank-account PDF parsing (Kotak, HDFC, and others via Gemini)
 - Credit-card PDF parsing with card-safe summary math
 - Upload labels: `nickname`, `account_purpose`, `card_network`
-- 3-tab dashboard: Overview (mirror card + summary), Insights (AI advisories), Upload (statement library)
+- 4-tab dashboard: Overview (mirror card + summary), Insights (AI advisories), Transactions (list + filters), Upload (statement library)
 - Mirror card: perceived vs actual spend side-by-side
 - Statement library with month picker and statement picker
 - Multi-account support (G1): separate tracking per bank account and credit card
 - 5 advisory triggers + expanded categorizer
 - Weekly recap email via Resend (Monday 8:00 AM IST Vercel cron)
-- 10 PostHog analytics events (server-side)
+- Phase 3 T4: Zod-validated **Layer A** facts (`src/lib/coaching-facts.ts`), Gemini structured narratives with `cited_fact_ids` validation, **Sources** drawer (`FactsDrawer`)
+- 15+ PostHog analytics events (server-side; includes coaching narrative + sources expansion)
 
 **Not shipped (Sprint 4 backlog):**
 

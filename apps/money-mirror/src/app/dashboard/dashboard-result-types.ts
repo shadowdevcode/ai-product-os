@@ -1,3 +1,4 @@
+import type { LayerAFacts } from '@/lib/coaching-facts';
 import type { StatementType } from '@/lib/statements';
 
 /** Dashboard API + parse response shape used by DashboardClient */
@@ -26,4 +27,13 @@ export interface DashboardResult {
     total_debits_paisa: number;
     total_credits_paisa: number;
   };
+  scope?: {
+    kind: 'single_statement' | 'unified';
+    date_from: string | null;
+    date_to: string | null;
+    included_statement_ids: string[];
+  };
+  perceived_is_profile_baseline?: boolean;
+  /** Layer A facts (issue-010 T4); server-built, facts-grounded coaching. */
+  coaching_facts?: LayerAFacts;
 }

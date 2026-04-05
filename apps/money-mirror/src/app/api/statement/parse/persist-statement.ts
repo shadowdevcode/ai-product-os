@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { getDb, getProfileFinancialSnapshot } from '@/lib/db';
+import { normalizeMerchantKey } from '@/lib/merchant-normalize';
 import { captureServerEvent } from '@/lib/posthog';
 import type { StatementType } from '@/lib/statements';
 
@@ -57,9 +58,9 @@ export async function persistStatement(
 
   try {
     const profile = await getProfileFinancialSnapshot(userId);
-    const transactionQueries = categorized.map(
-      (tx) =>
-        sql`
+    const transactionQueries = categorized.map((tx) => {
+      const merchantKey = normalizeMerchantKey(tx.description);
+      return sql`
         INSERT INTO transactions (
           id,
           statement_id,
@@ -69,7 +70,8 @@ export async function persistStatement(
           amount_paisa,
           type,
           category,
-          is_recurring
+          is_recurring,
+          merchant_key
         )
         VALUES (
           ${randomUUID()},
@@ -80,10 +82,11 @@ export async function persistStatement(
           ${tx.amount_paisa},
           ${tx.type},
           ${tx.category},
-          ${tx.is_recurring}
+          ${tx.is_recurring},
+          ${merchantKey}
         )
-      `
-    );
+      `;
+    });
 
     await sql.transaction([
       sql`

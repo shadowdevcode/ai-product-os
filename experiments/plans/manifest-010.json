@@ -1,0 +1,216 @@
+{
+  "issue": "issue-010",
+  "project": "money-mirror",
+  "linear": {
+    "parent": "VIJ-37",
+    "children": {
+      "T1": "VIJ-38",
+      "T2": "VIJ-39",
+      "T3": "VIJ-40",
+      "T4": "VIJ-41"
+    }
+  },
+  "phases": [
+    {
+      "id": "phase-t1",
+      "name": "T1 — Transaction surface + API (P0)",
+      "parallel": false,
+      "depends_on": [],
+      "linear_issue": "VIJ-38",
+      "tasks": [
+        {
+          "id": "T1.1",
+          "name": "Schema: transactions.merchant_key + indexes",
+          "agent": "backend-engineer",
+          "files_to_create": [],
+          "files_to_modify": ["apps/money-mirror/schema.sql", "apps/money-mirror/README.md"],
+          "verification": "grep -n merchant_key apps/money-mirror/schema.sql && cd apps/money-mirror && npm run build",
+          "test_file": null
+        },
+        {
+          "id": "T1.2",
+          "name": "Library: normalizeMerchantKey + unit tests",
+          "agent": "backend-engineer",
+          "files_to_create": ["apps/money-mirror/src/lib/merchant-normalize.ts"],
+          "files_to_modify": [],
+          "verification": "cd apps/money-mirror && npm test -- --testPathPattern=merchant-normalize",
+          "test_file": "apps/money-mirror/src/lib/__tests__/merchant-normalize.test.ts"
+        },
+        {
+          "id": "T1.3",
+          "name": "Persist merchant_key on insert + backfill path",
+          "agent": "backend-engineer",
+          "files_to_create": [],
+          "files_to_modify": [
+            "apps/money-mirror/src/app/api/statement/parse/persist-statement.ts"
+          ],
+          "verification": "cd apps/money-mirror && npm test && npx tsc --noEmit",
+          "test_file": null
+        },
+        {
+          "id": "T1.4",
+          "name": "GET /api/transactions — auth, pagination, filters",
+          "agent": "backend-engineer",
+          "files_to_create": ["apps/money-mirror/src/app/api/transactions/route.ts"],
+          "files_to_modify": [],
+          "verification": "cd apps/money-mirror && npm test",
+          "test_file": "apps/money-mirror/src/app/api/transactions/__tests__/route.test.ts"
+        },
+        {
+          "id": "T1.5",
+          "name": "Dashboard: Transactions UI + shell integration",
+          "agent": "frontend-engineer",
+          "files_to_create": [],
+          "files_to_modify": [
+            "apps/money-mirror/src/app/dashboard",
+            "apps/money-mirror/src/components"
+          ],
+          "verification": "cd apps/money-mirror && npm run build",
+          "test_file": null
+        }
+      ]
+    },
+    {
+      "id": "phase-t2",
+      "name": "T2 — Unified scope model",
+      "parallel": false,
+      "depends_on": ["phase-t1"],
+      "linear_issue": "VIJ-39",
+      "tasks": [
+        {
+          "id": "T2.1",
+          "name": "Shared scope type + validation (client/server)",
+          "agent": "frontend-engineer",
+          "files_to_create": ["apps/money-mirror/src/lib/scope.ts"],
+          "files_to_modify": [],
+          "verification": "cd apps/money-mirror && npx tsc --noEmit",
+          "test_file": null
+        },
+        {
+          "id": "T2.2",
+          "name": "Extend dashboard fetch for date range + statement_ids",
+          "agent": "backend-engineer",
+          "files_to_modify": [
+            "apps/money-mirror/src/lib/dashboard.ts",
+            "apps/money-mirror/src/app/api/dashboard/route.ts"
+          ],
+          "files_to_create": [],
+          "verification": "cd apps/money-mirror && npm test",
+          "test_file": null
+        },
+        {
+          "id": "T2.3",
+          "name": "ScopeBar UI + Overview alignment + PostHog scope_changed",
+          "agent": "frontend-engineer",
+          "files_to_modify": ["apps/money-mirror/src/components"],
+          "files_to_create": [],
+          "verification": "cd apps/money-mirror && npm run build",
+          "test_file": null
+        }
+      ]
+    },
+    {
+      "id": "phase-t3",
+      "name": "T3 — Merchant rollups + Overview↔Insights coupling",
+      "parallel": false,
+      "depends_on": ["phase-t2"],
+      "linear_issue": "VIJ-40",
+      "tasks": [
+        {
+          "id": "T3.1",
+          "name": "API: merchant rollups for scope (GROUP BY merchant_key)",
+          "agent": "backend-engineer",
+          "files_to_create": ["apps/money-mirror/src/app/api/insights/merchants/route.ts"],
+          "files_to_modify": [],
+          "verification": "cd apps/money-mirror && npm test",
+          "test_file": null
+        },
+        {
+          "id": "T3.2",
+          "name": "Insights UI: MerchantRollupCard + deep link to transactions",
+          "agent": "frontend-engineer",
+          "files_to_modify": ["apps/money-mirror/src/components"],
+          "files_to_create": [],
+          "verification": "cd apps/money-mirror && npm run build",
+          "test_file": null
+        },
+        {
+          "id": "T3.3",
+          "name": "Reconciliation smoke: Overview totals vs transaction sums",
+          "agent": "qa-agent",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "verification": "cd apps/money-mirror && npm test",
+          "test_file": null
+        }
+      ]
+    },
+    {
+      "id": "phase-t4",
+      "name": "T4 — Facts-grounded AI coaching",
+      "parallel": false,
+      "depends_on": ["phase-t3"],
+      "linear_issue": "VIJ-41",
+      "tasks": [
+        {
+          "id": "T4.1",
+          "name": "Define Layer A facts Zod schema + builder from DB",
+          "agent": "backend-engineer",
+          "files_to_create": ["apps/money-mirror/src/lib/coaching-facts.ts"],
+          "files_to_modify": [],
+          "verification": "cd apps/money-mirror && npm test",
+          "test_file": null
+        },
+        {
+          "id": "T4.2",
+          "name": "Gemini narrative step: structured output cites fact ids only",
+          "agent": "backend-engineer",
+          "files_to_modify": ["apps/money-mirror/src/lib/advisory-engine.ts", "apps/money-mirror/src/app/api/dashboard/advisories/route.ts"],
+          "files_to_create": [],
+          "verification": "cd apps/money-mirror && npm run build",
+          "test_file": null
+        },
+        {
+          "id": "T4.3",
+          "name": "Update docs/COACHING-TONE.md + UI FactsDrawer",
+          "agent": "frontend-engineer",
+          "files_to_modify": ["apps/money-mirror/docs/COACHING-TONE.md", "apps/money-mirror/src/components"],
+          "files_to_create": [],
+          "verification": "cd apps/money-mirror && npm run build",
+          "test_file": null
+        }
+      ]
+    }
+  ],
+  "env_vars": [
+    "DATABASE_URL",
+    "GEMINI_API_KEY",
+    "POSTHOG_KEY",
+    "POSTHOG_HOST",
+    "RESEND_API_KEY",
+    "CRON_SECRET",
+    "NEXT_PUBLIC_APP_URL"
+  ],
+  "schema_tables": ["profiles", "statements", "transactions", "advisory_feed"],
+  "posthog_events": [
+    "transactions_view_opened",
+    "transactions_filter_applied",
+    "merchant_rollup_clicked",
+    "coaching_narrative_completed",
+    "coaching_narrative_timeout",
+    "coaching_narrative_failed",
+    "coaching_facts_expanded",
+    "scope_changed",
+    "onboarding_completed",
+    "statement_parse_started",
+    "statement_parse_success",
+    "statement_parse_failed",
+    "statement_parse_timeout",
+    "statement_parse_rate_limited",
+    "weekly_recap_triggered",
+    "weekly_recap_completed",
+    "weekly_recap_email_sent",
+    "weekly_recap_email_failed"
+  ],
+  "deferred": ["T5", "T6"]
+}

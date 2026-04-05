@@ -1,6 +1,6 @@
 'use client';
 
-export type DashboardTab = 'overview' | 'insights' | 'upload';
+export type DashboardTab = 'overview' | 'insights' | 'transactions' | 'upload';
 
 interface DashboardNavProps {
   active: DashboardTab;
@@ -10,6 +10,7 @@ interface DashboardNavProps {
 const TABS: { id: DashboardTab; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'insights', label: 'Insights' },
+  { id: 'transactions', label: 'Transactions' },
   { id: 'upload', label: 'Upload' },
 ];
 
@@ -20,7 +21,7 @@ export function DashboardNav({ active, onChange }: DashboardNavProps) {
       aria-label="Dashboard sections"
       style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
+        gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
         gap: '8px',
         marginBottom: '22px',
       }}

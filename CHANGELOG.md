@@ -1,5 +1,30 @@
 # Changelog
 
+## 2026-04-05 — MoneyMirror Phase 3 T4 (VIJ-41): facts-grounded AI coaching
+
+**App:** `apps/money-mirror`
+
+**What:** Layer A facts (`src/lib/coaching-facts.ts`, Zod + `buildLayerAFacts`), Gemini 2.5 Flash structured narratives with `cited_fact_ids` validation (`src/lib/gemini-coaching-narrative.ts`), `attachCoachingLayer` (`src/lib/coaching-enrich.ts`) wired into `GET /api/dashboard` and `GET /api/dashboard/advisories`, `POST /api/dashboard/coaching-facts-expanded` for `coaching_facts_expanded` telemetry, `FactsDrawer` + updated `AdvisoryFeed`, `dashboard.signals` for food/subscription heuristics, dependency `zod`. README, `docs/COACHING-TONE.md`, `CODEBASE-CONTEXT.md`, `manifest-010.json` PostHog list updated.
+
+---
+
+## 2026-04-05 — MoneyMirror Phase 3 T2 (VIJ-39): unified dashboard scope
+
+**App:** `apps/money-mirror`
+
+**What:** Implemented the unified scope model from `experiments/plans/plan-010.md` Phase B: shared `src/lib/scope.ts`, extended `GET /api/dashboard` and `fetchDashboardData` (legacy single statement vs `date_from`/`date_to`/`statement_ids`), `statement_ids` filter on `GET /api/transactions`, `ScopeBar` UI with `POST /api/dashboard/scope-changed` for PostHog `scope_changed`, and aligned `TransactionsPanel` with the same scope. Mirror “perceived” uses `profiles.perceived_spend_paisa` (single baseline). README and `project-state.md` updated.
+
+---
+
+## 2026-04-05 — Issue Created: issue-010
+
+- **Type**: Enhancement
+- **Title**: MoneyMirror Phase 3 — Unified multi-source dashboard, transaction-native insights, and expert AI coaching
+- **App**: apps/money-mirror
+- **Status**: Discovery
+
+---
+
 ## 2026-04-05 — Docs: MoneyMirror added to root README + app README updated for Phase 2
 
 **What:** Closed remaining documentation gaps after Phase 2 ship and VIJ-24 closure.

@@ -56,6 +56,14 @@ Questions to ask when needed:
 
 Keep questions brief — one message, max 3 questions, no back-and-forth.
 
+**Issue Type (always required):** Infer from the raw idea if obvious; otherwise include as one of the clarifying questions.
+
+- **Feature** — new capability that didn't exist before
+- **Enhancement** — improvement to an existing capability
+- **Bug Fix** — something broken that needs fixing
+
+Store the result as `issue_type` in the issue file header.
+
 ---
 
 ## 1 Problem Statement
@@ -115,6 +123,7 @@ Return the result in this structure.
 ---
 
 Issue Title
+Type: Feature | Enhancement | Bug Fix
 
 Problem (Current State → Desired Outcome)
 
@@ -133,6 +142,22 @@ Risks / Open Questions (omit if none)
 # Post-Output Steps
 
 After writing `experiments/ideas/issue-<NNN>.md` and updating `project-state.md`:
+
+## Auto-Write CHANGELOG Entry
+
+Append to the top of `CHANGELOG.md` immediately after writing the issue file:
+
+```
+## YYYY-MM-DD — Issue Created: issue-NNN
+- **Type**: Feature | Enhancement | Bug Fix
+- **Title**: <issue title>
+- **App**: <project/app name if known, else TBD>
+- **Status**: Discovery
+```
+
+Use today's date. Do not modify any other CHANGELOG content.
+
+---
 
 ## Auto-Bind Linear
 
