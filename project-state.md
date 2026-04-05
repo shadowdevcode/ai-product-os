@@ -22,8 +22,8 @@
 - last_commit: (see `git log -1`)
 - open_pr_link: open a new PR when pushing MoneyMirror hardening / perf follow-ups
 - environments: local, production (`https://money-mirror-rho.vercel.app`)
-- implementation_focus: **Phase 3 (issue-010)** — pipeline **complete** (`/learning` + `/linear-close`). **Follow-up engineering** (perf, E2E, CWV, dev ergonomics) tracked in repo; **does not** reopen VIJ-37. Use [`experiments/results/production-launch-checklist-010.md`](experiments/results/production-launch-checklist-010.md) before production promotion and GitHub merge.
-- linear_ops_note: **VIJ-42** (Done) — production-readiness mirror issue; comment **2026-04-06** on **VIJ-37** links VIJ-42 + post-close summary (`docs/PERFORMANCE-REVIEW.md`, `production-launch-checklist-010.md`, `SCHEMA_DRIFT.md`).
+- implementation_focus: **Phase 3 (issue-010)** — **T1–T4** complete through **`/learning`** + **`/linear-close`**. Linear project **Completed**; VIJ-37 + VIJ-38–VIJ-41 **Done**; [issue-010 Closeout Snapshot](https://linear.app/vijaypmworkspace/document/issue-010-closeout-snapshot-5ef07c9db6ee). **Follow-up engineering** (perf, E2E, CWV, schema drift, dev ergonomics) tracked in repo; **does not** reopen VIJ-37. Use [`experiments/results/production-launch-checklist-010.md`](experiments/results/production-launch-checklist-010.md) before production promotion. **Next:** `/create-issue` for the next project. **T5–T6** deferred.
+- linear_ops_note: **VIJ-42** (Done) — production-readiness mirror issue; comment **2026-04-06** on **VIJ-37** links VIJ-42 + post-close summary (`docs/PERFORMANCE-REVIEW.md`, `production-launch-checklist-010.md`, `SCHEMA-DRIFT.md`).
 
 ## Quality Gates
 
@@ -239,7 +239,7 @@ All items sit in Linear project **issue-009 — MoneyMirror**. Feature work for 
 - linear_cycle: <!-- Linear cycle/sprint, if assigned -->
 - linear_sync_map_path: experiments/linear-sync/issue-010.json <!-- path to durable id map -->
 - linear_last_sync: 2026-04-06T20:35:30Z <!-- VIJ-42 production-readiness sync + comment c595274e-311d-4990-afda-3cf7afc9b243 on VIJ-37 -->
-- linear_sync_status: success — issue-010 project **Completed**; VIJ-37 **Done**; closeout [issue-010 Closeout Snapshot](https://linear.app/vijaypmworkspace/document/issue-010-closeout-snapshot-5ef07c9db6ee); **VIJ-42** [production readiness](https://linear.app/vijaypmworkspace/issue/VIJ-42/moneymirror-production-readiness-sync-post-vij-37-closeout) **Done** (ops mirror for post-close hardening); prior ops comment `9137c798-bdbc-488c-b243-089dee8911aa`.
+- linear_sync_status: success — issue-010 project **Completed**; VIJ-37 **Done**; closeout [issue-010 Closeout Snapshot](https://linear.app/vijaypmworkspace/document/issue-010-closeout-snapshot-5ef07c9db6ee); **VIJ-42** [production readiness](https://linear.app/vijaypmworkspace/issue/VIJ-42/moneymirror-production-readiness-sync-post-vij-37-closeout) **Done** (ops mirror for post-close hardening); closeout comment id `8d7639f5-820f-4ddc-8f8c-7acc4b93fa2b`; prior ops comment `9137c798-bdbc-488c-b243-089dee8911aa`.
 - linear_follow_up_issue_identifier: VIJ-38
 - linear_follow_up_issue_url: https://linear.app/vijaypmworkspace/issue/VIJ-38/issue-010t1-transaction-surface-api-p0-foundation
 - linear_prior_cycle_map: experiments/linear-sync/issue-009.json (VIJ-11 root; VIJ-25 → Duplicate of VIJ-37 as of 2026-04-05)
