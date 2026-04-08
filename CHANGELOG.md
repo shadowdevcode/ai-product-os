@@ -5,7 +5,7 @@
 - **MoneyMirror Vercel reconnect:** the existing `money-mirror` Vercel project was reconnected to `shadowdevcode/ai-product-os` after confirming the project had `createDeployments = "enabled"` but no active Git link. Production branch is now explicitly `main`, rooted at [`apps/money-mirror`](apps/money-mirror/).
 - **Main-only MoneyMirror deploys:** [`apps/money-mirror/vercel.json`](apps/money-mirror/vercel.json) now blocks non-`main` Git deployments for the app while preserving cron configuration.
 - **Proof deployment:** commit `133e62d` (`docs(money-mirror): note main-only production deploys`) automatically created production deployment `money-mirror-3so34gj1d-vijay-sehgals-projects.vercel.app`, which now backs `money-mirror-rho.vercel.app`.
-- **Landing isolation:** new [`apps/landing/vercel.json`](apps/landing/vercel.json) adds a path-scoped `ignoreCommand` so the `ai-product-os-493e` project skips builds when `apps/landing` did not change.
+- **Landing isolation:** new [`apps/landing/vercel.json`](apps/landing/vercel.json) adds a path-scoped `ignoreCommand` so the `ai-product-os-493e` project skips builds when `apps/landing` did not change. Runtime verification: config-fix commit `f7c18ff` produced a normal landing production build, while later non-landing pushes were canceled in 1-2 seconds instead of running a normal production build.
 
 ---
 
