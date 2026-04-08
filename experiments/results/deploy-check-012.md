@@ -98,6 +98,17 @@ Observed tables:
 
 ---
 
+## Post-approval deployment contract update (2026-04-09)
+
+- **Root cause found after deploy-check:** the Vercel project still had `gitProviderOptions.createDeployments = "enabled"` but no active Git link (`link: null`), so pushes to `main` could not auto-trigger production deployments reliably.
+- **Project state now verified:** Vercel project `money-mirror` is Git-linked to `shadowdevcode/ai-product-os`, rooted at `apps/money-mirror`, and uses production branch `main`.
+- **Repo guard:** [`apps/money-mirror/vercel.json`](../../apps/money-mirror/vercel.json) now enforces main-only Git deployments for this app.
+- **Proof deployment:** pushing commit `133e62d939445cd95113c8acf7e0d592ee75fab9` (`docs(money-mirror): note main-only production deploys`) created production deployment `money-mirror-3so34gj1d-vijay-sehgals-projects.vercel.app` automatically from `main`.
+- **Alias verification:** `money-mirror-rho.vercel.app` points at that deployment and returns HTTP 200.
+- **Rollback baseline:** prior production deployment remains `money-mirror-o0qjii01m-vijay-sehgals-projects.vercel.app`; rollback is still deploy promotion, not schema rollback.
+
+---
+
 ## README quality gate
 
 `apps/money-mirror/README.md` passes the template gate: one-liner, numbered user journey, stack table, complete setup flow, env table, schema section, `npm run dev` success/failure cues, API endpoints list, analytics event table, and key design decisions.  

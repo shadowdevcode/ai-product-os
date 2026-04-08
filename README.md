@@ -5,6 +5,8 @@ A simulated, end-to-end product development organization where specialized AI ag
 **Who this is for:** Product Managers, indie founders, and ICPs who want to ship AI-assisted products faster without skipping the parts that matter — research, architecture review, QA, metrics, and learning.
 
 > **Live:** [ai-product-os-493e.vercel.app](https://ai-product-os-493e.vercel.app/) | Built and operated with [Claude Code](https://claude.ai/code). You need Claude Code to run the slash commands.
+>
+> Deploy note: `ai-product-os-493e` and `money-mirror` are separate Vercel projects. MoneyMirror production deploys from `main`; the landing app is path-gated so it should only build when `apps/landing` changes.
 
 ---
 

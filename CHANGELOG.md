@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-04-09 — MoneyMirror deploy contract fix + landing isolation
+
+- **MoneyMirror Vercel reconnect:** the existing `money-mirror` Vercel project was reconnected to `shadowdevcode/ai-product-os` after confirming the project had `createDeployments = "enabled"` but no active Git link. Production branch is now explicitly `main`, rooted at [`apps/money-mirror`](apps/money-mirror/).
+- **Main-only MoneyMirror deploys:** [`apps/money-mirror/vercel.json`](apps/money-mirror/vercel.json) now blocks non-`main` Git deployments for the app while preserving cron configuration.
+- **Proof deployment:** commit `133e62d` (`docs(money-mirror): note main-only production deploys`) automatically created production deployment `money-mirror-3so34gj1d-vijay-sehgals-projects.vercel.app`, which now backs `money-mirror-rho.vercel.app`.
+- **Landing isolation:** new [`apps/landing/vercel.json`](apps/landing/vercel.json) adds a path-scoped `ignoreCommand` so the `ai-product-os-493e` project skips builds when `apps/landing` did not change.
+
+---
+
 ## 2026-04-07 — peer-review-012 blocker fixes (issue-012)
 
 - **Privacy contract enforcement (server):** [`apps/money-mirror/src/app/api/guided-review/outcome/route.ts`](apps/money-mirror/src/app/api/guided-review/outcome/route.ts) now forces `commitment_text = NULL` whenever `dismissed = true`, regardless of client payload. Telemetry uses the server-derived value. Regression test added at [`__tests__/route.test.ts`](apps/money-mirror/src/app/api/guided-review/outcome/__tests__/route.test.ts).

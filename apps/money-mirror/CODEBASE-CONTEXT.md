@@ -1,6 +1,6 @@
 # Codebase Context: MoneyMirror
 
-Last updated: 2026-04-07 (issue-012 learning closeout: frequency clusters, guided review outcomes, deploy/postmortem hardening)
+Last updated: 2026-04-09 (MoneyMirror deploy contract documented: Vercel Git reconnect, main-only production deploys, proof deployment)
 
 ## What This App Does
 
@@ -15,6 +15,7 @@ MoneyMirror is a mobile-first PWA AI financial coach for Gen Z Indians (₹20K�
 - **Schema upgrades**: Idempotent DDL lives in `src/lib/schema-upgrades.ts` (`applyIdempotentSchemaUpgrades`) and is invoked by (1) `npm run db:upgrade` → `scripts/apply-schema-upgrades.ts`, (2) `runAutoSchemaUpgradeOnBoot` from `src/instrumentation.ts` on Node server start when `DATABASE_URL` is set (skip with `MONEYMIRROR_SKIP_AUTO_SCHEMA=1`). Keeps older Neon DBs aligned with `schema.sql` tail (e.g. `transactions.merchant_key`, statement label columns).
 - **Analytics**: PostHog server-side (`posthog-node`) plus optional client (`posthog-js` when `NEXT_PUBLIC_POSTHOG_KEY` set) for CWV, bad-pattern advisory engagement, and P4-G `paywall_prompt_seen` / `upgrade_intent_tapped` from `PaywallPrompt`. Core server events: `onboarding_completed`, `statement_parse_started/rate_limited/success/timeout/failed`, `weekly_recap_triggered/completed`, `weekly_recap_email_sent/failed`, plus Phase 3 `transactions_view_opened`, `transactions_filter_applied`, `scope_changed`, `merchant_rollup_clicked`, `coaching_narrative_completed/timeout/failed`, `coaching_facts_expanded` (see `README.md`). All calls fire-and-forget (`.catch(() => {})`) where not awaiting success paths.
 - **Error tracking**: Sentry via `@sentry/nextjs` (`sentry.server.config.ts`, `sentry.edge.config.ts`, `src/instrumentation.ts`, `src/instrumentation-client.ts`). Uses `NEXT_PUBLIC_SENTRY_DSN` plus org/project/auth token vars as in app `README.md` / `.env.local.example`.
+- **Production deploy contract**: Vercel project `money-mirror` is rooted at `apps/money-mirror`, Git-linked to `shadowdevcode/ai-product-os`, and uses production branch `main`. [`vercel.json`](./vercel.json) explicitly disables non-`main` Git deployments for this app. Proof deployment: `133e62d` on `main` created production deployment `money-mirror-3so34gj1d-vijay-sehgals-projects.vercel.app`, which now backs `https://money-mirror-rho.vercel.app`.
 
 ## Key Files
 

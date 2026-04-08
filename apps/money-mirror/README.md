@@ -34,7 +34,7 @@ For AI- and agent-oriented architecture, data model, and API reference, see [`CO
 | Email     | Resend                                     |
 | Hosting   | Vercel                                     |
 
-Production deploys are expected to come from the Vercel-linked `main` branch for this app.
+Production deploys for this app come from the Vercel-linked `main` branch only.
 
 ## Setup
 
