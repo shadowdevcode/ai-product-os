@@ -7,6 +7,7 @@ on:
 jobs:
   assign-reviewers:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     # Skip bot-authored PRs entirely
     if: >
       github.actor != 'dependabot[bot]' &&
@@ -32,5 +33,24 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
-          claude --dangerously-skip-permissions \
-            -p "Read commands/assign-reviewers.md and execute the full protocol for this PR: ${{ github.event.pull_request.html_url }}"
+          prompt="Read commands/assign-reviewers.md and execute the full protocol for this PR: ${{ github.event.pull_request.html_url }}"
+          max_attempts=3
+          attempt=1
+
+          while [ "$attempt" -le "$max_attempts" ]; do
+            echo "Attempt $attempt/$max_attempts: running assign-reviewers"
+            if claude --dangerously-skip-permissions -p "$prompt"; then
+              echo "assign-reviewers completed successfully"
+              exit 0
+            fi
+
+            if [ "$attempt" -lt "$max_attempts" ]; then
+              sleep_seconds=$((attempt * 30))
+              echo "assign-reviewers failed on attempt $attempt; retrying in ${sleep_seconds}s..."
+              sleep "$sleep_seconds"
+            fi
+            attempt=$((attempt + 1))
+          done
+
+          echo "assign-reviewers failed after $max_attempts attempts"
+          exit 1
