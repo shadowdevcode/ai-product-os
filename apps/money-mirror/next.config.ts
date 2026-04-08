@@ -16,7 +16,12 @@ const nextConfig: NextConfig = {
   },
   // OTEL/Sentry use these hook packages; Turbopack must not bundle them as hashed externals or dev fails with
   // "Cannot find module 'require-in-the-middle-…'".
-  serverExternalPackages: ['pdf-parse', 'require-in-the-middle', 'import-in-the-middle'],
+  serverExternalPackages: [
+    'pdf-parse',
+    '@napi-rs/canvas',
+    'require-in-the-middle',
+    'import-in-the-middle',
+  ],
   // Enable PWA headers
   headers: async () => [
     {

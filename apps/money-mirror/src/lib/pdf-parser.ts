@@ -4,10 +4,16 @@
  * Accepts a raw PDF Buffer, extracts plain text, and returns it.
  * The buffer is consumed in-memory and never written to disk (Option A).
  *
+ * Uses `pdf-parse/worker` + `CanvasFactory` from `@napi-rs/canvas` (via worker)
+ * so parsing works on Vercel serverless, not only local dev. See pdf-parse
+ * troubleshooting: import worker before `pdf-parse` and pass `CanvasFactory`.
+ *
  * Privacy guarantee: the caller is responsible for immediately nulling
  * the buffer reference after calling extractPdfText() so it becomes
  * eligible for GC. See /api/statement/parse/route.ts.
  */
+
+import type { CanvasFactory as CanvasFactoryCtor } from 'pdf-parse/worker';
 
 export interface PdfExtractionResult {
   text: string;
@@ -25,102 +31,35 @@ export class PdfExtractionError extends Error {
 }
 
 interface PdfParseModule {
-  PDFParse: new (opts: { data: Uint8Array; verbosity: number }) => {
+  PDFParse: new (opts: {
+    data: Uint8Array;
+    verbosity: number;
+    CanvasFactory: typeof CanvasFactoryCtor;
+  }) => {
     getText: () => Promise<{ text?: string; total?: number }>;
     destroy: () => Promise<void>;
   };
 }
 
-interface DomMatrixLike {
-  a: number;
-  b: number;
-  c: number;
-  d: number;
-  e: number;
-  f: number;
+interface PdfToolkit {
+  PDFParse: PdfParseModule['PDFParse'];
+  CanvasFactory: typeof CanvasFactoryCtor;
 }
 
-class MinimalDOMMatrix implements DomMatrixLike {
-  a: number;
-  b: number;
-  c: number;
-  d: number;
-  e: number;
-  f: number;
+let pdfToolkitPromise: Promise<PdfToolkit> | null = null;
 
-  constructor(init?: Iterable<number> | ArrayLike<number>) {
-    const values = init ? Array.from(init).slice(0, 6) : [];
-    this.a = values[0] ?? 1;
-    this.b = values[1] ?? 0;
-    this.c = values[2] ?? 0;
-    this.d = values[3] ?? 1;
-    this.e = values[4] ?? 0;
-    this.f = values[5] ?? 0;
+async function loadPdfToolkit(): Promise<PdfToolkit> {
+  if (!pdfToolkitPromise) {
+    pdfToolkitPromise = (async () => {
+      const workerMod = await import('pdf-parse/worker');
+      const pdfMod = (await import('pdf-parse')) as PdfParseModule;
+      return {
+        CanvasFactory: workerMod.CanvasFactory,
+        PDFParse: pdfMod.PDFParse,
+      };
+    })();
   }
-
-  multiplySelf(): MinimalDOMMatrix {
-    return this;
-  }
-
-  preMultiplySelf(): MinimalDOMMatrix {
-    return this;
-  }
-
-  translate(tx?: number, ty?: number): MinimalDOMMatrix {
-    this.e += tx ?? 0;
-    this.f += ty ?? 0;
-    return this;
-  }
-
-  scale(scaleX?: number, scaleY?: number): MinimalDOMMatrix {
-    this.a *= scaleX ?? 1;
-    this.d *= scaleY ?? scaleX ?? 1;
-    return this;
-  }
-
-  invertSelf(): MinimalDOMMatrix {
-    return this;
-  }
-}
-
-class MinimalImageData {
-  data: Uint8ClampedArray;
-  width: number;
-  height: number;
-
-  constructor(data: Uint8ClampedArray, width: number, height: number) {
-    this.data = data;
-    this.width = width;
-    this.height = height;
-  }
-}
-
-class MinimalPath2D {
-  addPath(): void {}
-}
-
-let pdfParseModulePromise: Promise<PdfParseModule> | null = null;
-
-function ensurePdfJsServerPolyfills(): void {
-  const globalRecord = globalThis as Record<string, unknown>;
-
-  if (!globalRecord.DOMMatrix) {
-    globalRecord.DOMMatrix = MinimalDOMMatrix;
-  }
-  if (!globalRecord.ImageData) {
-    globalRecord.ImageData = MinimalImageData;
-  }
-  if (!globalRecord.Path2D) {
-    globalRecord.Path2D = MinimalPath2D;
-  }
-}
-
-async function loadPdfParseModule(): Promise<PdfParseModule> {
-  if (!pdfParseModulePromise) {
-    ensurePdfJsServerPolyfills();
-    pdfParseModulePromise = import('pdf-parse') as Promise<PdfParseModule>;
-  }
-  return pdfParseModulePromise;
+  return pdfToolkitPromise;
 }
 
 /**
@@ -139,8 +78,8 @@ export async function extractPdfText(buffer: Buffer): Promise<PdfExtractionResul
   let pageCount: number;
 
   try {
-    const { PDFParse } = await loadPdfParseModule();
-    const parser = new PDFParse({ data: buffer, verbosity: 0 });
+    const { PDFParse, CanvasFactory } = await loadPdfToolkit();
+    const parser = new PDFParse({ data: buffer, verbosity: 0, CanvasFactory });
     const result = await parser.getText();
     text = result.text ?? '';
     pageCount = result.total ?? 1;

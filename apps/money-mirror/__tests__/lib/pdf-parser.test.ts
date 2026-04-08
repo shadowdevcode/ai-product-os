@@ -22,8 +22,15 @@ const mockPdfParseFactory = vi.fn(async () => {
   };
 });
 
+const MockCanvasFactory = class {};
+
+const mockWorkerFactory = vi.fn(async () => ({
+  CanvasFactory: MockCanvasFactory,
+}));
+
 async function loadPdfParserModule(): Promise<PdfParserModule> {
   vi.resetModules();
+  vi.doMock('pdf-parse/worker', mockWorkerFactory);
   vi.doMock('pdf-parse', mockPdfParseFactory);
   return import('@/lib/pdf-parser');
 }
@@ -32,9 +39,6 @@ describe('extractPdfText', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockDestroy.mockResolvedValue(undefined);
-    delete (globalThis as Record<string, unknown>).DOMMatrix;
-    delete (globalThis as Record<string, unknown>).ImageData;
-    delete (globalThis as Record<string, unknown>).Path2D;
   });
 
   it('throws EMPTY_FILE when buffer is empty', async () => {
@@ -44,6 +48,7 @@ describe('extractPdfText', () => {
       code: 'EMPTY_FILE',
     });
     expect(mockPdfParseFactory).not.toHaveBeenCalled();
+    expect(mockWorkerFactory).not.toHaveBeenCalled();
   });
 
   it('throws PARSE_FAILED when getText throws', async () => {
@@ -89,19 +94,7 @@ describe('extractPdfText', () => {
     }
   });
 
-  it('lazy-loads pdf-parse only after server polyfills are installed', async () => {
-    mockPdfParseFactory.mockImplementationOnce(async () => {
-      expect(globalThis.DOMMatrix).toBeTypeOf('function');
-      expect(globalThis.ImageData).toBeTypeOf('function');
-      expect(globalThis.Path2D).toBeTypeOf('function');
-
-      return {
-        PDFParse: function MockPDFParse() {
-          return { getText: mockGetText, destroy: mockDestroy };
-        },
-      };
-    });
-
+  it('loads pdf-parse/worker before pdf-parse and passes CanvasFactory to PDFParse', async () => {
     const { extractPdfText } = await loadPdfParserModule();
     mockGetText.mockResolvedValue({ text: 'statement text', total: 2 });
 
@@ -109,6 +102,17 @@ describe('extractPdfText', () => {
       text: 'statement text',
       pageCount: 2,
     });
+
+    expect(mockWorkerFactory).toHaveBeenCalledBefore(
+      mockPdfParseFactory as unknown as typeof mockWorkerFactory
+    );
+    expect(mockPdfParseConstructor).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.any(Buffer),
+        verbosity: 0,
+        CanvasFactory: MockCanvasFactory,
+      })
+    );
   });
 
   it('maps parser initialization failures to PARSE_FAILED', async () => {
