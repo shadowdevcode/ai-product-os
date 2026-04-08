@@ -1,5 +1,6 @@
 import type { Advisory } from '@/lib/advisory-engine';
 import type { StatementType } from '@/lib/statements';
+import type { UserPlan } from '@/lib/user-plan';
 
 export interface DashboardSummary {
   needs_paisa: number;
@@ -15,6 +16,17 @@ export interface DashboardSummary {
 export interface DashboardSignals {
   food_delivery_paisa: number;
   subscription_paisa: number;
+  /** P4-E: debits with UPI handle and amount ≤ micro threshold. */
+  micro_upi_debit_paisa: number;
+  micro_upi_debit_count: number;
+  /** Merchant with highest debit count in scope (noise pattern). */
+  repeat_merchant_key: string | null;
+  repeat_merchant_debit_count: number;
+  repeat_merchant_debit_paisa: number;
+  /** True when scope includes at least one credit card statement (P4-E CC stress). */
+  has_credit_card_statement: boolean;
+  /** Max/min CC minimum due across CC statements in scope; null if none. */
+  cc_minimum_due_effective_paisa: number | null;
 }
 
 export interface DashboardScopeMeta {
@@ -22,6 +34,30 @@ export interface DashboardScopeMeta {
   date_from: string | null;
   date_to: string | null;
   included_statement_ids: string[];
+}
+
+export interface DashboardMonthCompare {
+  scope: {
+    statement_ids: string[];
+  };
+  current: {
+    date_from: string;
+    date_to: string;
+    total_debits_paisa: number;
+    total_credits_paisa: number;
+  };
+  previous: {
+    date_from: string;
+    date_to: string;
+    total_debits_paisa: number;
+    total_credits_paisa: number;
+  };
+  delta: {
+    debits_paisa: number;
+    credits_paisa: number;
+    debits_pct: number | null;
+    credits_pct: number | null;
+  };
 }
 
 export interface DashboardData {
@@ -46,6 +82,10 @@ export interface DashboardData {
   scope: DashboardScopeMeta;
   /** True when perceived spend comes from profiles (single monthly baseline), not per-statement. */
   perceived_is_profile_baseline: boolean;
+  /** P4-G: `free` retains full access until payment integration; `pro` reserved. */
+  plan: UserPlan;
+  /** P4-F: scope-aligned current vs previous-period totals. */
+  month_compare: DashboardMonthCompare | null;
 }
 
 export interface StatementRow {
@@ -76,6 +116,8 @@ export interface DashboardAggregateRow {
   food_delivery_paisa: number | string | bigint;
   subscription_paisa: number | string | bigint;
   transaction_count: number | string | bigint;
+  micro_upi_debit_paisa: number | string | bigint;
+  micro_upi_debit_count: number | string | bigint;
 }
 
 export type DashboardFetchInput =

@@ -27,6 +27,20 @@ Educational, India-first personal finance copy. Used for in-app insights and any
 - Append: “This is general information based on your uploaded statement, not a recommendation.”
 - **Expert-style example (pattern only):** “Your statement mix leans heavily on discretionary buckets — that matters because small recurring cuts free cash without touching fixed obligations. One next step: pick a single recurring charge to audit this month.” (No amounts in prose — user opens **Sources** for figures.)
 
+## Gen Z and income-transition users
+
+Users in this segment may be between jobs, dependent on family support, earning irregularly from gigs, or spending micro-amounts frequently through UPI and quick-commerce. Copy must never assume a stable salary or a traditional budgeting frame.
+
+### Rules
+
+1. **No salary assumption** — Use "money coming in" or "credits" rather than "salary" or "income" when the source is unclear.
+2. **Frequency over totals** — "12 Swiggy orders this month" is more vivid than "₹X on food delivery." Lead with how often, then connect to what it adds up to.
+3. **No shame for dependence** — Receiving money from family or friends is normal, not a failure. Never frame credits from individuals as "you should be earning this yourself."
+4. **Micro-spend visibility** — Small UPI debits feel invisible individually; surface them as patterns ("52 transactions under ₹200"), not as moral failures.
+5. **Transition-safe framing** — "This is where things stand" is better than "You spent too much." Observations, not verdicts.
+6. **One next step, not a lecture** — Each advisory suggests one concrete, low-friction action — not a life overhaul.
+7. **Empty states are safe** — When no patterns fire, celebrate awareness: "Nothing to flag — clarity starts with knowing."
+
 ## Archetypes (optional user preference)
 
 - **Educator** — Neutral, step-by-step.

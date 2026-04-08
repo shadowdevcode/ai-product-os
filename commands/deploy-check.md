@@ -101,6 +101,7 @@ Ensure secrets are not exposed.
    - ❌ MISSING — not in file at all
 4. Report EMPTY variables as a **BLOCKING violation** — a variable that exists in the file with no value is just as broken as one that's missing.
 5. Exception: variables explicitly marked `# Optional` in `.env.local.example` may be empty without blocking.
+6. Optionality must be explicit at definition-site: each optional variable must have an adjacent `# Optional` annotation near that key. If a variable behaves as optional in code/docs but is unlabeled in `.env.local.example`, require updating `.env.local.example` in this cycle before approval.
 
 # Added: 2026-04-02 — ENV completeness must be a gate, not a checklist item
 
@@ -154,6 +155,12 @@ Confirm tables are applied before proceeding. Do not continue until this is done
 
 - MCP query shows any expected table is missing
 - User has not confirmed tables are applied when MCP is unavailable
+
+**Fallback verification path (before blocking)**:
+
+When MCP is unavailable, attempt direct DB verification using the app's configured DB client and `DATABASE_URL` (for example, a short script querying `information_schema.tables`). If direct verification succeeds with evidence, do not block on MCP unavailability alone.
+
+# Added: 2026-04-07 — MoneyMirror issue-012
 
 # Added: 2026-04-02 — Schema verification must be a blocking gate, not a PR reviewer TODO
 

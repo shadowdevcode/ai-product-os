@@ -22,6 +22,8 @@ interface TxnFilterBarProps {
   onTypeChange: (v: string) => void;
   merchantFromUrl: string;
   onClearMerchant: () => void;
+  upiMicroFromUrl: boolean;
+  onClearUpiMicro: () => void;
 }
 
 export function TxnFilterBar({
@@ -33,12 +35,42 @@ export function TxnFilterBar({
   onTypeChange,
   merchantFromUrl,
   onClearMerchant,
+  upiMicroFromUrl,
+  onClearUpiMicro,
 }: TxnFilterBarProps) {
   return (
     <div
       style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}
       className="txn-filters"
     >
+      {upiMicroFromUrl ? (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '10px',
+            flexWrap: 'wrap',
+            padding: '10px 12px',
+            borderRadius: '12px',
+            border: '1px solid var(--border)',
+            background: 'var(--bg-elevated)',
+            fontSize: '0.82rem',
+          }}
+        >
+          <span>
+            Filtered by <strong>small UPI</strong> (≤₹500, with VPA)
+          </span>
+          <button
+            type="button"
+            className="btn-ghost"
+            style={{ fontSize: '0.78rem' }}
+            onClick={onClearUpiMicro}
+          >
+            Clear
+          </button>
+        </div>
+      ) : null}
       {merchantFromUrl ? (
         <div
           style={{

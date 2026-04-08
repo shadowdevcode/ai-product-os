@@ -14,6 +14,7 @@ import { useDashboardScopeDerived } from './useDashboardScopeDerived';
 import { useDashboardUrlModel } from './useDashboardUrlModel';
 import { useDashboardInitialLoadEffect } from './useDashboardInitialLoadEffect';
 import { useStatementUploadHandler } from './useStatementUploadHandler';
+import { tabFromSearchParams } from './dashboard-tab-params';
 
 export { tabFromSearchParams } from './dashboard-tab-params';
 
@@ -27,6 +28,7 @@ export function useDashboardState() {
     dashboardScopeKey,
     dashboardApiPath,
   } = useDashboardUrlModel();
+  const canonicalTab = tabFromSearchParams(searchParams);
 
   const [result, setResult] = useState<DashboardResult | null>(null);
   const [advisories, setAdvisories] = useState<Advisory[]>([]);
@@ -114,8 +116,7 @@ export function useDashboardState() {
       setAdvisories(data.advisories);
       setCoachingFacts(data.coaching_facts);
       return true;
-    } catch (e) {
-      console.error('[loadCoachingNarratives]', e);
+    } catch {
       return false;
     } finally {
       setIsLoadingNarratives(false);
@@ -184,9 +185,10 @@ export function useDashboardState() {
       const next = pool[0].id;
       const q = new URLSearchParams(searchParams.toString());
       q.set('statement_id', next);
+      q.set('tab', canonicalTab);
       router.replace(`/dashboard?${q.toString()}`, { scroll: false });
     },
-    [statements, router, searchParams]
+    [canonicalTab, statements, router, searchParams]
   );
 
   const handleStatementChange = useCallback(
@@ -196,9 +198,10 @@ export function useDashboardState() {
       }
       const q = new URLSearchParams(searchParams.toString());
       q.set('statement_id', statementId);
+      q.set('tab', canonicalTab);
       router.replace(`/dashboard?${q.toString()}`, { scroll: false });
     },
-    [router, searchParams]
+    [canonicalTab, router, searchParams]
   );
 
   const applyUnified = useCallback(
@@ -209,10 +212,7 @@ export function useDashboardState() {
       if (payload.scope.statementIds?.length) {
         q.set('statement_ids', payload.scope.statementIds.join(','));
       }
-      const t = searchParams.get('tab');
-      if (t && t !== 'overview') {
-        q.set('tab', t);
-      }
+      q.set('tab', canonicalTab);
       router.replace(`/dashboard?${q.toString()}`, { scroll: false });
       const n = payload.scope.statementIds?.length ?? statements?.length ?? 0;
       void fetch('/api/dashboard/scope-changed', {
@@ -224,20 +224,17 @@ export function useDashboardState() {
         }),
       }).catch(() => {});
     },
-    [router, searchParams, statements?.length]
+    [canonicalTab, router, statements?.length]
   );
 
   const applyLegacy = useCallback(
     (statementId: string) => {
       const q = new URLSearchParams();
       q.set('statement_id', statementId);
-      const t = searchParams.get('tab');
-      if (t && t !== 'overview') {
-        q.set('tab', t);
-      }
+      q.set('tab', canonicalTab);
       router.replace(`/dashboard?${q.toString()}`, { scroll: false });
     },
-    [router, searchParams]
+    [canonicalTab, router]
   );
 
   const handleUpload = useStatementUploadHandler({
@@ -254,6 +251,7 @@ export function useDashboardState() {
     router,
     searchParams,
     isUnifiedUrl,
+    dashboardScopeKey,
     result,
     advisories,
     coachingFacts,

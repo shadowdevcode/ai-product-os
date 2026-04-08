@@ -1,5 +1,116 @@
 # Changelog
 
+## 2026-04-07 — peer-review-012 blocker fixes (issue-012)
+
+- **Privacy contract enforcement (server):** [`apps/money-mirror/src/app/api/guided-review/outcome/route.ts`](apps/money-mirror/src/app/api/guided-review/outcome/route.ts) now forces `commitment_text = NULL` whenever `dismissed = true`, regardless of client payload. Telemetry uses the server-derived value. Regression test added at [`__tests__/route.test.ts`](apps/money-mirror/src/app/api/guided-review/outcome/__tests__/route.test.ts).
+- **Cluster rollup truthfulness:** New helper `fetchClusterMerchantAggregates()` in [`dashboard-helpers.ts`](apps/money-mirror/src/lib/dashboard-helpers.ts) runs a full-scope SQL aggregate bound by `merchant_key = ANY(ALL_CLUSTER_MERCHANT_KEYS)` (no LIMIT). [`frequency-clusters/route.ts`](apps/money-mirror/src/app/api/insights/frequency-clusters/route.ts) now feeds cluster rollups from this query while keeping the LIMIT-30 list only as the UI top-merchants preview. Fixes the issue-010-class anti-pattern where cluster totals undercounted whenever a clustered merchant fell outside the top 30. New test in [`frequency-clusters/__tests__/route.test.ts`](apps/money-mirror/src/app/api/insights/frequency-clusters/__tests__/route.test.ts) proves cluster totals include merchants absent from the top-N sample.
+- **Scope-keyed SLA timers:** [`DashboardClient.tsx`](apps/money-mirror/src/app/dashboard/DashboardClient.tsx) now resets `mountTimeRef`, `dashboardReadyFiredRef`, and `advisoryReadyFiredRef` whenever `dashboardScopeKey` changes, so `dashboard_ready_ms` and `time_to_first_advisory_ms` re-fire per scope rather than only on first mount.
+- **Prompt autopsy applied:** [`agents/backend-engineer-agent.md`](agents/backend-engineer-agent.md) §5 (server-authoritative consent flags), [`agents/backend-architect-agent.md`](agents/backend-architect-agent.md) checklist item 15 (full-scope rollup truthfulness), [`agents/frontend-engineer-agent.md`](agents/frontend-engineer-agent.md) §6 (scope-keyed SLA timers).
+- **Verification:** `npm test` 159/159 ✅, `npm run lint` ✅, `npm run build` ✅ (apps/money-mirror).
+- **Source:** [`experiments/results/peer-review-012.md`](experiments/results/peer-review-012.md) (BLOCKED → fixes for both blockers + medium).
+
+---
+
+## 2026-04-07 — `/linear-sync plan` issue-012
+
+- **Linear:** Project state **Planned**; root [**VIJ-52**](https://linear.app/vijaypmworkspace/issue/VIJ-52/issue-012-gen-z-clarity-loop-emotional-ux-frequency-perf-slas) → **Todo** (Planning); document [issue-012 Plan Snapshot](https://linear.app/vijaypmworkspace/document/issue-012-plan-snapshot-7032c79bc5b0); child tasks **VIJ-53**–**VIJ-64** from [`experiments/plans/manifest-012.json`](experiments/plans/manifest-012.json).
+- **Repo:** [`experiments/linear-sync/issue-012.json`](experiments/linear-sync/issue-012.json) task map + `manifest-012.json` `linear.tasks` identifiers.
+
+---
+
+## 2026-04-07 — `/create-plan` issue-012 (Gen Z clarity loop)
+
+- **Artifacts:** [`experiments/plans/plan-012.md`](experiments/plans/plan-012.md), [`experiments/plans/manifest-012.json`](experiments/plans/manifest-012.json)
+- **Themes:** T0 emotional UX + performance-to-insight SLAs; T1 frequency-first + deterministic merchant clusters; T2 guided review + proactive/recap copy; schema addition **`guided_review_outcomes`** (opt-in commitment storage).
+- **Linear:** root [**VIJ-52**](https://linear.app/vijaypmworkspace/issue/VIJ-52/issue-012-gen-z-clarity-loop-emotional-ux-frequency-perf-slas); **`/linear-sync plan`** checkpoint to sync PRD + child tasks.
+- **Next pipeline step:** `/execute-plan` (start **phase-t0**).
+
+---
+
+## 2026-04-07 — Issue Created: issue-012
+
+- **Type**: Enhancement
+- **Title**: MoneyMirror — Gen Z clarity loop: emotional UX, frequency-first insights, and performance-to-insight SLAs
+- **App**: apps/money-mirror
+- **Status**: Discovery
+- **Linear**: root [VIJ-52](https://linear.app/vijaypmworkspace/issue/VIJ-52/issue-012-gen-z-clarity-loop-emotional-ux-frequency-perf-slas), project [issue-012 — Gen Z clarity loop](https://linear.app/vijaypmworkspace/project/issue-012-gen-z-clarity-loop-emotional-ux-frequency-perf-slas-1bbe50903d79)
+- **Source**: `.cursor/plans/money_mirror_10x_issue_34a61725.plan.md`
+
+---
+
+## 2026-04-07 — issue-011 QA harness (env, tests, README)
+
+- **App:** `apps/money-mirror`
+- **Paywall visibility for local QA:** `.env.local.example` sets `NEXT_PUBLIC_PAYWALL_PROMPT_ENABLED=1` (copy still opt-in per deploy); local `.env.local` can mirror for manual Overview testing (gitignored).
+- **Regression script:** `npm run test:issue-011` runs Vitest for P4 advisories, MoM compare, rate limits, user plan, merchant normalize, `POST /api/chat`, compare-months API, and new `__tests__/api/proactive.test.ts` (WhatsApp opt-in stub + push subscription).
+- **README:** Testing table + short manual QA note for P4-E thresholds (points to `bad-pattern-signals.ts`).
+
+---
+
+## 2026-04-06 — `/execute-plan` issue-011: P4-D/B/C/H completion (proactive, ingestion trust, chat, hardening)
+
+- **App:** `apps/money-mirror`
+- **Proactive channels (P4-D):** added `POST /api/proactive/whatsapp-opt-in` (auth required, env-gated provider relay, telemetry-only stub fallback) and `POST /api/proactive/push-subscription`.
+- **Ingestion trust (P4-B):** Upload panel now shows an explicit **Retry upload** CTA on parse errors; README adds golden PDF regression runbook.
+- **Facts-only chat (P4-C):** added `POST /api/chat` with dashboard-scope parsing, Layer A facts grounding, bounded transaction context, strict JSON response parsing, citation validation, and daily chat rate limiting (`chat_query_submitted`, `chat_response_rendered`, `chat_rate_limited`).
+- **Hardening (P4-H):** introduced shared `src/lib/rate-limit.ts`; enforced per-user heavy-read limits on `GET /api/dashboard`, `GET /api/transactions`, and `GET /api/insights/merchants`; emits `rate_limit_hit`.
+- **Docs/env/tests:** `.env.local.example` now includes `WHATSAPP_API_URL` / `WHATSAPP_API_TOKEN`; README API + analytics tables updated. Added tests: `__tests__/api/chat.test.ts`, `src/lib/__tests__/rate-limit.test.ts`. Validation: `npm --prefix apps/money-mirror test` (105/105), `npm --prefix apps/money-mirror run lint`, `npm --prefix apps/money-mirror run build` (Sentry sourcemap upload warning under sandbox only).
+
+---
+
+## 2026-04-06 — `/execute-plan` issue-011: P4-G (VIJ-46) monetization + Product Hunt hooks
+
+- **App:** `apps/money-mirror`
+- **Schema:** `profiles.plan` (`free` \| `pro`, default `free`); idempotent DDL in `schema.sql` + `schema-upgrades.ts`.
+- **API:** `GET /api/dashboard` and `POST /api/statement/parse` responses include `plan`; `normalizeUserPlan` in `src/lib/user-plan.ts`.
+- **UI:** `PaywallPrompt` on Overview after the Money Mirror block is visible (IntersectionObserver) when `NEXT_PUBLIC_PAYWALL_PROMPT_ENABLED=1`; dismiss stored in `localStorage`.
+- **Telemetry:** client `paywall_prompt_seen`, `upgrade_intent_tapped` via `posthog-browser.ts` (requires `NEXT_PUBLIC_POSTHOG_KEY`).
+- **Docs:** README Product Hunt section + analytics table rows; `.env.local.example` documents `NEXT_PUBLIC_PAYWALL_PROMPT_ENABLED`.
+- **Tests:** Vitest includes `user-plan.test.ts`. **Next (issue-011):** P4-F / VIJ-47 per `manifest-011.json`.
+
+---
+
+## 2026-04-06 — `/execute-plan` issue-011: P4-E (VIJ-45) bad-pattern detection
+
+- **App:** `apps/money-mirror`
+- **Advisories:** `MICRO_UPI_DRAIN`, `REPEAT_MERCHANT_NOISE`, `CC_MIN_DUE_INCOME_STRESS` in `advisory-engine.ts` (thresholds in `bad-pattern-signals.ts`); dashboard aggregates extended in `dashboard-unified.ts` / `dashboard-legacy.ts` (micro-UPI sums, top repeat `merchant_key`, CC min-due vs scope).
+- **API:** `GET /api/transactions?upi_micro=1` filters small UPI debits (≤₹500 with VPA); `transactions_filter_applied` includes `upi_micro` in `filter_types` when set.
+- **UI:** `AdvisoryFeed` CTA → `/dashboard?tab=transactions` with scope-preserving `merchant_key` / `upi_micro`; `TxnFilterBar` banner for micro-UPI filter.
+- **Telemetry:** `bad_pattern_advisory_shown` / `bad_pattern_advisory_clicked` via `posthog-browser.ts` (requires `NEXT_PUBLIC_POSTHOG_KEY`). Layer A facts: `micro_upi_debit_paisa`, `repeat_merchant_noise_paisa`, `cc_minimum_due_income_ratio`.
+- **Tests:** 92 passing. **Next (issue-011):** P4-G / VIJ-46 per `manifest-011.json`.
+
+---
+
+## 2026-04-06 — `/execute-plan` issue-011: P4-A (VIJ-44) merchant + UPI visibility
+
+- **App:** `apps/money-mirror`
+- **Schema:** `transactions.upi_handle`; tables `user_merchant_aliases`, `merchant_label_suggestions` (+ indexes); idempotent DDL in `schema.sql` and `src/lib/schema-upgrades.ts`.
+- **Parse:** `extractUpiHandle` + persist on insert (`persist-statement.ts`); `merchant-normalize` exports `formatMerchantKeyForDisplay`.
+- **API:** `GET|POST|DELETE /api/merchants/alias`, `POST /api/merchants/suggest-accept`, `GET /api/cron/merchant-enrich` (weekly cron in `vercel.json`); `GET /api/transactions` and merchant rollups join aliases; rollups return `display_label` + optional Gemini suggestion fields.
+- **UI:** `TxnRow` UPI chip + alias-aware label; `MerchantRollups` rename modal + “Use AI suggestion”.
+- **Telemetry:** `merchant_alias_saved`, `merchant_suggestion_accepted` (server-side). Tests: 87 passing.
+- **Docs:** `apps/money-mirror/README.md` updated (endpoints, analytics, schema). **Next (issue-011):** P4-E / VIJ-45 per `manifest-011.json`.
+
+---
+
+## 2026-04-06 — `/create-plan` issue-011 (MoneyMirror Phase 4)
+
+- **Artifacts:** [`experiments/plans/plan-011.md`](experiments/plans/plan-011.md) (PRD, UX, architecture, DB, AC per epic P4-A–P4-H); [`experiments/plans/manifest-011.json`](experiments/plans/manifest-011.json) (phases, tasks, `posthog_events`, env vars).
+- **Linear:** `/linear-sync plan` — project **Planned**; [issue-011 Plan Snapshot](https://linear.app/vijaypmworkspace/document/issue-011-plan-snapshot-f8ddb7ff33ef); child epics **VIJ-44** (P4-A) through **VIJ-51** (P4-C), **VIJ-50** (P4-H); root **VIJ-43** updated. Sync map [`experiments/linear-sync/issue-011.json`](experiments/linear-sync/issue-011.json).
+- **State:** [`project-state.md`](project-state.md) — stage `execute-plan`, quality gate `create_plan` done; next `/execute-plan` from **VIJ-44**.
+
+---
+
+## 2026-04-06 — Issue Created: issue-011
+
+- **Type**: Enhancement
+- **Title**: MoneyMirror Phase 4 — Merchant-native visibility, proactive coaching, and growth readiness
+- **App**: apps/money-mirror
+- **Status**: Discovery
+- **Linear**: Project **issue-011 — MoneyMirror Phase 4 — merchant visibility & growth**; root [**VIJ-43**](https://linear.app/vijaypmworkspace/issue/VIJ-43/issue-011-moneymirror-phase-4-merchant-native-visibility-proactive)
+
+---
+
 ## 2026-04-06 — MoneyMirror: E2E documentation pass, `CODEBASE-CONTEXT` refresh, verification
 
 **App:** `apps/money-mirror`

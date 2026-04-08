@@ -1,9 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
+import { FactsDrawer } from '@/components/FactsDrawer';
 import type { Advisory } from '@/lib/advisory-engine';
 import type { LayerAFacts } from '@/lib/coaching-facts';
-import { FactsDrawer } from '@/components/FactsDrawer';
+import {
+  BAD_PATTERN_ADVISORY_CLICKED,
+  BAD_PATTERN_ADVISORY_SHOWN,
+  getPosthogBrowser,
+} from '@/lib/posthog-browser';
 
 interface AdvisoryFeedProps {
   advisories: Advisory[];
@@ -34,12 +40,29 @@ const SEVERITY_STYLES: Record<
   },
 };
 
+function buildTransactionsHref(
+  searchParams: { toString: () => string },
+  cta: NonNullable<Advisory['cta']>
+): string {
+  const q = new URLSearchParams(searchParams.toString());
+  q.set('tab', 'transactions');
+  q.delete('merchant_key');
+  q.delete('upi_micro');
+  if (cta.preset === 'micro_upi') {
+    q.set('upi_micro', '1');
+  } else if (cta.preset === 'merchant_key' && cta.merchant_key) {
+    q.set('merchant_key', cta.merchant_key);
+  }
+  return `/dashboard?${q.toString()}`;
+}
+
 interface AdvisoryCardProps {
   adv: Advisory;
   index: number;
   coachingFacts: LayerAFacts | null;
   openSourcesId: string | null;
   onToggleSources: (id: string | null) => void;
+  onCtaClick: (adv: Advisory) => void;
 }
 
 function AdvisoryCard({
@@ -48,11 +71,13 @@ function AdvisoryCard({
   coachingFacts,
   openSourcesId,
   onToggleSources,
+  onCtaClick,
 }: AdvisoryCardProps) {
   const style = SEVERITY_STYLES[adv.severity];
   const cited = adv.cited_fact_ids ?? [];
   const showSources = coachingFacts && cited.length > 0;
   const sourcesOpen = openSourcesId === adv.id;
+  const cta = adv.cta;
 
   return (
     <div
@@ -83,6 +108,23 @@ function AdvisoryCard({
       >
         {adv.narrative ?? adv.message}
       </p>
+      {cta ? (
+        <div style={{ marginTop: '12px' }}>
+          <button
+            type="button"
+            className="btn-ghost"
+            style={{
+              fontSize: '0.78rem',
+              fontWeight: 600,
+              width: '100%',
+              justifyContent: 'center',
+            }}
+            onClick={() => onCtaClick(adv)}
+          >
+            {cta.label}
+          </button>
+        </div>
+      ) : null}
       {showSources ? (
         <div style={{ marginTop: '12px' }}>
           <button
@@ -125,13 +167,47 @@ function AdvisoryCard({
 
 export function AdvisoryFeed({ advisories, coachingFacts }: AdvisoryFeedProps) {
   const [openSourcesId, setOpenSourcesId] = useState<string | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const shownTriggersRef = useRef<Set<string>>(new Set());
+
+  // Single emission source: client-side PostHog when bad-pattern cards with CTA mount.
+  useEffect(() => {
+    const withCta = advisories.filter((a) => a.cta);
+    if (withCta.length === 0) return;
+    void getPosthogBrowser().then((ph) => {
+      if (!ph) return;
+      for (const a of withCta) {
+        if (shownTriggersRef.current.has(a.trigger)) continue;
+        shownTriggersRef.current.add(a.trigger);
+        ph.capture(BAD_PATTERN_ADVISORY_SHOWN, {
+          trigger: a.trigger,
+          advisory_id: a.id,
+        });
+      }
+    });
+  }, [advisories]);
+
+  const handleCta = (adv: Advisory) => {
+    const cta = adv.cta;
+    if (!cta) return;
+    void getPosthogBrowser().then((ph) => {
+      if (!ph) return;
+      ph.capture(BAD_PATTERN_ADVISORY_CLICKED, {
+        trigger: adv.trigger,
+        advisory_id: adv.id,
+        preset: cta.preset,
+      });
+    });
+    router.push(buildTransactionsHref(searchParams, cta));
+  };
 
   if (advisories.length === 0) {
     return (
       <div className="card" style={{ textAlign: 'center', padding: '32px 24px' }}>
         <span style={{ fontSize: '2rem' }}>✨</span>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: '12px 0 0' }}>
-          No red flags found. Your spending looks healthy!
+          Nothing to flag right now. Clarity starts with knowing — you&apos;re already here.
         </p>
       </div>
     );
@@ -147,6 +223,7 @@ export function AdvisoryFeed({ advisories, coachingFacts }: AdvisoryFeedProps) {
           coachingFacts={coachingFacts}
           openSourcesId={openSourcesId}
           onToggleSources={setOpenSourcesId}
+          onCtaClick={handleCta}
         />
       ))}
     </div>

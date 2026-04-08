@@ -1,0 +1,214 @@
+{
+  "issue": "issue-012",
+  "project": "money-mirror",
+  "linear": {
+    "parent": "VIJ-52",
+    "project_url": "https://linear.app/vijaypmworkspace/project/issue-012-gen-z-clarity-loop-emotional-ux-frequency-perf-slas-1bbe50903d79",
+    "plan_document_url": "https://linear.app/vijaypmworkspace/document/issue-012-plan-snapshot-7032c79bc5b0",
+    "tasks": {
+      "T0.1": "VIJ-53",
+      "T0.2": "VIJ-54",
+      "T0.3": "VIJ-55",
+      "T0.4": "VIJ-56",
+      "T1.1": "VIJ-57",
+      "T1.2": "VIJ-58",
+      "T1.3": "VIJ-59",
+      "T1.4": "VIJ-60",
+      "T2.1": "VIJ-61",
+      "T2.2": "VIJ-62",
+      "T2.3": "VIJ-63",
+      "T2.4": "VIJ-64"
+    }
+  },
+  "phases": [
+    {
+      "id": "phase-t0",
+      "name": "T0 — Emotional UX + performance-to-insight SLAs",
+      "parallel": false,
+      "depends_on": [],
+      "linear_issue": null,
+      "tasks": [
+        {
+          "id": "T0.1",
+          "name": "Client perf marks + PostHog: dashboard_ready + time_to_first_advisory (document timing boundaries)",
+          "agent": "frontend-engineer",
+          "files_to_create": [],
+          "files_to_modify": [
+            "apps/money-mirror/src/app/dashboard/DashboardClient.tsx",
+            "apps/money-mirror/src/lib/posthog-browser.ts"
+          ],
+          "verification": "cd apps/money-mirror && npm run build && npm test",
+          "test_file": "apps/money-mirror/src/app/dashboard/__tests__/dashboard-tab-params.test.ts"
+        },
+        {
+          "id": "T0.2",
+          "name": "Skeleton-first Overview shell + reduce layout shift for Mirror and advisories",
+          "agent": "frontend-engineer",
+          "files_to_modify": [
+            "apps/money-mirror/src/app/dashboard/DashboardClient.tsx",
+            "apps/money-mirror/src/app/dashboard/ResultsPanel.tsx",
+            "apps/money-mirror/src/components/AdvisoryFeed.tsx"
+          ],
+          "files_to_create": [],
+          "verification": "cd apps/money-mirror && npm run build",
+          "test_file": null
+        },
+        {
+          "id": "T0.3",
+          "name": "Shame-safe empty/loading copy + COACHING-TONE Gen Z / transition subsection",
+          "agent": "frontend-engineer",
+          "files_to_modify": [
+            "apps/money-mirror/docs/COACHING-TONE.md",
+            "apps/money-mirror/src/app/dashboard/UploadPanel.tsx"
+          ],
+          "files_to_create": [],
+          "verification": "cd apps/money-mirror && npm run lint",
+          "test_file": null
+        },
+        {
+          "id": "T0.4",
+          "name": "Defer non-critical Overview panels until after dashboard_ready mark (progressive disclosure)",
+          "agent": "frontend-engineer",
+          "files_to_modify": [
+            "apps/money-mirror/src/app/dashboard/DashboardClient.tsx"
+          ],
+          "files_to_create": [],
+          "verification": "cd apps/money-mirror && npm test",
+          "test_file": null
+        }
+      ]
+    },
+    {
+      "id": "phase-t1",
+      "name": "T1 — Frequency-first + deterministic merchant clusters",
+      "parallel": false,
+      "depends_on": ["phase-t0"],
+      "linear_issue": null,
+      "tasks": [
+        {
+          "id": "T1.1",
+          "name": "Lib: merchant-clusters registry (merchant_key patterns → cluster id) + unit tests",
+          "agent": "backend-engineer",
+          "files_to_create": [
+            "apps/money-mirror/src/lib/merchant-clusters.ts",
+            "apps/money-mirror/src/lib/__tests__/merchant-clusters.test.ts"
+          ],
+          "files_to_modify": [],
+          "verification": "cd apps/money-mirror && npm test -- src/lib/__tests__/merchant-clusters.test.ts",
+          "test_file": "apps/money-mirror/src/lib/__tests__/merchant-clusters.test.ts"
+        },
+        {
+          "id": "T1.2",
+          "name": "API: frequency + cluster aggregates for scope (extend GET /api/dashboard or add GET /api/insights/frequency-clusters)",
+          "agent": "backend-engineer",
+          "files_to_modify": [
+            "apps/money-mirror/src/app/api/dashboard/route.ts",
+            "apps/money-mirror/src/lib/dashboard-helpers.ts"
+          ],
+          "files_to_create": [],
+          "verification": "cd apps/money-mirror && npm test",
+          "test_file": null
+        },
+        {
+          "id": "T1.3",
+          "name": "UI: FrequencyInsight + Cluster rows; drill-through with AbortController",
+          "agent": "frontend-engineer",
+          "files_to_modify": [
+            "apps/money-mirror/src/app/dashboard/ResultsPanel.tsx",
+            "apps/money-mirror/src/app/dashboard/TransactionsPanel.tsx"
+          ],
+          "files_to_create": [],
+          "verification": "cd apps/money-mirror && npm run build && npm test",
+          "test_file": "apps/money-mirror/src/app/dashboard/__tests__/ResultsPanel.test.tsx"
+        },
+        {
+          "id": "T1.4",
+          "name": "Telemetry: frequency_insight_opened, merchant_cluster_clicked (single client source)",
+          "agent": "frontend-engineer",
+          "files_to_modify": ["apps/money-mirror/src/lib/posthog-browser.ts"],
+          "files_to_create": [],
+          "verification": "cd apps/money-mirror && npm run lint",
+          "test_file": null
+        }
+      ]
+    },
+    {
+      "id": "phase-t2",
+      "name": "T2 — Guided review + proactive/recap copy",
+      "parallel": false,
+      "depends_on": ["phase-t1"],
+      "linear_issue": null,
+      "tasks": [
+        {
+          "id": "T2.1",
+          "name": "Schema: guided_review_outcomes + schema-upgrades + README migration note",
+          "agent": "backend-engineer",
+          "files_to_modify": [
+            "apps/money-mirror/schema.sql",
+            "apps/money-mirror/src/lib/schema-upgrades.ts",
+            "apps/money-mirror/README.md"
+          ],
+          "files_to_create": [],
+          "verification": "cd apps/money-mirror && npm run db:upgrade && npm run build",
+          "test_file": null
+        },
+        {
+          "id": "T2.2",
+          "name": "API: POST /api/guided-review/outcome (auth, validation, opt-in commitment)",
+          "agent": "backend-engineer",
+          "files_to_create": ["apps/money-mirror/src/app/api/guided-review/outcome/route.ts"],
+          "files_to_modify": [],
+          "verification": "cd apps/money-mirror && npm test",
+          "test_file": "apps/money-mirror/__tests__/api/guided-review-outcome.test.ts"
+        },
+        {
+          "id": "T2.3",
+          "name": "UI: GuidedReviewSheet (3 steps) + guided_review_* + commitment_saved events",
+          "agent": "frontend-engineer",
+          "files_to_create": ["apps/money-mirror/src/components/GuidedReviewSheet.tsx"],
+          "files_to_modify": [
+            "apps/money-mirror/src/app/dashboard/DashboardClient.tsx",
+            "apps/money-mirror/src/lib/posthog-browser.ts"
+          ],
+          "verification": "cd apps/money-mirror && npm run build",
+          "test_file": null
+        },
+        {
+          "id": "T2.4",
+          "name": "Recap/proactive: Resend template + stub copy specificity (facts placeholders only)",
+          "agent": "backend-engineer",
+          "files_to_modify": [
+            "apps/money-mirror/src/app/api/cron/weekly-recap/route.ts"
+          ],
+          "files_to_create": [],
+          "verification": "cd apps/money-mirror && npm test",
+          "test_file": null
+        }
+      ]
+    }
+  ],
+  "env_vars": [
+    "NEXT_PUBLIC_POSTHOG_KEY",
+    "NEXT_PUBLIC_POSTHOG_HOST",
+    "POSTHOG_KEY",
+    "POSTHOG_HOST"
+  ],
+  "schema_tables": [
+    "profiles",
+    "statements",
+    "transactions",
+    "advisory_feed",
+    "user_merchant_aliases",
+    "merchant_label_suggestions",
+    "guided_review_outcomes"
+  ],
+  "posthog_events": [
+    "dashboard_ready_ms",
+    "time_to_first_advisory_ms",
+    "frequency_insight_opened",
+    "merchant_cluster_clicked",
+    "guided_review_started",
+    "guided_review_completed",
+    "commitment_saved"
+  ]
+}

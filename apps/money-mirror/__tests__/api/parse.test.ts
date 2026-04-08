@@ -32,9 +32,13 @@ vi.mock('@/lib/auth/session', () => ({
 
 const mockCountUserStatementsSince = vi.fn();
 const mockEnsureProfile = vi.fn();
+/** Plan lookup at end of successful parse (`SELECT plan FROM profiles`). */
+const mockPlanSql = vi.fn(async () => [{ plan: 'free' }]);
+const mockGetDb = vi.fn(() => mockPlanSql);
 vi.mock('@/lib/db', () => ({
   countUserStatementsSince: mockCountUserStatementsSince,
   ensureProfile: mockEnsureProfile,
+  getDb: mockGetDb,
 }));
 
 const mockPersistStatement = vi.fn();
@@ -133,6 +137,7 @@ describe('POST /api/statement/parse', () => {
     expect(res.status).toBe(200);
     expect(body).toMatchObject({
       statement_id: 'stmt-abc',
+      plan: 'free',
       institution_name: 'HDFC Bank',
       statement_type: 'bank_account',
       period_start: '2026-03-01',
@@ -231,6 +236,7 @@ describe('POST /api/statement/parse', () => {
 
     expect(res.status).toBe(200);
     expect(body).toMatchObject({
+      plan: 'free',
       institution_name: 'SBI Card',
       statement_type: 'credit_card',
       due_date: '2026-04-18',

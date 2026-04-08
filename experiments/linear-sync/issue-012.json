@@ -1,0 +1,91 @@
+{
+  "issue_number": "012",
+  "issue_title": "MoneyMirror — Gen Z clarity loop: emotional UX, frequency-first insights, and performance-to-insight SLAs",
+  "issue_type": "Enhancement",
+  "team_id": "70aea0d1-a706-481f-a0b7-3e636709ba77",
+  "team_name": "Vijaypmworkspace",
+  "project_id": "99de1d5b-2c49-4fa3-a9ed-6756a746eb44",
+  "project_name": "issue-012 — Gen Z clarity loop (emotional UX, frequency, perf SLAs)",
+  "project_url": "https://linear.app/vijaypmworkspace/project/issue-012-gen-z-clarity-loop-emotional-ux-frequency-perf-slas-1bbe50903d79",
+  "root_issue_id": "VIJ-52",
+  "root_issue_identifier": "VIJ-52",
+  "root_issue_url": "https://linear.app/vijaypmworkspace/issue/VIJ-52/issue-012-gen-z-clarity-loop-emotional-ux-frequency-perf-slas",
+  "labels": {
+    "discovery": "b05592c1-47a6-4fdd-9a08-7a6287d4f1f8",
+    "improvement": "24fb89fb-dd24-4e23-9741-bf5def3dce29",
+    "planning": "c115a797-9a9a-4474-aec9-977473efa69a",
+    "execution": "7c533cde-cb79-4377-a158-9807bc567ebc"
+  },
+  "tasks": {
+    "T0.1": { "id": "VIJ-53", "url": "https://linear.app/vijaypmworkspace/issue/VIJ-53/issue-012t01-client-perf-marks-posthog-dashboard-ready-time-to-first" },
+    "T0.2": { "id": "VIJ-54", "url": "https://linear.app/vijaypmworkspace/issue/VIJ-54/issue-012t02-skeleton-first-overview-shell-reduce-layout-shift-for" },
+    "T0.3": { "id": "VIJ-55", "url": "https://linear.app/vijaypmworkspace/issue/VIJ-55/issue-012t03-shame-safe-emptyloading-copy-coaching-tone-gen-z" },
+    "T0.4": { "id": "VIJ-56", "url": "https://linear.app/vijaypmworkspace/issue/VIJ-56/issue-012t04-defer-non-critical-overview-panels-until-after-dashboard" },
+    "T1.1": { "id": "VIJ-57", "url": "https://linear.app/vijaypmworkspace/issue/VIJ-57/issue-012t11-lib-merchant-clusters-registry-merchant-key-patterns" },
+    "T1.2": { "id": "VIJ-58", "url": "https://linear.app/vijaypmworkspace/issue/VIJ-58/issue-012t12-api-frequency-cluster-aggregates-for-scope-extend-get" },
+    "T1.3": { "id": "VIJ-59", "url": "https://linear.app/vijaypmworkspace/issue/VIJ-59/issue-012t13-ui-frequencyinsight-cluster-rows-drill-through-with" },
+    "T1.4": { "id": "VIJ-60", "url": "https://linear.app/vijaypmworkspace/issue/VIJ-60/issue-012t14-telemetry-frequency-insight-opened-merchant-cluster" },
+    "T2.1": { "id": "VIJ-61", "url": "https://linear.app/vijaypmworkspace/issue/VIJ-61/issue-012t21-schema-guided-review-outcomes-schema-upgrades-readme" },
+    "T2.2": { "id": "VIJ-62", "url": "https://linear.app/vijaypmworkspace/issue/VIJ-62/issue-012t22-api-post-apiguided-reviewoutcome-auth-validation-opt-in" },
+    "T2.3": { "id": "VIJ-63", "url": "https://linear.app/vijaypmworkspace/issue/VIJ-63/issue-012t23-ui-guidedreviewsheet-3-steps-guided-review-commitment" },
+    "T2.4": { "id": "VIJ-64", "url": "https://linear.app/vijaypmworkspace/issue/VIJ-64/issue-012t24-recapproactive-resend-template-stub-copy-specificity" }
+  },
+  "phases_linear": {
+    "phase-t0": ["VIJ-53", "VIJ-54", "VIJ-55", "VIJ-56"],
+    "phase-t1": ["VIJ-57", "VIJ-58", "VIJ-59", "VIJ-60"],
+    "phase-t2": ["VIJ-61", "VIJ-62", "VIJ-63", "VIJ-64"]
+  },
+  "related_issues": {
+    "prior_phase4_umbrella": "VIJ-43 — issue-011 (complete `/learning` + `/linear-close` when ready)",
+    "source_plan": ".cursor/plans/money_mirror_10x_issue_34a61725.plan.md"
+  },
+  "documents": {
+    "plan_snapshot": {
+      "id": "d1194de3-c7d4-441a-adbb-fe83f52b3e59",
+      "title": "issue-012 Plan Snapshot",
+      "url": "https://linear.app/vijaypmworkspace/document/issue-012-plan-snapshot-7032c79bc5b0",
+      "slug_id": "7032c79bc5b0"
+    },
+    "closeout_snapshot": {
+      "id": "f02cf29a-3654-4575-b633-6f735c90e16d",
+      "title": "issue-012 Closeout Snapshot",
+      "url": "https://linear.app/vijaypmworkspace/document/issue-012-closeout-snapshot-5be4662b77c9",
+      "slug_id": "5be4662b77c9"
+    }
+  },
+  "issue_sync": {
+    "last_sync_timestamp": "2026-04-07T00:00:00Z",
+    "root_issue_status": "Todo",
+    "artifacts": [
+      "experiments/ideas/issue-012.md",
+      "experiments/plans/plan-012.md",
+      "experiments/plans/manifest-012.json"
+    ]
+  },
+  "last_sync_mode": "close",
+  "last_sync_timestamp": "2026-04-07T15:43:41Z",
+  "linear_sync_status": "success",
+  "plan_document_url": "https://linear.app/vijaypmworkspace/document/issue-012-plan-snapshot-7032c79bc5b0",
+  "closeout_document_url": "https://linear.app/vijaypmworkspace/document/issue-012-closeout-snapshot-5be4662b77c9",
+  "close_sync": {
+    "closeout_document_id": "f02cf29a-3654-4575-b633-6f735c90e16d",
+    "closeout_comment_id": "55b267c0-2010-489e-b6b3-fbc317159d16",
+    "project_state": "Completed",
+    "root_issue_state": "Done",
+    "root_issue_labels": [
+      "Improvement",
+      "Completed"
+    ]
+  },
+  "status_sync": {
+    "comment_id": "e3058150-8cd0-46ee-8b06-bed15234a44f",
+    "prior_comment_id": "5dc3a28b-9723-4371-9dca-40cd8bcfe3f5",
+    "gate": "learning",
+    "gate_result": "pass",
+    "repo_stage": "learning",
+    "repo_status": "completed",
+    "project_state": "Completed",
+    "root_issue_state": "Done",
+    "root_issue_labels": ["Improvement", "Completed"]
+  }
+}

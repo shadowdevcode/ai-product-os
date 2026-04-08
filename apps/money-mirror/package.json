@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "test:issue-011": "vitest run src/lib/advisory-engine.test.ts src/lib/__tests__/dashboard-compare.test.ts src/lib/__tests__/rate-limit.test.ts src/lib/__tests__/user-plan.test.ts src/lib/__tests__/merchant-normalize.test.ts __tests__/api/chat.test.ts __tests__/api/compare-months.test.ts __tests__/api/proactive.test.ts",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "npm run build && playwright test",

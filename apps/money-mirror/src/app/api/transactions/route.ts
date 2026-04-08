@@ -18,9 +18,11 @@ import {
 } from '@/lib/transactions-list';
 import { isUndefinedColumnError, SCHEMA_UPGRADE_HINT } from '@/lib/pg-errors';
 import { parseStatementIdsParam } from '@/lib/scope';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const CATEGORIES = new Set(['needs', 'wants', 'investment', 'debt', 'other']);
 const TYPES = new Set(['debit', 'credit']);
+const HEAVY_READ_LIMIT = { limit: 60, windowMs: 60_000 };
 
 function parseDateOnly(raw: string | null): string | null {
   if (!raw) {
@@ -46,10 +48,41 @@ function parseUuid(raw: string | null): string | null {
   return raw;
 }
 
+function parseMerchantKeys(raw: string | null): string[] | null | 'invalid' {
+  if (raw == null || raw.trim() === '') {
+    return null;
+  }
+  const keys = raw
+    .split(',')
+    .map((key) => key.trim())
+    .filter(Boolean);
+  if (keys.length === 0) {
+    return null;
+  }
+  for (const key of keys) {
+    if (key.length > 128) {
+      return 'invalid';
+    }
+  }
+  return keys;
+}
+
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const user = await getSessionUser();
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const rate = checkRateLimit(`transactions:get:${user.id}`, HEAVY_READ_LIMIT);
+  if (!rate.ok) {
+    void captureServerEvent(user.id, 'rate_limit_hit', {
+      route: '/api/transactions',
+      retry_after_sec: rate.retryAfterSec,
+    }).catch(() => {});
+    return NextResponse.json(
+      { error: 'Too many requests. Please wait before retrying.' },
+      { status: 429, headers: { 'Retry-After': String(rate.retryAfterSec) } }
+    );
   }
 
   const sp = req.nextUrl.searchParams;
@@ -84,6 +117,11 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     statementId = null;
   }
 
+  const merchantKeysParsed = parseMerchantKeys(sp.get('merchant_keys'));
+  if (merchantKeysParsed === 'invalid') {
+    return NextResponse.json({ error: 'Invalid merchant_keys.' }, { status: 400 });
+  }
+
   const category = sp.get('category');
   if (category && !CATEGORIES.has(category)) {
     return NextResponse.json({ error: 'Invalid category.' }, { status: 400 });
@@ -106,7 +144,14 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
   if (merchantKeyRaw && merchantKeyRaw.length > 128) {
     return NextResponse.json({ error: 'Invalid merchant_key.' }, { status: 400 });
   }
-  const merchantKey = merchantKeyRaw || null;
+  const merchantKey =
+    merchantKeysParsed && merchantKeysParsed.length > 0 ? null : merchantKeyRaw || null;
+
+  const upiMicroRaw = sp.get('upi_micro');
+  if (upiMicroRaw !== null && upiMicroRaw !== '' && upiMicroRaw !== '1') {
+    return NextResponse.json({ error: 'Invalid upi_micro (use 1 or omit).' }, { status: 400 });
+  }
+  const upiMicro = upiMicroRaw === '1';
 
   const params: ListTransactionsParams = {
     userId: user.id,
@@ -118,6 +163,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     type: type || null,
     search,
     merchantKey,
+    merchantKeys: merchantKeysParsed && merchantKeysParsed.length > 0 ? merchantKeysParsed : null,
+    upiMicro,
     limit,
     offset,
   };
@@ -163,7 +210,9 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       category ||
       type ||
       search ||
-      merchantKey
+      merchantKey ||
+      (params.merchantKeys && params.merchantKeys.length > 0) ||
+      upiMicro
     );
     if (hasFilters) {
       const filterTypes: string[] = [];
@@ -186,6 +235,12 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
       }
       if (merchantKey) {
         filterTypes.push('merchant_key');
+      }
+      if (params.merchantKeys && params.merchantKeys.length > 0) {
+        filterTypes.push('merchant_keys');
+      }
+      if (upiMicro) {
+        filterTypes.push('upi_micro');
       }
       void captureServerEvent(user.id, 'transactions_filter_applied', {
         filter_types: filterTypes,

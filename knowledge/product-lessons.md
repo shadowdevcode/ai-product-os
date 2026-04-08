@@ -103,3 +103,14 @@ rule: If the product supports arbitrary or multi-month ranges, default user-faci
 improvement: Product Agent and Design Agent must add a Scope → Copy contract section for any feature with configurable date ranges: which phrases are allowed per scope shape (single calendar month vs multi-month vs custom range).
 
 ---
+
+---
+
+date: 2026-04-07
+project: MoneyMirror Gen Z clarity loop (issue-012)
+issue: Metric-plan labels drifted from canonical implementation event names, increasing analytics interpretation risk
+root_cause: Planning output described intent-level events without forcing reconciliation to actual event identifiers wired in code.
+rule: Every metric plan must include a canonical event dictionary mapped to implemented event names and one authoritative emitter (client or server). Intent labels are acceptable only as aliases, never as primary event IDs.
+improvement: analytics-agent must end metric-plan with a "Canonical Event Dictionary" table cross-checked against implementation names before marking the stage complete.
+
+---

@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/weekly-recap",
       "schedule": "30 2 * * 1"
+    },
+    {
+      "path": "/api/cron/merchant-enrich",
+      "schedule": "15 3 * * 1"
     }
   ]
 }

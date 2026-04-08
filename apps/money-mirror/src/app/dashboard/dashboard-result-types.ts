@@ -1,5 +1,7 @@
 import type { LayerAFacts } from '@/lib/coaching-facts';
+import type { DashboardMonthCompare } from '@/lib/dashboard-types';
 import type { StatementType } from '@/lib/statements';
+import type { UserPlan } from '@/lib/user-plan';
 
 /** Dashboard API + parse response shape used by DashboardClient */
 export interface DashboardResult {
@@ -34,6 +36,10 @@ export interface DashboardResult {
     included_statement_ids: string[];
   };
   perceived_is_profile_baseline?: boolean;
+  /** P4-G: from profiles.plan; omit on partial responses (defaults to free in UI). */
+  plan?: UserPlan;
   /** Layer A facts (issue-010 T4); server-built, facts-grounded coaching. */
   coaching_facts?: LayerAFacts;
+  /** P4-F: scope-aligned month-over-month totals. */
+  month_compare?: DashboardMonthCompare | null;
 }

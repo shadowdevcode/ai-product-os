@@ -1,11 +1,14 @@
+import { MICRO_UPI_MAX_AMOUNT_PAISA } from '@/lib/bad-pattern-signals';
 import { getDb, toNumber } from '@/lib/db';
 import type { StatementType } from '@/lib/statements';
 import {
   buildAdvisories,
   buildDashboardSummary,
   computeDebitSignals,
+  type RepeatMerchantScopeRow,
 } from '@/lib/dashboard-helpers';
 import type { DashboardAggregateRow, DashboardData, StatementRow } from '@/lib/dashboard-types';
+import { normalizeUserPlan } from '@/lib/user-plan';
 
 export async function fetchDashboardLegacy(
   userId: string,
@@ -15,7 +18,7 @@ export async function fetchDashboardLegacy(
 
   const statementRows = statementId
     ? ((await sql`
-        SELECT s.id, s.institution_name, s.statement_type, s.period_start, s.period_end, s.due_date, s.payment_due_paisa, s.minimum_due_paisa, s.credit_limit_paisa, p.perceived_spend_paisa, p.monthly_income_paisa, s.nickname, s.account_purpose, s.card_network
+        SELECT s.id, s.institution_name, s.statement_type, s.period_start, s.period_end, s.due_date, s.payment_due_paisa, s.minimum_due_paisa, s.credit_limit_paisa, p.perceived_spend_paisa, p.monthly_income_paisa, p.plan, s.nickname, s.account_purpose, s.card_network
         FROM statements s
         LEFT JOIN profiles p ON p.id = s.user_id
         WHERE s.user_id = ${userId}
@@ -34,12 +37,13 @@ export async function fetchDashboardLegacy(
         credit_limit_paisa: number | string | bigint | null;
         perceived_spend_paisa: number | string | bigint | null;
         monthly_income_paisa: number | string | bigint | null;
+        plan: string | null;
         nickname: string | null;
         account_purpose: string | null;
         card_network: string | null;
       }[])
     : ((await sql`
-        SELECT s.id, s.institution_name, s.statement_type, s.period_start, s.period_end, s.due_date, s.payment_due_paisa, s.minimum_due_paisa, s.credit_limit_paisa, p.perceived_spend_paisa, p.monthly_income_paisa, s.nickname, s.account_purpose, s.card_network
+        SELECT s.id, s.institution_name, s.statement_type, s.period_start, s.period_end, s.due_date, s.payment_due_paisa, s.minimum_due_paisa, s.credit_limit_paisa, p.perceived_spend_paisa, p.monthly_income_paisa, p.plan, s.nickname, s.account_purpose, s.card_network
         FROM statements s
         LEFT JOIN profiles p ON p.id = s.user_id
         WHERE s.user_id = ${userId}
@@ -58,6 +62,7 @@ export async function fetchDashboardLegacy(
         credit_limit_paisa: number | string | bigint | null;
         perceived_spend_paisa: number | string | bigint | null;
         monthly_income_paisa: number | string | bigint | null;
+        plan: string | null;
         nickname: string | null;
         account_purpose: string | null;
         card_network: string | null;
@@ -67,6 +72,8 @@ export async function fetchDashboardLegacy(
   if (!row) {
     return null;
   }
+
+  const userPlan = normalizeUserPlan(row.plan);
 
   const statement: StatementRow = {
     id: row.id,
@@ -131,6 +138,20 @@ export async function fetchDashboardLegacy(
         ) THEN amount_paisa
         ELSE 0
       END), 0)::bigint AS subscription_paisa,
+      COALESCE(SUM(CASE
+        WHEN type = 'debit'
+          AND upi_handle IS NOT NULL
+          AND TRIM(upi_handle) <> ''
+          AND amount_paisa <= ${MICRO_UPI_MAX_AMOUNT_PAISA}
+        THEN amount_paisa
+        ELSE 0
+      END), 0)::bigint AS micro_upi_debit_paisa,
+      COALESCE(COUNT(*) FILTER (
+        WHERE type = 'debit'
+          AND upi_handle IS NOT NULL
+          AND TRIM(upi_handle) <> ''
+          AND amount_paisa <= ${MICRO_UPI_MAX_AMOUNT_PAISA}
+      ), 0)::bigint AS micro_upi_debit_count,
       COUNT(*)::bigint AS transaction_count
     FROM transactions
     WHERE statement_id = ${statement.id}
@@ -138,8 +159,39 @@ export async function fetchDashboardLegacy(
   `) as DashboardAggregateRow[];
   const aggregate = aggregateRows[0];
 
+  const repeatRows = (await sql`
+    SELECT
+      merchant_key,
+      COUNT(*)::bigint AS cnt,
+      COALESCE(SUM(amount_paisa), 0)::bigint AS total_paisa
+    FROM transactions
+    WHERE statement_id = ${statement.id}
+      AND user_id = ${userId}
+      AND type = 'debit'
+      AND merchant_key IS NOT NULL
+    GROUP BY merchant_key
+    ORDER BY COUNT(*) DESC, SUM(amount_paisa) DESC
+    LIMIT 1
+  `) as {
+    merchant_key: string;
+    cnt: number | string | bigint;
+    total_paisa: number | string | bigint;
+  }[];
+
+  const repeatTop: RepeatMerchantScopeRow = repeatRows[0]
+    ? {
+        merchant_key: repeatRows[0].merchant_key,
+        debit_count: toNumber(repeatRows[0].cnt),
+        debit_paisa: toNumber(repeatRows[0].total_paisa),
+      }
+    : { merchant_key: null, debit_count: 0, debit_paisa: 0 };
+
   const summary = buildDashboardSummary(aggregate);
-  const signals = computeDebitSignals(aggregate);
+  const signals = computeDebitSignals(aggregate, repeatTop, {
+    has_credit_card_statement: statement.statement_type === 'credit_card',
+    cc_minimum_due_effective_paisa:
+      statement.statement_type === 'credit_card' ? statement.minimum_due_paisa : null,
+  });
   const advisories = buildAdvisories(summary, statement, signals);
 
   return {
@@ -168,5 +220,7 @@ export async function fetchDashboardLegacy(
       included_statement_ids: [statement.id],
     },
     perceived_is_profile_baseline: true,
+    plan: userPlan,
+    month_compare: null,
   };
 }

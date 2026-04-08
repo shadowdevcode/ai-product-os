@@ -1,0 +1,340 @@
+{
+  "issue": "issue-011",
+  "project": "money-mirror",
+  "linear": {
+    "parent": "VIJ-43",
+    "children": {
+      "P4-A": "VIJ-44",
+      "P4-B": "VIJ-49",
+      "P4-C": "VIJ-51",
+      "P4-D": "VIJ-48",
+      "P4-E": "VIJ-45",
+      "P4-F": "VIJ-47",
+      "P4-G": "VIJ-46",
+      "P4-H": "VIJ-50"
+    },
+    "plan_document_url": "https://linear.app/vijaypmworkspace/document/issue-011-plan-snapshot-f8ddb7ff33ef"
+  },
+  "phases": [
+    {
+      "id": "phase-p4-a",
+      "name": "P4-A — Merchant + UPI visibility v2",
+      "parallel": false,
+      "depends_on": [],
+      "linear_issue": "VIJ-44",
+      "tasks": [
+        {
+          "id": "P4-A.1",
+          "name": "Schema: transactions.upi_handle + user_merchant_aliases + optional merchant_label_suggestions",
+          "agent": "backend-engineer",
+          "files_to_create": [],
+          "files_to_modify": [
+            "apps/money-mirror/schema.sql",
+            "apps/money-mirror/src/lib/schema-upgrades.ts",
+            "apps/money-mirror/README.md"
+          ],
+          "verification": "cd apps/money-mirror && npm run build && npm test",
+          "test_file": null
+        },
+        {
+          "id": "P4-A.2",
+          "name": "Extract UPI/VPA in parse path + persist merchant_key/upi_handle",
+          "agent": "backend-engineer",
+          "files_to_modify": [
+            "apps/money-mirror/src/lib/merchant-normalize.ts",
+            "apps/money-mirror/src/app/api/statement/parse/persist-statement.ts"
+          ],
+          "files_to_create": [],
+          "verification": "cd apps/money-mirror && npm test",
+          "test_file": "apps/money-mirror/src/lib/__tests__/merchant-normalize.test.ts"
+        },
+        {
+          "id": "P4-A.3",
+          "name": "API: user merchant alias CRUD + merge into rollups/transactions API",
+          "agent": "backend-engineer",
+          "files_to_create": ["apps/money-mirror/src/app/api/merchants/alias/route.ts"],
+          "files_to_modify": [
+            "apps/money-mirror/src/app/api/insights/merchants/route.ts",
+            "apps/money-mirror/src/app/api/transactions/route.ts"
+          ],
+          "verification": "cd apps/money-mirror && npm test",
+          "test_file": null
+        },
+        {
+          "id": "P4-A.4",
+          "name": "UI: txn row + MerchantRollups display labels; rename modal",
+          "agent": "frontend-engineer",
+          "files_to_modify": ["apps/money-mirror/src/components"],
+          "files_to_create": [],
+          "verification": "cd apps/money-mirror && npm run build",
+          "test_file": null
+        },
+        {
+          "id": "P4-A.5",
+          "name": "Optional: async Gemini re-label job + suggestion accept path (non-blocking parse)",
+          "agent": "backend-engineer",
+          "files_to_create": ["apps/money-mirror/src/lib/merchant-label-enrich.ts"],
+          "files_to_modify": ["apps/money-mirror/vercel.json"],
+          "verification": "cd apps/money-mirror && npm run build",
+          "test_file": null
+        }
+      ]
+    },
+    {
+      "id": "phase-p4-e",
+      "name": "P4-E — Bad-pattern detection",
+      "parallel": false,
+      "depends_on": ["phase-p4-a"],
+      "linear_issue": "VIJ-45",
+      "tasks": [
+        {
+          "id": "P4-E.1",
+          "name": "Extend advisory-engine: micro-UPI, recurring noise, CC min-due signals + tests",
+          "agent": "backend-engineer",
+          "files_to_modify": ["apps/money-mirror/src/lib/advisory-engine.ts"],
+          "files_to_create": [],
+          "verification": "cd apps/money-mirror && npm test -- --testPathPattern=advisory",
+          "test_file": "apps/money-mirror/src/lib/advisory-engine.test.ts"
+        },
+        {
+          "id": "P4-E.2",
+          "name": "AdvisoryFeed UI: new card types + deep link to Transactions",
+          "agent": "frontend-engineer",
+          "files_to_modify": ["apps/money-mirror/src/components"],
+          "verification": "cd apps/money-mirror && npm run build",
+          "test_file": null
+        },
+        {
+          "id": "P4-E.3",
+          "name": "PostHog: bad_pattern_advisory_shown / bad_pattern_advisory_clicked (single source)",
+          "agent": "backend-engineer",
+          "files_to_modify": ["apps/money-mirror/src/lib/posthog.ts"],
+          "verification": "cd apps/money-mirror && npm run lint",
+          "test_file": null
+        }
+      ]
+    },
+    {
+      "id": "phase-p4-g",
+      "name": "P4-G — Monetization + Product Hunt",
+      "parallel": false,
+      "depends_on": ["phase-p4-e"],
+      "linear_issue": "VIJ-46",
+      "tasks": [
+        {
+          "id": "P4-G.1",
+          "name": "Schema: profiles.plan or entitlements column + server checks",
+          "agent": "backend-engineer",
+          "files_to_modify": ["apps/money-mirror/schema.sql", "apps/money-mirror/src/lib/db.ts"],
+          "verification": "cd apps/money-mirror && npm run build",
+          "test_file": null
+        },
+        {
+          "id": "P4-G.2",
+          "name": "Paywall prompt UI + paywall_prompt_seen / upgrade_intent_tapped",
+          "agent": "frontend-engineer",
+          "files_to_modify": ["apps/money-mirror/src/components"],
+          "verification": "cd apps/money-mirror && npm run build",
+          "test_file": null
+        },
+        {
+          "id": "P4-G.3",
+          "name": "README + checklist: Product Hunt hooks per production-launch-checklist-010",
+          "agent": "frontend-engineer",
+          "files_to_modify": ["apps/money-mirror/README.md"],
+          "verification": "grep -n Product Hunt apps/money-mirror/README.md",
+          "test_file": null
+        }
+      ]
+    },
+    {
+      "id": "phase-p4-f",
+      "name": "P4-F — URL tabs + month-over-month (ex-T5–T6)",
+      "parallel": false,
+      "depends_on": ["phase-p4-g"],
+      "linear_issue": "VIJ-47",
+      "tasks": [
+        {
+          "id": "P4-F.1",
+          "name": "Dashboard: URL-synced ?tab= for primary nav",
+          "agent": "frontend-engineer",
+          "files_to_modify": ["apps/money-mirror/src/app/dashboard", "apps/money-mirror/src/components"],
+          "verification": "cd apps/money-mirror && npm run build",
+          "test_file": null
+        },
+        {
+          "id": "P4-F.2",
+          "name": "API + UI: month-over-month compare for scope-aligned totals",
+          "agent": "backend-engineer",
+          "files_to_create": ["apps/money-mirror/src/app/api/dashboard/compare-months/route.ts"],
+          "files_to_modify": ["apps/money-mirror/src/lib/dashboard.ts"],
+          "verification": "cd apps/money-mirror && npm test",
+          "test_file": null
+        }
+      ]
+    },
+    {
+      "id": "phase-p4-d",
+      "name": "P4-D — Proactive + channels",
+      "parallel": false,
+      "depends_on": ["phase-p4-f"],
+      "linear_issue": "VIJ-48",
+      "tasks": [
+        {
+          "id": "P4-D.1",
+          "name": "Richer weekly recap email templates (Resend)",
+          "agent": "backend-engineer",
+          "files_to_modify": ["apps/money-mirror/src/app/api/cron/weekly-recap"],
+          "verification": "cd apps/money-mirror && npm run build",
+          "test_file": null
+        },
+        {
+          "id": "P4-D.2",
+          "name": "WhatsApp spike: opt-in + env-gated stub send",
+          "agent": "backend-engineer",
+          "files_to_create": [],
+          "files_to_modify": ["apps/money-mirror/.env.local.example"],
+          "verification": "cd apps/money-mirror && npm run lint",
+          "test_file": null
+        },
+        {
+          "id": "P4-D.3",
+          "name": "Optional web push: permission UX + subscription handler",
+          "agent": "frontend-engineer",
+          "files_to_modify": ["apps/money-mirror/src/components"],
+          "verification": "cd apps/money-mirror && npm run build",
+          "test_file": null
+        }
+      ]
+    },
+    {
+      "id": "phase-p4-b",
+      "name": "P4-B — Ingestion scale + trust",
+      "parallel": false,
+      "depends_on": ["phase-p4-d"],
+      "linear_issue": "VIJ-49",
+      "tasks": [
+        {
+          "id": "P4-B.1",
+          "name": "Upload queue/retry UX + user-visible parse status",
+          "agent": "frontend-engineer",
+          "files_to_modify": ["apps/money-mirror/src/components", "apps/money-mirror/src/app/api/statement/parse"],
+          "verification": "cd apps/money-mirror && npm run build",
+          "test_file": null
+        },
+        {
+          "id": "P4-B.2",
+          "name": "Golden PDF fixtures + regression test hook in README",
+          "agent": "backend-engineer",
+          "files_to_create": [],
+          "files_to_modify": ["apps/money-mirror/README.md"],
+          "verification": "cd apps/money-mirror && npm test",
+          "test_file": null
+        }
+      ]
+    },
+    {
+      "id": "phase-p4-c",
+      "name": "P4-C — Facts-only chat coach",
+      "parallel": false,
+      "depends_on": ["phase-p4-b"],
+      "linear_issue": "VIJ-51",
+      "tasks": [
+        {
+          "id": "P4-C.1",
+          "name": "POST /api/chat: Layer A facts + bounded txns + Gemini structured answer",
+          "agent": "backend-engineer",
+          "files_to_create": ["apps/money-mirror/src/app/api/chat/route.ts"],
+          "files_to_modify": ["apps/money-mirror/src/lib/coaching-facts.ts"],
+          "verification": "cd apps/money-mirror && npm test",
+          "test_file": null
+        },
+        {
+          "id": "P4-C.2",
+          "name": "ChatPanel UI + citations + rate limit messaging",
+          "agent": "frontend-engineer",
+          "files_to_modify": ["apps/money-mirror/src/components"],
+          "verification": "cd apps/money-mirror && npm run build",
+          "test_file": null
+        },
+        {
+          "id": "P4-C.3",
+          "name": "Extend COACHING-TONE.md for chat surface",
+          "agent": "frontend-engineer",
+          "files_to_modify": ["apps/money-mirror/docs/COACHING-TONE.md"],
+          "verification": "cd apps/money-mirror && npm run build",
+          "test_file": null
+        }
+      ]
+    },
+    {
+      "id": "phase-p4-h",
+      "name": "P4-H — Hardening",
+      "parallel": false,
+      "depends_on": ["phase-p4-c"],
+      "linear_issue": "VIJ-50",
+      "tasks": [
+        {
+          "id": "P4-H.1",
+          "name": "Per-user rate limits on heavy GET routes (dashboard, transactions, merchants)",
+          "agent": "backend-engineer",
+          "files_to_create": ["apps/money-mirror/src/lib/rate-limit.ts"],
+          "files_to_modify": [
+            "apps/money-mirror/src/app/api/dashboard/route.ts",
+            "apps/money-mirror/src/app/api/transactions/route.ts",
+            "apps/money-mirror/src/app/api/insights/merchants/route.ts"
+          ],
+          "verification": "cd apps/money-mirror && npm test",
+          "test_file": null
+        },
+        {
+          "id": "P4-H.2",
+          "name": "Gemini HTTP AbortController follow-up (document + implement where SDK allows)",
+          "agent": "backend-engineer",
+          "files_to_modify": ["apps/money-mirror/src/lib/gemini-coaching-narrative.ts"],
+          "verification": "cd apps/money-mirror && npm run build",
+          "test_file": null
+        }
+      ]
+    }
+  ],
+  "env_vars": [
+    "DATABASE_URL",
+    "GEMINI_API_KEY",
+    "POSTHOG_KEY",
+    "POSTHOG_HOST",
+    "RESEND_API_KEY",
+    "CRON_SECRET",
+    "NEXT_PUBLIC_APP_URL",
+    "WHATSAPP_API_URL",
+    "WHATSAPP_API_TOKEN"
+  ],
+  "schema_tables": [
+    "profiles",
+    "statements",
+    "transactions",
+    "advisory_feed",
+    "user_merchant_aliases",
+    "merchant_label_suggestions"
+  ],
+  "posthog_events": [
+    "merchant_rollup_clicked",
+    "merchant_alias_saved",
+    "merchant_suggestion_accepted",
+    "bad_pattern_advisory_shown",
+    "bad_pattern_advisory_clicked",
+    "paywall_prompt_seen",
+    "upgrade_intent_tapped",
+    "chat_query_submitted",
+    "chat_response_rendered",
+    "chat_rate_limited",
+    "whatsapp_opt_in_completed",
+    "push_subscription_granted",
+    "transactions_view_opened",
+    "scope_changed",
+    "statement_parse_success",
+    "statement_parse_failed",
+    "weekly_recap_email_sent",
+    "rate_limit_hit"
+  ]
+}

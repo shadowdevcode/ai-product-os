@@ -48,3 +48,6 @@ export async function captureServerEvent(
 //
 // All events listed in experiments/plans/manifest-NNN.json["posthog_events"]
 // must appear in the grep output.
+//
+// Client-only (posthog-js): `bad_pattern_advisory_shown`, `bad_pattern_advisory_clicked`
+// — emitted from `getPosthogBrowser()` in `posthog-browser.ts` / `AdvisoryFeed.tsx`.

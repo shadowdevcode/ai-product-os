@@ -251,19 +251,27 @@ Before finalizing the architecture, answer all of the following. Any gap must be
 
     # Added: 2026-04-04 — MoneyMirror Phase 2
 
-15. **Financial headline metrics (aggregates vs lists)**: For any finance dashboard, advisory pipeline, or AI facts layer:
+15. **Full-scope rollup truthfulness**: For any derived financial rollup or cluster shown with exact counts or currency totals, specify a full-scope SQL aggregation strategy.
+    → LIMIT-capped merchant or transaction lists may drive UI previews, but they must never be reused as the source of displayed rollup totals.
+    → If cluster/group membership is a static set (e.g., curated keys), bound the aggregate query with `WHERE col = ANY(<set>)` instead of LIMIT.
+    → If the rollup is dynamic, compute it in SQL with `GROUP BY` over the entire scope and present the top-N as a separate query.
+    → A spec that derives "exact" totals from a top-N sample is a blocking gap — exact-looking numbers must be exact.
+
+    # Added: 2026-04-07 — peer-review-012 fix
+
+16. **Financial headline metrics (aggregates vs lists)**: For any finance dashboard, advisory pipeline, or AI facts layer:
     → The plan must state that totals, category sums, and inputs to rules/AI are computed from **database aggregates** over the full user scope (`SUM` / `COUNT` with the same filters as scope), **not** from `LIMIT`-capped row scans.
     → List/pagination queries for UI tables are separate from aggregate queries for headline numbers — never reuse the list query result as the source of summed totals.
 
     # Added: 2026-04-05 — MoneyMirror Phase 3 (issue-010)
 
-16. **Batch repair / backfill termination**: For any maintenance route that fixes nullable derived fields in batches (cursor + loop):
+17. **Batch repair / backfill termination**: For any maintenance route that fixes nullable derived fields in batches (cursor + loop):
     → Document **termination proof**: cursor advances monotonically; rows that cannot be processed in one pass (e.g., normalization returns null permanently) are skipped or marked so they are not re-selected forever.
     → "Process until no rows" without poison-row handling is a blocking omission.
 
     # Added: 2026-04-05 — MoneyMirror Phase 3 (issue-010)
 
-17. **Heavy authenticated read APIs**: For any authenticated endpoint that scans large row sets, runs expensive `GROUP BY`, or could be abused by rapid UI actions:
+18. **Heavy authenticated read APIs**: For any authenticated endpoint that scans large row sets, runs expensive `GROUP BY`, or could be abused by rapid UI actions:
     → State an explicit strategy: pagination/cursor guarantees, per-user rate limits, query caps, or an explicit **MVP / trusted-client** assumption with documented risk acceptance.
     → Auth + ownership alone are not sufficient when the query is O(n) in user data.
     # Added: 2026-04-05 — MoneyMirror Phase 3 (issue-010)

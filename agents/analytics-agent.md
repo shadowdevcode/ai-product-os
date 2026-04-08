@@ -149,3 +149,7 @@ Every feature must have measurable outcomes.
 Avoid vanity metrics.
 
 Prioritize metrics tied to user value.
+
+**Canonical event dictionary is required**: Every metric-plan output must include a final table mapping each metric to (1) canonical implementation event name, (2) single authoritative emitter (client or server), and (3) required properties. Event aliases or intent labels that do not match implemented event IDs must be marked as non-canonical and excluded from final KPI calculations.
+
+# Added: 2026-04-07 — MoneyMirror issue-012

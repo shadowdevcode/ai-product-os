@@ -95,6 +95,12 @@ performance metrics
 
 # Added: 2026-04-05 — MoneyMirror Phase 3 (issue-010)
 
+**ENV optionality source of truth**: Treat `.env.local.example` inline annotations as canonical. A variable is optional only when explicitly marked near that key (for example `# Optional ...` adjacent to the variable). If optional behavior exists in code but annotation is missing, require updating `.env.local.example` in the same cycle.
+
+**Schema verification fallback**: If MCP schema verification is unavailable (auth/tool outage), attempt direct DB verification using the app's configured DB client and `DATABASE_URL` before blocking. Record the exact `information_schema.tables` evidence in deploy-check output.
+
+# Added: 2026-04-07 — MoneyMirror issue-012
+
 ---
 
 ## 5 Rollback Plan

@@ -63,6 +63,8 @@ describe('GET /api/transactions', () => {
           category: 'wants',
           is_recurring: false,
           merchant_key: 'zomato',
+          upi_handle: null,
+          merchant_alias_label: null,
           statement_nickname: 'Main',
           statement_institution_name: 'HDFC',
         },
@@ -100,6 +102,8 @@ describe('GET /api/transactions', () => {
           category: 'wants',
           is_recurring: false,
           merchant_key: null,
+          upi_handle: null,
+          merchant_alias_label: null,
           statement_nickname: null,
           statement_institution_name: 'HDFC',
         },
@@ -114,6 +118,45 @@ describe('GET /api/transactions', () => {
     expect(body.total).toBe(1);
   });
 
+  it('accepts merchant_keys and applies them in the transaction query', async () => {
+    let call = 0;
+    mockSql.mockImplementation((strings: TemplateStringsArray, ...values: readonly unknown[]) => {
+      call += 1;
+      if (call === 1) {
+        return Promise.resolve([{ c: '1' }]);
+      }
+      expect(values).toContainEqual(['blinkit', 'instamart']);
+      return Promise.resolve([
+        {
+          id: 't1',
+          statement_id: 's1',
+          date: '2026-01-15',
+          description: 'Test',
+          amount_paisa: 100,
+          type: 'debit',
+          category: 'wants',
+          is_recurring: false,
+          merchant_key: 'zomato',
+          upi_handle: null,
+          merchant_alias_label: null,
+          statement_nickname: 'Main',
+          statement_institution_name: 'HDFC',
+        },
+      ]);
+    });
+
+    const GET = await getGet();
+    const res = await GET(
+      makeRequest(
+        'http://localhost/api/transactions?merchant_keys=blinkit,instamart&date_from=2026-01-01&date_to=2026-01-31'
+      )
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.total).toBe(1);
+    expect(body.transactions).toHaveLength(1);
+  });
+
   it('returns 404 when statement_id is not owned', async () => {
     mockSql.mockImplementationOnce(() => Promise.resolve([]));
 
@@ -124,5 +167,25 @@ describe('GET /api/transactions', () => {
       )
     );
     expect(res.status).toBe(404);
+  });
+
+  it('returns 400 for invalid upi_micro', async () => {
+    const GET = await getGet();
+    const res = await GET(makeRequest('http://localhost/api/transactions?upi_micro=yes'));
+    expect(res.status).toBe(400);
+  });
+
+  it('accepts upi_micro=1', async () => {
+    mockSql.mockImplementation((strings: TemplateStringsArray) => {
+      const q = strings[0]?.slice(0, 120) ?? '';
+      if (q.includes('COUNT(*)')) {
+        return Promise.resolve([{ c: '0' }]);
+      }
+      return Promise.resolve([]);
+    });
+
+    const GET = await getGet();
+    const res = await GET(makeRequest('http://localhost/api/transactions?upi_micro=1'));
+    expect(res.status).toBe(200);
   });
 });

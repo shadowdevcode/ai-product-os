@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS public.transactions (
     category TEXT NOT NULL CHECK (category IN ('needs', 'wants', 'investment', 'debt', 'other')),
     is_recurring BOOLEAN NOT NULL DEFAULT false,
     merchant_key TEXT,
+    upi_handle TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -84,3 +85,55 @@ ALTER TABLE public.statements ADD COLUMN IF NOT EXISTS account_purpose TEXT;
 ALTER TABLE public.statements ADD COLUMN IF NOT EXISTS card_network TEXT;
 
 ALTER TABLE public.transactions ADD COLUMN IF NOT EXISTS merchant_key TEXT;
+ALTER TABLE public.transactions ADD COLUMN IF NOT EXISTS upi_handle TEXT;
+
+CREATE TABLE IF NOT EXISTS public.user_merchant_aliases (
+    user_id TEXT NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    merchant_key TEXT NOT NULL,
+    display_label TEXT NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now()),
+    CONSTRAINT user_merchant_aliases_label_nonempty CHECK (length(trim(display_label)) > 0),
+    PRIMARY KEY (user_id, merchant_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_merchant_aliases_user
+    ON public.user_merchant_aliases(user_id);
+
+CREATE TABLE IF NOT EXISTS public.merchant_label_suggestions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id TEXT NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    merchant_key TEXT NOT NULL,
+    suggested_label TEXT NOT NULL,
+    confidence NUMERIC,
+    source TEXT NOT NULL DEFAULT 'gemini',
+    model TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now()),
+    CONSTRAINT merchant_label_suggestions_label_nonempty CHECK (length(trim(suggested_label)) > 0),
+    CONSTRAINT merchant_label_suggestions_unique_per_user_key UNIQUE (user_id, merchant_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_merchant_label_suggestions_user
+    ON public.merchant_label_suggestions(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_transactions_user_upi
+    ON public.transactions(user_id, upi_handle)
+    WHERE upi_handle IS NOT NULL;
+
+-- P4-G: subscription tier (default free = full access until payments ship)
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'free';
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_plan_check;
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_plan_check CHECK (plan IN ('free', 'pro'));
+
+-- Issue-012: guided review outcomes (optional saved commitment)
+-- Privacy: commitment_text is opt-in only; CASCADE on profile delete covers cleanup.
+CREATE TABLE IF NOT EXISTS public.guided_review_outcomes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id TEXT NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    statement_id UUID REFERENCES public.statements(id) ON DELETE SET NULL,
+    dismissed BOOLEAN NOT NULL DEFAULT false,
+    commitment_text TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now())
+);
+
+CREATE INDEX IF NOT EXISTS idx_guided_review_outcomes_user_created
+    ON public.guided_review_outcomes(user_id, created_at DESC);

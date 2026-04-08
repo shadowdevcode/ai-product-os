@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { TxnFilterBar } from './TxnFilterBar';
 import { TxnRow, type TxRow } from './TxnRow';
@@ -24,7 +24,25 @@ interface TransactionsPanelProps {
 export function TransactionsPanel({ txnScope }: TransactionsPanelProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const merchantKeysParam = searchParams.get('merchant_keys')?.trim() ?? '';
+  const merchantKeysFromUrl = useMemo(
+    () =>
+      merchantKeysParam
+        ? merchantKeysParam
+            .split(',')
+            .map((key) => key.trim())
+            .filter(Boolean)
+        : [],
+    [merchantKeysParam]
+  );
   const merchantFromUrl = searchParams.get('merchant_key')?.trim() ?? '';
+  const merchantFilterLabel = useMemo(() => {
+    if (merchantKeysFromUrl.length > 0) {
+      return merchantKeysFromUrl.map((key) => key.replace(/_/g, ' ')).join(', ');
+    }
+    return merchantFromUrl.replace(/_/g, ' ');
+  }, [merchantFromUrl, merchantKeysFromUrl]);
+  const upiMicroFromUrl = searchParams.get('upi_micro') === '1';
   const [rows, setRows] = useState<TxRow[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -75,7 +93,12 @@ export function TransactionsPanel({ txnScope }: TransactionsPanelProps) {
       if (category) q.set('category', category);
       if (type) q.set('type', type);
       if (debouncedSearch) q.set('search', debouncedSearch);
-      if (merchantFromUrl) q.set('merchant_key', merchantFromUrl);
+      if (merchantKeysFromUrl.length > 0) {
+        q.set('merchant_keys', merchantKeysFromUrl.join(','));
+      } else if (merchantFromUrl) {
+        q.set('merchant_key', merchantFromUrl);
+      }
+      if (upiMicroFromUrl) q.set('upi_micro', '1');
 
       try {
         const resp = await fetch(`/api/transactions?${q.toString()}`, { signal: ac.signal });
@@ -104,18 +127,42 @@ export function TransactionsPanel({ txnScope }: TransactionsPanelProps) {
         setLoading(false);
       }
     },
-    [txnScope, category, type, debouncedSearch, merchantFromUrl]
+    [
+      txnScope,
+      category,
+      type,
+      debouncedSearch,
+      merchantFromUrl,
+      merchantKeysFromUrl,
+      upiMicroFromUrl,
+    ]
   );
 
   useEffect(() => {
     if (txnScope.mode === 'legacy' && !txnScope.statementId) return;
     if (txnScope.mode === 'unified' && (!txnScope.dateFrom || !txnScope.dateTo)) return;
     void load(0, false);
-  }, [txnScope, category, type, debouncedSearch, merchantFromUrl, load]);
+  }, [
+    txnScope,
+    category,
+    type,
+    debouncedSearch,
+    merchantFromUrl,
+    merchantKeysFromUrl,
+    upiMicroFromUrl,
+    load,
+  ]);
 
   const clearMerchantFilter = useCallback(() => {
     const q = new URLSearchParams(searchParams.toString());
     q.delete('merchant_key');
+    q.delete('merchant_keys');
+    router.replace(`/dashboard?${q.toString()}`, { scroll: false });
+  }, [router, searchParams]);
+
+  const clearUpiMicroFilter = useCallback(() => {
+    const q = new URLSearchParams(searchParams.toString());
+    q.delete('upi_micro');
     router.replace(`/dashboard?${q.toString()}`, { scroll: false });
   }, [router, searchParams]);
 
@@ -133,8 +180,10 @@ export function TransactionsPanel({ txnScope }: TransactionsPanelProps) {
         onCategoryChange={setCategory}
         type={type}
         onTypeChange={setType}
-        merchantFromUrl={merchantFromUrl}
+        merchantFromUrl={merchantFilterLabel}
         onClearMerchant={clearMerchantFilter}
+        upiMicroFromUrl={upiMicroFromUrl}
+        onClearUpiMicro={clearUpiMicroFilter}
       />
 
       {error && (

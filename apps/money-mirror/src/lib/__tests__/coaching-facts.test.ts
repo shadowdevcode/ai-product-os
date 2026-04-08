@@ -37,6 +37,7 @@ function minimalDashboard(overrides: Partial<DashboardData> = {}): DashboardData
       included_statement_ids: ['00000000-0000-4000-8000-000000000001'],
     },
     perceived_is_profile_baseline: true,
+    plan: 'free',
     ...overrides,
   };
 }
