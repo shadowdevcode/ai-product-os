@@ -1,13 +1,22 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { TxnScope } from '@/app/dashboard/TransactionsPanel';
-
+import { MerchantRenameDialog } from './MerchantRenameDialog';
 type MerchantRow = {
   merchant_key: string;
+  display_label: string;
   debit_paisa: number;
   txn_count: number;
+  suggested_label: string | null;
+  suggestion_confidence: number | null;
+};
+
+export type RenameTarget = {
+  merchantKey: string;
+  draft: string;
+  suggestedLabel: string | null;
 };
 
 function formatInr(paisa: number): string {
@@ -40,13 +49,20 @@ export function MerchantRollups({ txnScope }: MerchantRollupsProps) {
   const [rows, setRows] = useState<MerchantRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [rename, setRename] = useState<RenameTarget | null>(null);
+  const [renameBusy, setRenameBusy] = useState(false);
+  const renameInputRef = useRef<HTMLInputElement | null>(null);
+  const loadAbortRef = useRef<AbortController | null>(null);
 
   const load = useCallback(async () => {
+    loadAbortRef.current?.abort();
+    const ac = new AbortController();
+    loadAbortRef.current = ac;
     setLoading(true);
     setError(null);
     try {
       const qs = merchantsQuery(txnScope);
-      const resp = await fetch(`/api/insights/merchants?${qs}`);
+      const resp = await fetch(`/api/insights/merchants?${qs}`, { signal: ac.signal });
       if (!resp.ok) {
         const body = (await resp.json().catch(() => ({}))) as {
           error?: string;
@@ -63,18 +79,83 @@ export function MerchantRollups({ txnScope }: MerchantRollupsProps) {
       const data = (await resp.json()) as {
         merchants: MerchantRow[];
       };
-      setRows(data.merchants ?? []);
+      if (!ac.signal.aborted) {
+        setRows(data.merchants ?? []);
+      }
     } catch (e) {
+      if (e instanceof Error && e.name === 'AbortError') {
+        return;
+      }
       setError(e instanceof Error ? e.message : 'Failed to load merchants.');
       setRows([]);
     } finally {
-      setLoading(false);
+      if (loadAbortRef.current === ac) {
+        setLoading(false);
+      }
     }
   }, [txnScope]);
 
   useEffect(() => {
     void load();
+    return () => {
+      loadAbortRef.current?.abort();
+    };
   }, [load]);
+
+  useEffect(() => {
+    if (rename && renameInputRef.current) {
+      renameInputRef.current.focus();
+    }
+  }, [rename]);
+
+  const saveRename = async () => {
+    if (!rename) {
+      return;
+    }
+    const label = rename.draft.trim();
+    if (label.length < 1) {
+      return;
+    }
+    setRenameBusy(true);
+    try {
+      const resp = await fetch('/api/merchants/alias', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ merchant_key: rename.merchantKey, display_label: label }),
+      });
+      if (!resp.ok) {
+        const body = (await resp.json().catch(() => ({}))) as { error?: string };
+        throw new Error(body.error ?? 'Save failed');
+      }
+      setRename(null);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not save name.');
+    } finally {
+      setRenameBusy(false);
+    }
+  };
+
+  const acceptSuggestion = async (merchantKey: string) => {
+    setRenameBusy(true);
+    try {
+      const resp = await fetch('/api/merchants/suggest-accept', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ merchant_key: merchantKey }),
+      });
+      if (!resp.ok) {
+        const body = (await resp.json().catch(() => ({}))) as { error?: string };
+        throw new Error(body.error ?? 'Could not apply suggestion');
+      }
+      setRename(null);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not apply suggestion.');
+    } finally {
+      setRenameBusy(false);
+    }
+  };
 
   const onSeeTransactions = (merchantKey: string) => {
     void fetch('/api/insights/merchant-click', {
@@ -94,6 +175,17 @@ export function MerchantRollups({ txnScope }: MerchantRollupsProps) {
       aria-label="Top merchants"
       style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
     >
+      {rename ? (
+        <MerchantRenameDialog
+          rename={rename}
+          renameBusy={renameBusy}
+          renameInputRef={renameInputRef}
+          onChange={(draft) => setRename({ ...rename, draft })}
+          onClose={() => setRename(null)}
+          onSave={() => void saveRename()}
+          onAcceptSuggestion={(key) => void acceptSuggestion(key)}
+        />
+      ) : null}
       <div>
         <h2
           style={{
@@ -166,11 +258,7 @@ export function MerchantRollups({ txnScope }: MerchantRollupsProps) {
               }}
             >
               <div style={{ minWidth: 0 }}>
-                <div
-                  style={{ fontWeight: 700, textTransform: 'capitalize', wordBreak: 'break-word' }}
-                >
-                  {r.merchant_key.replace(/_/g, ' ')}
-                </div>
+                <div style={{ fontWeight: 700, wordBreak: 'break-word' }}>{r.display_label}</div>
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>
                   {r.txn_count} debit{r.txn_count === 1 ? '' : 's'}
                 </div>
@@ -179,6 +267,20 @@ export function MerchantRollups({ txnScope }: MerchantRollupsProps) {
                 <span style={{ fontWeight: 800, fontSize: '0.95rem' }}>
                   ₹{formatInr(r.debit_paisa)}
                 </span>
+                <button
+                  type="button"
+                  className="btn-ghost"
+                  style={{ fontSize: '0.78rem', whiteSpace: 'nowrap' }}
+                  onClick={() =>
+                    setRename({
+                      merchantKey: r.merchant_key,
+                      draft: r.display_label,
+                      suggestedLabel: r.suggested_label,
+                    })
+                  }
+                >
+                  Rename
+                </button>
                 <button
                   type="button"
                   className="btn-ghost"

@@ -23,7 +23,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/auth/session';
-import { countUserStatementsSince, ensureProfile } from '@/lib/db';
+import { countUserStatementsSince, ensureProfile, getDb } from '@/lib/db';
+import { normalizeUserPlan } from '@/lib/user-plan';
 import { extractPdfText, PdfExtractionError } from '@/lib/pdf-parser';
 import {
   categorizeCreditCardTransaction,
@@ -231,8 +232,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       summary.total_debits > 0 ? Math.round((summary.investment / summary.total_debits) * 100) : 0,
   }).catch(() => {});
 
+  const sql = getDb();
+  const planRows = (await sql`
+    SELECT plan FROM profiles WHERE id = ${userId} LIMIT 1
+  `) as { plan: string | null }[];
+
   return NextResponse.json({
     statement_id,
+    plan: normalizeUserPlan(planRows[0]?.plan),
     institution_name: parsedStatement.institution_name,
     statement_type: parsedStatement.statement_type,
     period_start: parsedStatement.period_start,

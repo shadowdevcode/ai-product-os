@@ -51,25 +51,28 @@ cp .env.local.example .env.local
 
 Fill in these values:
 
-| Variable                       | Required | Description                                                                                                                     |
-| ------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`                 | Yes      | Neon Postgres connection string                                                                                                 |
-| `NEON_AUTH_BASE_URL`           | Yes      | Base URL for your Neon Auth project                                                                                             |
-| `NEON_AUTH_COOKIE_SECRET`      | No       | Optional only if Neon explicitly gives one for your project/runtime                                                             |
-| `GEMINI_API_KEY`               | Yes      | Google AI Studio API key                                                                                                        |
-| `RESEND_API_KEY`               | Yes      | Resend API key                                                                                                                  |
-| `POSTHOG_KEY`                  | Yes      | Server-side PostHog key                                                                                                         |
-| `POSTHOG_HOST`                 | Yes      | PostHog host URL                                                                                                                |
-| `NEXT_PUBLIC_POSTHOG_KEY`      | No       | Same key as `POSTHOG_KEY` — enables client `web_vital` (CWV) events                                                             |
-| `NEXT_PUBLIC_POSTHOG_HOST`     | No       | Defaults to `https://app.posthog.com` if unset                                                                                  |
-| `NEXT_PUBLIC_APP_URL`          | Yes      | Public app URL used in recap links                                                                                              |
-| `CRON_SECRET`                  | Yes      | Shared secret for cron routes                                                                                                   |
-| `NEXT_PUBLIC_SENTRY_DSN`       | No       | Client Sentry DSN — optional locally if you skip browser reporting                                                              |
-| `SENTRY_AUTH_TOKEN`            | Yes\*    | \*Required for production builds that upload source maps to Sentry                                                              |
-| `SENTRY_ORG`                   | No       | Optional locally — used by Sentry CLI / webpack plugin for releases                                                             |
-| `SENTRY_PROJECT`               | No       | Optional locally — same as above                                                                                                |
-| `CI`                           | No       | Optional CI build flag                                                                                                          |
-| `MONEYMIRROR_SKIP_AUTO_SCHEMA` | No       | Set to `1` to skip automatic idempotent DDL on server boot (`instrumentation.ts`); default is to run when `DATABASE_URL` is set |
+| Variable                             | Required | Description                                                                                                                           |
+| ------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                       | Yes      | Neon Postgres connection string                                                                                                       |
+| `NEON_AUTH_BASE_URL`                 | Yes      | Base URL for your Neon Auth project                                                                                                   |
+| `NEON_AUTH_COOKIE_SECRET`            | No       | Optional only if Neon explicitly gives one for your project/runtime                                                                   |
+| `GEMINI_API_KEY`                     | Yes      | Google AI Studio API key                                                                                                              |
+| `RESEND_API_KEY`                     | Yes      | Resend API key                                                                                                                        |
+| `POSTHOG_KEY`                        | Yes      | Server-side PostHog key                                                                                                               |
+| `POSTHOG_HOST`                       | Yes      | PostHog host URL                                                                                                                      |
+| `NEXT_PUBLIC_POSTHOG_KEY`            | No       | Same key as `POSTHOG_KEY` — enables client `web_vital` (CWV) events                                                                   |
+| `NEXT_PUBLIC_POSTHOG_HOST`           | No       | Defaults to `https://app.posthog.com` if unset                                                                                        |
+| `NEXT_PUBLIC_PAYWALL_PROMPT_ENABLED` | No       | `.env.local.example` sets `1` so local QA sees the Phase 4 soft paywall on Overview; unset or `0` in production if you do not want it |
+| `NEXT_PUBLIC_APP_URL`                | Yes      | Public app URL used in recap links                                                                                                    |
+| `CRON_SECRET`                        | Yes      | Shared secret for cron routes                                                                                                         |
+| `WHATSAPP_API_URL`                   | No       | Optional webhook endpoint for WhatsApp opt-in relay (P4-D spike); when unset, endpoint runs in telemetry-only stub mode               |
+| `WHATSAPP_API_TOKEN`                 | No       | Optional bearer token for WhatsApp relay endpoint                                                                                     |
+| `NEXT_PUBLIC_SENTRY_DSN`             | No       | Client Sentry DSN — optional locally if you skip browser reporting                                                                    |
+| `SENTRY_AUTH_TOKEN`                  | Yes\*    | \*Required for production builds that upload source maps to Sentry                                                                    |
+| `SENTRY_ORG`                         | No       | Optional locally — used by Sentry CLI / webpack plugin for releases                                                                   |
+| `SENTRY_PROJECT`                     | No       | Optional locally — same as above                                                                                                      |
+| `CI`                                 | No       | Optional CI build flag                                                                                                                |
+| `MONEYMIRROR_SKIP_AUTO_SCHEMA`       | No       | Set to `1` to skip automatic idempotent DDL on server boot (`instrumentation.ts`); default is to run when `DATABASE_URL` is set       |
 
 ### 3. Create Neon project and enable Neon Auth
 
@@ -102,6 +105,8 @@ Tables created:
 - `statements`
 - `transactions`
 - `advisory_feed`
+- `user_merchant_aliases` — user-defined display label per `merchant_key` (Phase 4 P4-A)
+- `merchant_label_suggestions` — optional async Gemini label suggestions (Phase 4 P4-A; cron-filled)
 
 Indexes created:
 
@@ -109,9 +114,10 @@ Indexes created:
 - `idx_transactions_user_statement`
 - `idx_transactions_user_date` (user_id, date DESC)
 - `idx_transactions_user_merchant` (partial) where `merchant_key` is not null
+- `idx_transactions_user_upi` (partial) where `upi_handle` is not null
 - `idx_advisory_feed_user_created_at`
 
-Transaction rows include optional `merchant_key` (heuristic normalization for rollups; see `src/lib/merchant-normalize.ts`). New parses persist `merchant_key` on insert; existing rows can be backfilled via `POST /api/transactions/backfill-merchant-keys` (authenticated).
+Transaction rows include optional `merchant_key` (heuristic normalization for rollups; see `src/lib/merchant-normalize.ts`) and optional **`upi_handle`** (extracted VPA when the description matches UPI patterns). New parses persist both on insert; existing rows can be backfilled for `merchant_key` via `POST /api/transactions/backfill-merchant-keys` (authenticated). Re-upload or a future backfill can populate `upi_handle` for older rows.
 
 ### 5. Run locally
 
@@ -137,14 +143,17 @@ First-run failure looks like:
 
 ## Testing
 
-| Command            | What it runs                                                               |
-| ------------------ | -------------------------------------------------------------------------- |
-| `npm run test`     | Vitest — API routes, libs, parsers                                         |
-| `npm run test:e2e` | Playwright — builds, serves on port **3333**, smoke-tests `/` and `/login` |
+| Command                  | What it runs                                                                                                     |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `npm run test`           | Vitest — API routes, libs, parsers                                                                               |
+| `npm run test:issue-011` | Vitest — P4 regression (bad-pattern advisories, MoM compare, rate limits, paywall helpers, chat, proactive APIs) |
+| `npm run test:e2e`       | Playwright — builds, serves on port **3333**, smoke-tests `/` and `/login`                                       |
+
+**Manual QA (issue-011 / P4-E):** Bad-pattern cards (`MICRO_UPI_DRAIN`, `REPEAT_MERCHANT_NOISE`, `CC_MIN_DUE_INCOME_STRESS`) only appear when aggregates in [`src/lib/bad-pattern-signals.ts`](./src/lib/bad-pattern-signals.ts) are met (e.g. micro-UPI debit total ≥ ₹1,500, or ≥15 micro-UPI debits, or repeat-merchant noise thresholds). Upload statements with enough small UPI debits / repeat merchants / CC min-due vs income, or run `npm run test:issue-011` to assert engine logic.
 
 First-time E2E setup: `npx playwright install chromium`. See [`docs/PERFORMANCE-REVIEW.md`](./docs/PERFORMANCE-REVIEW.md) for Lighthouse and performance notes.
 
-Optional: set `NEXT_PUBLIC_POSTHOG_KEY` (same project as `POSTHOG_KEY`) to send **Core Web Vitals** (`web_vital` events) from the browser.
+Optional: set `NEXT_PUBLIC_POSTHOG_KEY` (same project as `POSTHOG_KEY`) to send **Core Web Vitals** (`web_vital` events) and **bad-pattern advisory** engagement (`bad_pattern_advisory_shown` / `bad_pattern_advisory_clicked`) from the browser.
 
 ## API
 
@@ -222,6 +231,43 @@ Same query parameters as `GET /api/dashboard`. Returns `{ advisories, coaching_f
 
 **Auth**: Neon Auth session cookie required.
 
+### `GET /api/dashboard/compare-months`
+
+Returns scope-aligned **current vs previous-period** totals for debits and credits. The previous window is automatically computed to match the current window length.
+
+**Auth**: Neon Auth session cookie required.
+
+**Query (same scope model as dashboard):**
+
+- **Legacy (single statement):** `?statement_id=<uuid>` optional — if omitted, uses the latest processed statement and its `period_start`/`period_end`.
+- **Unified scope:** `?date_from=YYYY-MM-DD&date_to=YYYY-MM-DD` plus optional `statement_ids=<uuid1,uuid2,...>`.
+
+**Returns**: `{ scope, current, previous, delta }` where `delta` includes absolute paisa change and percentage change (`null` when previous is 0).
+
+### `POST /api/chat`
+
+Facts-only chat over the active dashboard scope. The backend composes Layer A facts plus a bounded recent-transaction context window, then returns a concise answer with cited fact IDs.
+
+**Auth**: Neon Auth session cookie required.
+
+**Query**: same scope model as `GET /api/dashboard` (`statement_id` legacy or `date_from` + `date_to` + optional `statement_ids`).
+
+**Body**:
+
+```json
+{ "message": "Where am I overspending this month?" }
+```
+
+**Returns**:
+
+```json
+{
+  "answer": "Your wants share is elevated versus needs in this scope. Focus on recurring low-value debits first.",
+  "cited_fact_ids": ["wants_paisa", "discretionary_paisa"],
+  "facts": { "version": 1, "generated_at": "..." }
+}
+```
+
 ### `POST /api/dashboard/coaching-facts-expanded`
 
 Fires PostHog `coaching_facts_expanded` when the user opens **Sources** on an advisory card (server-side, fire-and-forget).
@@ -246,19 +292,20 @@ Paginated transactions for the authenticated user. Joins `statements` for nickna
 
 **Query params** (all optional except pagination defaults):
 
-| Param                  | Description                                                                                           |
-| ---------------------- | ----------------------------------------------------------------------------------------------------- |
-| `limit`                | Max 100, default 50                                                                                   |
-| `offset`               | Default 0                                                                                             |
-| `date_from`, `date_to` | `YYYY-MM-DD` (inclusive range)                                                                        |
-| `statement_id`         | Single UUID; must belong to the user or **404**                                                       |
-| `statement_ids`        | Comma-separated UUIDs; each must belong to the user or **404** (takes precedence over `statement_id`) |
-| `category`             | `needs` \| `wants` \| `investment` \| `debt` \| `other`                                               |
-| `type`                 | `debit` \| `credit`                                                                                   |
-| `search`               | Substring match on description (max 200 chars)                                                        |
-| `merchant_key`         | Exact match on normalized merchant key                                                                |
+| Param                  | Description                                                                                                                                         |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `limit`                | Max 100, default 50                                                                                                                                 |
+| `offset`               | Default 0                                                                                                                                           |
+| `date_from`, `date_to` | `YYYY-MM-DD` (inclusive range)                                                                                                                      |
+| `statement_id`         | Single UUID; must belong to the user or **404**                                                                                                     |
+| `statement_ids`        | Comma-separated UUIDs; each must belong to the user or **404** (takes precedence over `statement_id`)                                               |
+| `category`             | `needs` \| `wants` \| `investment` \| `debt` \| `other`                                                                                             |
+| `type`                 | `debit` \| `credit`                                                                                                                                 |
+| `search`               | Substring match on description (max 200 chars)                                                                                                      |
+| `merchant_key`         | Exact match on normalized merchant key                                                                                                              |
+| `upi_micro`            | `1` = only **debit** rows with a non-empty `upi_handle` and amount ≤ ₹500 (same cap as dashboard micro-UPI signal); omit or invalid value → **400** |
 
-**Returns**: `{ transactions, total, limit, offset }`.
+**Returns**: `{ transactions, total, limit, offset }`. Each transaction includes `upi_handle` (nullable) and `merchant_alias_label` (nullable; from `user_merchant_aliases` when set).
 
 ### `POST /api/transactions/view-opened`
 
@@ -292,7 +339,51 @@ Top merchants by **debit** spend for the current user, scoped like `GET /api/tra
 | `statement_id`         | Single UUID; **404** if not owned                                                    |
 | `statement_ids`        | Comma-separated UUIDs; **404** if any missing (takes precedence over `statement_id`) |
 
-**Returns**: `{ merchants: [{ merchant_key, debit_paisa, txn_count }], scope_total_debit_paisa, keyed_debit_paisa }` — `keyed_debit_paisa` is the sum of debits that have a `merchant_key` (used for reconciliation; the listed rows may be a top-N subset).
+**Returns**: `{ merchants: [{ merchant_key, display_label, debit_paisa, txn_count, suggested_label, suggestion_confidence }], scope_total_debit_paisa, keyed_debit_paisa }` — `display_label` prefers the user alias, else a formatted `merchant_key`. `suggested_label` / `suggestion_confidence` are set when the async merchant-enrich cron has stored a Gemini suggestion (see `GET /api/cron/merchant-enrich`). `keyed_debit_paisa` is the sum of debits that have a `merchant_key` (used for reconciliation; the listed rows may be a top-N subset).
+
+### `GET /api/merchants/alias`
+
+Lists all saved merchant display labels for the current user.
+
+**Auth**: Neon Auth session cookie required.
+
+**Returns**: `{ aliases: [{ merchant_key, display_label, updated_at }] }`.
+
+### `POST /api/merchants/alias`
+
+Upserts a display label for a normalized `merchant_key`.
+
+**Auth**: Neon Auth session cookie required.
+
+**Body**: `{ "merchant_key": string, "display_label": string }` (1–128 / 1–120 chars after trim).
+
+**Returns**: `{ ok: true, merchant_key, display_label }`. Fires PostHog `merchant_alias_saved` (server-side, fire-and-forget).
+
+### `DELETE /api/merchants/alias?merchant_key=<key>`
+
+Removes a user-defined label for that key (UI falls back to formatted `merchant_key`).
+
+**Auth**: Neon Auth session cookie required.
+
+**Returns**: `{ ok: true }`.
+
+### `POST /api/merchants/suggest-accept`
+
+Copies a stored Gemini suggestion into `user_merchant_aliases` for the given key.
+
+**Auth**: Neon Auth session cookie required.
+
+**Body**: `{ "merchant_key": string }`.
+
+**Returns**: `{ ok: true, merchant_key, display_label }`. Fires PostHog `merchant_suggestion_accepted` (server-side, fire-and-forget).
+
+### `GET /api/cron/merchant-enrich`
+
+Batch job (scheduled weekly in [`vercel.json`](./vercel.json)) that creates `merchant_label_suggestions` rows for `merchant_key` values missing suggestions. Requires `GEMINI_API_KEY`; otherwise returns `{ skipped: true }`. **Not on the statement upload path.**
+
+**Auth**: `authorization: Bearer <CRON_SECRET>` or `x-cron-secret: <CRON_SECRET>`.
+
+**Returns**: `{ ok: true, processed: [{ user_id, merchant_key, status }] }`.
 
 ### `POST /api/insights/merchant-click`
 
@@ -329,6 +420,72 @@ Sends one recap email for one user.
 { "userId": "user-id" }
 ```
 
+### `POST /api/proactive/whatsapp-opt-in`
+
+Captures explicit WhatsApp opt-in for the authenticated user.
+
+**Auth**: Neon Auth session cookie required.
+
+**Body**:
+
+```json
+{ "phone_e164": "+919876543210" }
+```
+
+If `WHATSAPP_API_URL` and `WHATSAPP_API_TOKEN` are configured, the route forwards an opt-in payload to that provider endpoint. Otherwise it returns `mode: "stub"` and records telemetry only.
+
+### `POST /api/proactive/push-subscription`
+
+Captures successful web-push subscription grants from the client.
+
+**Auth**: Neon Auth session cookie required.
+
+**Body**:
+
+```json
+{ "endpoint": "https://push.example/...", "user_agent": "Mozilla/5.0 ..." }
+```
+
+### `GET /api/insights/frequency-clusters`
+
+Returns top merchants by debit frequency and deterministic cluster rollups (quick commerce, food delivery, etc.) for the given scope.
+
+**Auth**: Neon Auth session cookie required.
+
+**Query params**: `date_from`, `date_to` (required; unified scope only), `statement_ids` (optional comma-separated UUIDs).
+
+**Response**:
+
+```json
+{
+  "top_merchants": [{ "merchant_key": "zomato", "debit_count": 15, "debit_paisa": 120000 }],
+  "clusters": [
+    {
+      "cluster": { "id": "food_delivery", "label": "Food delivery" },
+      "totalDebitPaisa": 120000,
+      "debitCount": 15,
+      "merchantKeys": ["zomato"]
+    }
+  ]
+}
+```
+
+### `POST /api/guided-review/outcome`
+
+Saves a guided review outcome (dismissed or optional saved commitment). Commitment text is opt-in only.
+
+**Auth**: Neon Auth session cookie required.
+
+**Body**:
+
+```json
+{
+  "dismissed": true,
+  "statement_id": "uuid-or-null",
+  "commitment_text": "optional string (max 500)"
+}
+```
+
 ### `GET|POST|PUT|PATCH|DELETE /api/auth/[...path]`
 
 Neon Auth API catch-all (email OTP, session, callbacks). Implemented via `authApiHandler()` from `@neondatabase/auth/next/server`.
@@ -341,26 +498,58 @@ Intentional error route to verify Sentry server-side capture (`SentryExampleAPIE
 
 ## Analytics
 
-| Event                          | Where                                          | Properties                                                                            |
-| ------------------------------ | ---------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `onboarding_completed`         | `/api/onboarding/complete`                     | `money_health_score`, `perceived_spend_paisa`                                         |
-| `statement_parse_started`      | `/api/statement/parse`                         | `pdf_text_length`                                                                     |
-| `statement_parse_rate_limited` | `/api/statement/parse`                         | `uploads_today`, `limit`                                                              |
-| `statement_parse_success`      | `/api/statement/parse`                         | `latency_ms`, `transaction_count`, `period_start`, `period_end`, `total_debits_paisa` |
-| `statement_parse_timeout`      | `/api/statement/parse`                         | `timeout_ms`                                                                          |
-| `statement_parse_failed`       | `/api/statement/parse` and persistence helpers | `error_type`, optional context                                                        |
-| `weekly_recap_triggered`       | `/api/cron/weekly-recap`                       | `user_count`                                                                          |
-| `weekly_recap_completed`       | `/api/cron/weekly-recap`                       | `total`, `succeeded`, `failed`                                                        |
-| `weekly_recap_email_sent`      | `/api/cron/weekly-recap/worker`                | `period_start`, `period_end`, `total_debits_paisa`                                    |
-| `weekly_recap_email_failed`    | `/api/cron/weekly-recap/worker`                | `error`                                                                               |
-| `transactions_view_opened`     | `/api/transactions/view-opened`                | `surface`                                                                             |
-| `transactions_filter_applied`  | `/api/transactions` (GET with any filter set)  | `filter_types`, `scope`                                                               |
-| `merchant_rollup_clicked`      | `/api/insights/merchant-click`                 | `merchant_key_bucket`, `key_length`                                                   |
-| `scope_changed`                | `POST /api/dashboard/scope-changed`            | `date_preset`, `source_count`                                                         |
-| `coaching_narrative_completed` | `/api/dashboard` (after Gemini)                | `latency_ms`, `advisory_count` (only when Gemini ran)                                 |
-| `coaching_narrative_timeout`   | `/api/dashboard`                               | `timeout_ms`                                                                          |
-| `coaching_narrative_failed`    | `/api/dashboard`                               | `error_type`, optional `detail`                                                       |
-| `coaching_facts_expanded`      | `POST /api/dashboard/coaching-facts-expanded`  | `advisory_id`                                                                         |
+| Event                          | Where                                                                                                     | Properties                                                                            |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `onboarding_completed`         | `/api/onboarding/complete`                                                                                | `money_health_score`, `perceived_spend_paisa`                                         |
+| `statement_parse_started`      | `/api/statement/parse`                                                                                    | `pdf_text_length`                                                                     |
+| `statement_parse_rate_limited` | `/api/statement/parse`                                                                                    | `uploads_today`, `limit`                                                              |
+| `statement_parse_success`      | `/api/statement/parse`                                                                                    | `latency_ms`, `transaction_count`, `period_start`, `period_end`, `total_debits_paisa` |
+| `statement_parse_timeout`      | `/api/statement/parse`                                                                                    | `timeout_ms`                                                                          |
+| `statement_parse_failed`       | `/api/statement/parse` and persistence helpers                                                            | `error_type`, optional context                                                        |
+| `weekly_recap_triggered`       | `/api/cron/weekly-recap`                                                                                  | `user_count`                                                                          |
+| `weekly_recap_completed`       | `/api/cron/weekly-recap`                                                                                  | `total`, `succeeded`, `failed`                                                        |
+| `weekly_recap_email_sent`      | `/api/cron/weekly-recap/worker`                                                                           | `period_start`, `period_end`, `total_debits_paisa`                                    |
+| `weekly_recap_email_failed`    | `/api/cron/weekly-recap/worker`                                                                           | `error`                                                                               |
+| `transactions_view_opened`     | `/api/transactions/view-opened`                                                                           | `surface`                                                                             |
+| `transactions_filter_applied`  | `/api/transactions` (GET with any filter set)                                                             | `filter_types`, `scope`                                                               |
+| `merchant_rollup_clicked`      | `/api/insights/merchant-click`                                                                            | `merchant_key_bucket`, `key_length`                                                   |
+| `merchant_alias_saved`         | `POST /api/merchants/alias`                                                                               | `merchant_key_bucket`                                                                 |
+| `merchant_suggestion_accepted` | `POST /api/merchants/suggest-accept`                                                                      | `merchant_key_bucket`, optional `confidence`                                          |
+| `scope_changed`                | `POST /api/dashboard/scope-changed`                                                                       | `date_preset`, `source_count`                                                         |
+| `coaching_narrative_completed` | `/api/dashboard` (after Gemini)                                                                           | `latency_ms`, `advisory_count` (only when Gemini ran)                                 |
+| `coaching_narrative_timeout`   | `/api/dashboard`                                                                                          | `timeout_ms`                                                                          |
+| `coaching_narrative_failed`    | `/api/dashboard`                                                                                          | `error_type`, optional `detail`                                                       |
+| `coaching_facts_expanded`      | `POST /api/dashboard/coaching-facts-expanded`                                                             | `advisory_id`                                                                         |
+| `bad_pattern_advisory_shown`   | Insights `AdvisoryFeed` (client, `posthog-js` when `NEXT_PUBLIC_POSTHOG_KEY` set)                         | `trigger`, `advisory_id` — once per trigger per mount                                 |
+| `bad_pattern_advisory_clicked` | Insights `AdvisoryFeed` CTA → Transactions (client)                                                       | `trigger`, `advisory_id`, `preset` (`micro_upi` \| `merchant_key` \| `scope_only`)    |
+| `paywall_prompt_seen`          | Overview `PaywallPrompt` (client, when `NEXT_PUBLIC_PAYWALL_PROMPT_ENABLED=1` and mirror section visible) | `surface` (`overview_mirror`) — once per browser session                              |
+| `upgrade_intent_tapped`        | Overview `PaywallPrompt` primary CTA (client)                                                             | `surface` (`overview_mirror`)                                                         |
+| `whatsapp_opt_in_completed`    | `POST /api/proactive/whatsapp-opt-in`                                                                     | `provider_configured`, `country_code`                                                 |
+| `chat_query_submitted`         | `POST /api/chat`                                                                                          | `message_length`, `txn_context_count`, `scope_kind`                                   |
+| `chat_response_rendered`       | `POST /api/chat`                                                                                          | `latency_ms`, `cited_fact_count`                                                      |
+| `chat_rate_limited`            | `POST /api/chat`                                                                                          | `retry_after_sec`                                                                     |
+| `rate_limit_hit`               | Heavy read endpoints (`/api/dashboard`, `/api/transactions`, `/api/insights/merchants`)                   | `route`, `retry_after_sec`                                                            |
+| `push_subscription_granted`    | `POST /api/proactive/push-subscription`                                                                   | `endpoint_hash`, `user_agent`                                                         |
+
+## Golden PDF regression
+
+Keep known-good statement fixtures in `apps/money-mirror/__tests__/fixtures/` and run targeted parse regressions before parser changes:
+
+```bash
+npm --prefix apps/money-mirror test -- __tests__/api/parse.test.ts
+```
+
+## Product Hunt launch hooks
+
+Use this checklist when preparing a Product Hunt submission (complements [`experiments/results/production-launch-checklist-010.md`](../../experiments/results/production-launch-checklist-010.md)):
+
+| Asset / field     | Suggested source                                                                                                                         |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **Tagline**       | “Statement-native Money Mirror for India — see where your salary actually goes.”                                                         |
+| **Link**          | Production URL: `https://money-mirror-rho.vercel.app` (update if custom domain).                                                         |
+| **Gallery**       | 3–5 screenshots: login → upload PDF → Overview (Money Mirror + category breakdown) → Insights advisory → Transactions with merchant/UPI. |
+| **First comment** | Short founder story: Gen Z India, PDF-only privacy, merchant + UPI legibility, no investment advice; invite feedback on bank coverage.   |
+| **Demo video**    | 30–60s screen recording: OTP → one bank PDF → Overview mirror + one tap to Transactions filtered by advisory.                            |
 
 ## Key design decisions
 
@@ -392,11 +581,18 @@ Intentional error route to verify Sentry server-side capture (`SentryExampleAPIE
 - 5 advisory triggers + expanded categorizer
 - Weekly recap email via Resend (Monday 8:00 AM IST Vercel cron)
 - Phase 3 T4: Zod-validated **Layer A** facts (`src/lib/coaching-facts.ts`), Gemini structured narratives with `cited_fact_ids` validation, **Sources** drawer (`FactsDrawer`)
-- 15+ PostHog analytics events (server-side; includes coaching narrative + sources expansion)
+- Phase 4 P4-A: `transactions.upi_handle`, `user_merchant_aliases`, `merchant_label_suggestions`; merchant rename + UPI chips in UI; async `GET /api/cron/merchant-enrich` for Gemini label suggestions (non-blocking vs uploads)
+- Phase 4 P4-E: deterministic bad-pattern advisories (`MICRO_UPI_DRAIN`, `REPEAT_MERCHANT_NOISE`, `CC_MIN_DUE_INCOME_STRESS`) in `advisory-engine.ts`; Transactions deep link via `upi_micro=1` or `merchant_key`; client PostHog for bad-pattern CTA
+- Phase 4 P4-G: `profiles.plan` (`free` \| `pro`, default `free`); soft paywall prompt on Overview when `NEXT_PUBLIC_PAYWALL_PROMPT_ENABLED=1`; client PostHog `paywall_prompt_seen` / `upgrade_intent_tapped`
+- 15+ PostHog analytics events (server + optional client for CWV, bad-pattern engagement, and optional paywall intent)
+- Issue-012 T0: Skeleton-first dashboard loading; performance marks (`dashboard_ready_ms`, `time_to_first_advisory_ms`); progressive disclosure for month-compare; shame-safe empty/loading copy; `COACHING-TONE.md` Gen Z / income-transition subsection
+- Issue-012 T1: Deterministic merchant cluster mapping (`src/lib/merchant-clusters.ts`: quick_commerce, food_delivery, entertainment, transport, shopping); `GET /api/insights/frequency-clusters`; frequency + cluster UI on Insights tab; `frequency_insight_opened` / `merchant_cluster_clicked` events
+- Issue-012 T2: `guided_review_outcomes` table; `POST /api/guided-review/outcome`; 3-step `GuidedReviewSheet` (acknowledge → optional commitment → finish); `guided_review_started` / `guided_review_completed` / `commitment_saved` events; fact-specific weekly recap email copy
 
-**Not shipped (Sprint 4 backlog):**
+**Schema migration (issue-012):** Run `npm run db:upgrade` or restart dev server to create the `guided_review_outcomes` table on existing Neon DBs.
 
-- Spend-trend comparison across months (F3)
+**Not shipped (backlog):**
+
 - Multi-account aggregated spend view (G2–G3)
 - In-app coaching tone personalization (H3)
 - Inbox ingestion from email, WhatsApp/WATI delivery, gamification, Warikoo Priority Ladder goal gating

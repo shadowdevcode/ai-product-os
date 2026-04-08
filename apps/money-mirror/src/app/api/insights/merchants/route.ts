@@ -17,6 +17,8 @@ import {
   type MerchantRollupParams,
 } from '@/lib/merchant-rollups';
 import { parseStatementIdsParam } from '@/lib/scope';
+import { checkRateLimit } from '@/lib/rate-limit';
+import { captureServerEvent } from '@/lib/posthog';
 
 function parseDateOnly(raw: string | null): string | null {
   if (!raw) {
@@ -42,10 +44,24 @@ function parseUuid(raw: string | null): string | null {
   return raw;
 }
 
+const HEAVY_READ_LIMIT = { limit: 40, windowMs: 60_000 };
+
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const user = await getSessionUser();
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const rate = checkRateLimit(`insights:merchants:get:${user.id}`, HEAVY_READ_LIMIT);
+  if (!rate.ok) {
+    void captureServerEvent(user.id, 'rate_limit_hit', {
+      route: '/api/insights/merchants',
+      retry_after_sec: rate.retryAfterSec,
+    }).catch(() => {});
+    return NextResponse.json(
+      { error: 'Too many requests. Please wait before retrying.' },
+      { status: 429, headers: { 'Retry-After': String(rate.retryAfterSec) } }
+    );
   }
 
   const sp = req.nextUrl.searchParams;

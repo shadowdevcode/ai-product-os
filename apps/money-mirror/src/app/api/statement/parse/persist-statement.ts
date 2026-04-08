@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
+import * as Sentry from '@sentry/nextjs';
 import { getDb, getProfileFinancialSnapshot } from '@/lib/db';
-import { normalizeMerchantKey } from '@/lib/merchant-normalize';
+import { extractUpiHandle, normalizeMerchantKey } from '@/lib/merchant-normalize';
 import { captureServerEvent } from '@/lib/posthog';
 import type { StatementType } from '@/lib/statements';
 
@@ -60,6 +61,7 @@ export async function persistStatement(
     const profile = await getProfileFinancialSnapshot(userId);
     const transactionQueries = categorized.map((tx) => {
       const merchantKey = normalizeMerchantKey(tx.description);
+      const upiHandle = extractUpiHandle(tx.description);
       return sql`
         INSERT INTO transactions (
           id,
@@ -71,7 +73,8 @@ export async function persistStatement(
           type,
           category,
           is_recurring,
-          merchant_key
+          merchant_key,
+          upi_handle
         )
         VALUES (
           ${randomUUID()},
@@ -83,7 +86,8 @@ export async function persistStatement(
           ${tx.type},
           ${tx.category},
           ${tx.is_recurring},
-          ${merchantKey}
+          ${merchantKey},
+          ${upiHandle}
         )
       `;
     });
@@ -140,10 +144,10 @@ export async function persistStatement(
       `,
     ]);
   } catch (error) {
-    await captureServerEvent(userId, 'statement_parse_failed', {
+    Sentry.captureException(error);
+    captureServerEvent(userId, 'statement_parse_failed', {
       error_type: 'DB_TRANSACTION_FAILED',
-    });
-    console.error('[persist-statement] transaction failed:', error);
+    }).catch(() => {});
     return { statement_id: '', error: 'Failed to save statement data.' };
   }
 

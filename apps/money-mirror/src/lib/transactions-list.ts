@@ -1,3 +1,5 @@
+import { MICRO_UPI_MAX_AMOUNT_PAISA } from '@/lib/bad-pattern-signals';
+
 type SqlClient = ReturnType<typeof import('@/lib/db').getDb>;
 
 export const TRANSACTIONS_MAX_LIMIT = 100;
@@ -12,6 +14,10 @@ export type TransactionRow = {
   category: string;
   is_recurring: boolean;
   merchant_key: string | null;
+  /** Extracted UPI VPA when parse matched (e.g. name@oksbi). */
+  upi_handle: string | null;
+  /** User-defined display name for merchant_key, if any. */
+  merchant_alias_label: string | null;
   statement_nickname: string | null;
   statement_institution_name: string;
 };
@@ -27,6 +33,10 @@ export interface ListTransactionsParams {
   type: 'debit' | 'credit' | null;
   search: string | null;
   merchantKey: string | null;
+  /** When set and non-empty, restricts to these normalized merchant keys. */
+  merchantKeys: string[] | null;
+  /** When true, only debits with VPA and amount ≤ micro-UPI threshold (P4-E). */
+  upiMicro: boolean;
   limit: number;
   offset: number;
 }
@@ -49,6 +59,13 @@ export async function countTransactions(
           AND (${p.type}::text IS NULL OR t.type = ${p.type})
           AND (${p.search}::text IS NULL OR POSITION(LOWER(${p.search}) IN LOWER(t.description)) > 0)
           AND (${p.merchantKey}::text IS NULL OR t.merchant_key = ${p.merchantKey})
+          AND (${p.merchantKeys}::text[] IS NULL OR t.merchant_key = ANY(${p.merchantKeys}::text[]))
+          AND (NOT ${p.upiMicro} OR (
+            t.type = 'debit'
+            AND t.upi_handle IS NOT NULL
+            AND TRIM(t.upi_handle) <> ''
+            AND t.amount_paisa <= ${MICRO_UPI_MAX_AMOUNT_PAISA}
+          ))
       `
     : p.statementId
       ? await sql`
@@ -63,6 +80,13 @@ export async function countTransactions(
             AND (${p.type}::text IS NULL OR t.type = ${p.type})
             AND (${p.search}::text IS NULL OR POSITION(LOWER(${p.search}) IN LOWER(t.description)) > 0)
             AND (${p.merchantKey}::text IS NULL OR t.merchant_key = ${p.merchantKey})
+            AND (${p.merchantKeys}::text[] IS NULL OR t.merchant_key = ANY(${p.merchantKeys}::text[]))
+            AND (NOT ${p.upiMicro} OR (
+              t.type = 'debit'
+              AND t.upi_handle IS NOT NULL
+              AND TRIM(t.upi_handle) <> ''
+              AND t.amount_paisa <= ${MICRO_UPI_MAX_AMOUNT_PAISA}
+            ))
         `
       : await sql`
           SELECT COUNT(*)::bigint AS c
@@ -75,6 +99,13 @@ export async function countTransactions(
             AND (${p.type}::text IS NULL OR t.type = ${p.type})
             AND (${p.search}::text IS NULL OR POSITION(LOWER(${p.search}) IN LOWER(t.description)) > 0)
             AND (${p.merchantKey}::text IS NULL OR t.merchant_key = ${p.merchantKey})
+            AND (${p.merchantKeys}::text[] IS NULL OR t.merchant_key = ANY(${p.merchantKeys}::text[]))
+            AND (NOT ${p.upiMicro} OR (
+              t.type = 'debit'
+              AND t.upi_handle IS NOT NULL
+              AND TRIM(t.upi_handle) <> ''
+              AND t.amount_paisa <= ${MICRO_UPI_MAX_AMOUNT_PAISA}
+            ))
         `;
   const row = (rows as { c: bigint | string }[])[0];
   return Number(row.c);
@@ -97,10 +128,13 @@ export async function listTransactions(
           t.category,
           t.is_recurring,
           t.merchant_key,
+          t.upi_handle,
+          a.display_label AS merchant_alias_label,
           s.nickname AS statement_nickname,
           s.institution_name AS statement_institution_name
         FROM transactions t
         INNER JOIN statements s ON s.id = t.statement_id AND s.user_id = t.user_id
+        LEFT JOIN user_merchant_aliases a ON a.user_id = t.user_id AND a.merchant_key = t.merchant_key
         WHERE t.user_id = ${p.userId}
           AND (${p.dateFrom}::text IS NULL OR t.date >= ${p.dateFrom}::date)
           AND (${p.dateTo}::text IS NULL OR t.date <= ${p.dateTo}::date)
@@ -109,6 +143,13 @@ export async function listTransactions(
           AND (${p.type}::text IS NULL OR t.type = ${p.type})
           AND (${p.search}::text IS NULL OR POSITION(LOWER(${p.search}) IN LOWER(t.description)) > 0)
           AND (${p.merchantKey}::text IS NULL OR t.merchant_key = ${p.merchantKey})
+          AND (${p.merchantKeys}::text[] IS NULL OR t.merchant_key = ANY(${p.merchantKeys}::text[]))
+          AND (NOT ${p.upiMicro} OR (
+            t.type = 'debit'
+            AND t.upi_handle IS NOT NULL
+            AND TRIM(t.upi_handle) <> ''
+            AND t.amount_paisa <= ${MICRO_UPI_MAX_AMOUNT_PAISA}
+          ))
         ORDER BY t.date DESC, t.id DESC
         LIMIT ${p.limit}
         OFFSET ${p.offset}
@@ -125,10 +166,13 @@ export async function listTransactions(
             t.category,
             t.is_recurring,
             t.merchant_key,
+            t.upi_handle,
+            a.display_label AS merchant_alias_label,
             s.nickname AS statement_nickname,
             s.institution_name AS statement_institution_name
           FROM transactions t
           INNER JOIN statements s ON s.id = t.statement_id AND s.user_id = t.user_id
+          LEFT JOIN user_merchant_aliases a ON a.user_id = t.user_id AND a.merchant_key = t.merchant_key
           WHERE t.user_id = ${p.userId}
             AND (${p.dateFrom}::text IS NULL OR t.date >= ${p.dateFrom}::date)
             AND (${p.dateTo}::text IS NULL OR t.date <= ${p.dateTo}::date)
@@ -137,6 +181,13 @@ export async function listTransactions(
             AND (${p.type}::text IS NULL OR t.type = ${p.type})
             AND (${p.search}::text IS NULL OR POSITION(LOWER(${p.search}) IN LOWER(t.description)) > 0)
             AND (${p.merchantKey}::text IS NULL OR t.merchant_key = ${p.merchantKey})
+            AND (${p.merchantKeys}::text[] IS NULL OR t.merchant_key = ANY(${p.merchantKeys}::text[]))
+            AND (NOT ${p.upiMicro} OR (
+              t.type = 'debit'
+              AND t.upi_handle IS NOT NULL
+              AND TRIM(t.upi_handle) <> ''
+              AND t.amount_paisa <= ${MICRO_UPI_MAX_AMOUNT_PAISA}
+            ))
           ORDER BY t.date DESC, t.id DESC
           LIMIT ${p.limit}
           OFFSET ${p.offset}
@@ -152,10 +203,13 @@ export async function listTransactions(
             t.category,
             t.is_recurring,
             t.merchant_key,
+            t.upi_handle,
+            a.display_label AS merchant_alias_label,
             s.nickname AS statement_nickname,
             s.institution_name AS statement_institution_name
           FROM transactions t
           INNER JOIN statements s ON s.id = t.statement_id AND s.user_id = t.user_id
+          LEFT JOIN user_merchant_aliases a ON a.user_id = t.user_id AND a.merchant_key = t.merchant_key
           WHERE t.user_id = ${p.userId}
             AND (${p.dateFrom}::text IS NULL OR t.date >= ${p.dateFrom}::date)
             AND (${p.dateTo}::text IS NULL OR t.date <= ${p.dateTo}::date)
@@ -163,6 +217,13 @@ export async function listTransactions(
             AND (${p.type}::text IS NULL OR t.type = ${p.type})
             AND (${p.search}::text IS NULL OR POSITION(LOWER(${p.search}) IN LOWER(t.description)) > 0)
             AND (${p.merchantKey}::text IS NULL OR t.merchant_key = ${p.merchantKey})
+            AND (${p.merchantKeys}::text[] IS NULL OR t.merchant_key = ANY(${p.merchantKeys}::text[]))
+            AND (NOT ${p.upiMicro} OR (
+              t.type = 'debit'
+              AND t.upi_handle IS NOT NULL
+              AND TRIM(t.upi_handle) <> ''
+              AND t.amount_paisa <= ${MICRO_UPI_MAX_AMOUNT_PAISA}
+            ))
           ORDER BY t.date DESC, t.id DESC
           LIMIT ${p.limit}
           OFFSET ${p.offset}

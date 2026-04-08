@@ -1,11 +1,14 @@
+import { MICRO_UPI_MAX_AMOUNT_PAISA } from '@/lib/bad-pattern-signals';
 import { getDb, toNumber } from '@/lib/db';
 import type { StatementType } from '@/lib/statements';
 import {
   buildAdvisories,
   buildDashboardSummary,
   computeDebitSignals,
+  type RepeatMerchantScopeRow,
 } from '@/lib/dashboard-helpers';
 import type { DashboardAggregateRow, DashboardData, StatementRow } from '@/lib/dashboard-types';
+import { normalizeUserPlan } from '@/lib/user-plan';
 
 export async function fetchDashboardUnified(
   userId: string,
@@ -43,15 +46,17 @@ export async function fetchDashboardUnified(
   }
 
   const profileRows = (await sql`
-    SELECT perceived_spend_paisa, monthly_income_paisa
+    SELECT perceived_spend_paisa, monthly_income_paisa, plan
     FROM profiles
     WHERE id = ${userId}
     LIMIT 1
   `) as {
     perceived_spend_paisa: number | string | bigint | null;
     monthly_income_paisa: number | string | bigint | null;
+    plan: string | null;
   }[];
   const prof = profileRows[0];
+  const userPlan = normalizeUserPlan(prof?.plan);
   const perceivedProfile =
     prof?.perceived_spend_paisa == null ? 0 : toNumber(prof.perceived_spend_paisa);
   const monthlyIncome =
@@ -101,6 +106,20 @@ export async function fetchDashboardUnified(
         ) THEN amount_paisa
         ELSE 0
       END), 0)::bigint AS subscription_paisa,
+      COALESCE(SUM(CASE
+        WHEN type = 'debit'
+          AND upi_handle IS NOT NULL
+          AND TRIM(upi_handle) <> ''
+          AND amount_paisa <= ${MICRO_UPI_MAX_AMOUNT_PAISA}
+        THEN amount_paisa
+        ELSE 0
+      END), 0)::bigint AS micro_upi_debit_paisa,
+      COALESCE(COUNT(*) FILTER (
+        WHERE type = 'debit'
+          AND upi_handle IS NOT NULL
+          AND TRIM(upi_handle) <> ''
+          AND amount_paisa <= ${MICRO_UPI_MAX_AMOUNT_PAISA}
+      ), 0)::bigint AS micro_upi_debit_count,
       COUNT(*)::bigint AS transaction_count
     FROM transactions
     WHERE user_id = ${userId}
@@ -109,6 +128,35 @@ export async function fetchDashboardUnified(
       AND date <= ${dateTo}::date
   `) as DashboardAggregateRow[];
   const aggregate = aggregateRows[0];
+
+  const repeatRows = (await sql`
+    SELECT
+      merchant_key,
+      COUNT(*)::bigint AS cnt,
+      COALESCE(SUM(amount_paisa), 0)::bigint AS total_paisa
+    FROM transactions
+    WHERE user_id = ${userId}
+      AND statement_id = ANY(${includedIds}::uuid[])
+      AND date >= ${dateFrom}::date
+      AND date <= ${dateTo}::date
+      AND type = 'debit'
+      AND merchant_key IS NOT NULL
+    GROUP BY merchant_key
+    ORDER BY COUNT(*) DESC, SUM(amount_paisa) DESC
+    LIMIT 1
+  `) as {
+    merchant_key: string;
+    cnt: number | string | bigint;
+    total_paisa: number | string | bigint;
+  }[];
+
+  const repeatTop: RepeatMerchantScopeRow = repeatRows[0]
+    ? {
+        merchant_key: repeatRows[0].merchant_key,
+        debit_count: toNumber(repeatRows[0].cnt),
+        debit_paisa: toNumber(repeatRows[0].total_paisa),
+      }
+    : { merchant_key: null, debit_count: 0, debit_paisa: 0 };
 
   const metaRows = (await sql`
     SELECT id, institution_name, statement_type, nickname, account_purpose, card_network
@@ -123,6 +171,20 @@ export async function fetchDashboardUnified(
     account_purpose: string | null;
     card_network: string | null;
   }[];
+
+  const ccMinRows = (await sql`
+    SELECT COALESCE(
+      MAX(s.minimum_due_paisa) FILTER (WHERE s.statement_type = 'credit_card'),
+      NULL
+    )::bigint AS cc_min_due
+    FROM statements s
+    WHERE s.user_id = ${userId}
+      AND s.id = ANY(${includedIds}::uuid[])
+  `) as { cc_min_due: number | string | bigint | null }[];
+  const hasCreditCardStatement = metaRows.some((m) => m.statement_type === 'credit_card');
+  const ccMinRaw = ccMinRows[0]?.cc_min_due;
+  const ccMinimumDueEffective =
+    ccMinRaw === null || ccMinRaw === undefined ? null : toNumber(ccMinRaw);
 
   const institutionLabel =
     metaRows.length > 1 ? 'Multiple accounts' : (metaRows[0]?.institution_name ?? '—');
@@ -145,7 +207,10 @@ export async function fetchDashboardUnified(
   };
 
   const summary = buildDashboardSummary(aggregate);
-  const signals = computeDebitSignals(aggregate);
+  const signals = computeDebitSignals(aggregate, repeatTop, {
+    has_credit_card_statement: hasCreditCardStatement,
+    cc_minimum_due_effective_paisa: ccMinimumDueEffective,
+  });
   const advisories = buildAdvisories(summary, syntheticStatement, signals);
 
   return {
@@ -174,5 +239,7 @@ export async function fetchDashboardUnified(
       included_statement_ids: includedIds,
     },
     perceived_is_profile_baseline: true,
+    plan: userPlan,
+    month_compare: null,
   };
 }

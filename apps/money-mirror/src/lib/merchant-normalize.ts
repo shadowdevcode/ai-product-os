@@ -27,6 +27,26 @@ const KNOWN: { pattern: RegExp; key: string }[] = [
 
 const UPI_HANDLE = /([a-z0-9][a-z0-9._-]{1,48}@[a-z0-9._-]+)/i;
 
+/**
+ * Extracts a UPI VPA/handle from a transaction description when present (e.g. name@oksbi).
+ */
+/** Human-readable fallback when no user alias exists (underscores → spaces). */
+export function formatMerchantKeyForDisplay(merchantKey: string): string {
+  return merchantKey.replace(/_/g, ' ');
+}
+
+export function extractUpiHandle(description: string): string | null {
+  const trimmed = description.trim();
+  if (!trimmed) {
+    return null;
+  }
+  const m = trimmed.match(UPI_HANDLE);
+  if (m?.[1]) {
+    return m[1].toLowerCase();
+  }
+  return null;
+}
+
 function slugifyToken(raw: string): string | null {
   const s = raw
     .toLowerCase()
@@ -53,9 +73,9 @@ export function normalizeMerchantKey(description: string): string | null {
     }
   }
 
-  const upi = trimmed.match(UPI_HANDLE);
-  if (upi?.[1]) {
-    const slug = slugifyToken(upi[1].split('@')[0] ?? '');
+  const upi = extractUpiHandle(trimmed);
+  if (upi) {
+    const slug = slugifyToken(upi.split('@')[0] ?? '');
     if (slug) {
       return `upi_${slug}`;
     }

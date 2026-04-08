@@ -60,41 +60,57 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const topCategory = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])[0];
 
   const totalSpent = Math.round(statement.total_debits_paisa / 100).toLocaleString('en-IN');
+  const totalCredits = Math.round(statement.total_credits_paisa / 100).toLocaleString('en-IN');
   const periodLabel = statement.period_start
     ? `${statement.period_start} → ${statement.period_end}`
-    : 'last month';
+    : 'your latest statement';
   const topCatLabel = topCategory
     ? `${topCategory[0]} (₹${Math.round(topCategory[1] / 100).toLocaleString('en-IN')})`
-    : '—';
+    : null;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://moneymirror.in';
+
+  const topCatBlock = topCatLabel
+    ? `<div style="background:#131820;border-radius:10px;padding:16px;margin-bottom:16px;">
+            <div style="font-size:0.75rem;color:#9ba3b2;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Biggest spending bucket</div>
+            <div style="font-size:1rem;font-weight:600;color:#e8eaf6;">${topCatLabel}</div>
+          </div>`
+    : '';
 
   // ── Send email via Resend ─────────────────────────────────────────
   try {
     await resend.emails.send({
       from: 'MoneyMirror <recap@moneymirror.in>',
       to: email,
-      subject: `Your MoneyMirror weekly recap 🪞`,
+      subject: `Your week in numbers — ₹${totalSpent} across ${periodLabel}`,
       html: `
         <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;background:#080c10;color:#e8eaf6;border-radius:12px;">
-          <h1 style="font-size:1.4rem;font-weight:800;color:#6c63ff;margin:0 0 8px;">MoneyMirror Weekly Recap</h1>
+          <h1 style="font-size:1.4rem;font-weight:800;color:#6c63ff;margin:0 0 8px;">Your Money Mirror</h1>
           <p style="color:#9ba3b2;font-size:0.85rem;margin:0 0 24px;">${periodLabel}</p>
 
-          <div style="background:#131820;border-radius:10px;padding:16px;margin-bottom:16px;">
-            <div style="font-size:0.75rem;color:#9ba3b2;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Total Spent</div>
-            <div style="font-size:1.8rem;font-weight:800;color:#ef5350;">₹${totalSpent}</div>
+          <div style="display:flex;gap:12px;margin-bottom:16px;">
+            <div style="flex:1;background:#131820;border-radius:10px;padding:16px;text-align:center;">
+              <div style="font-size:0.72rem;color:#9ba3b2;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Spent</div>
+              <div style="font-size:1.4rem;font-weight:800;color:#ef5350;">₹${totalSpent}</div>
+            </div>
+            <div style="flex:1;background:#131820;border-radius:10px;padding:16px;text-align:center;">
+              <div style="font-size:0.72rem;color:#9ba3b2;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Received</div>
+              <div style="font-size:1.4rem;font-weight:800;color:#4caf50;">₹${totalCredits}</div>
+            </div>
           </div>
 
-          <div style="background:#131820;border-radius:10px;padding:16px;margin-bottom:16px;">
-            <div style="font-size:0.75rem;color:#9ba3b2;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;">Biggest Category</div>
-            <div style="font-size:1rem;font-weight:600;color:#e8eaf6;">${topCatLabel}</div>
-          </div>
+          ${topCatBlock}
 
-          <a href="${process.env.NEXT_PUBLIC_APP_URL ?? 'https://moneymirror.in'}/dashboard"
-             style="display:block;background:#6c63ff;color:#fff;text-align:center;padding:14px;border-radius:10px;font-weight:700;text-decoration:none;margin-top:24px;">
-            See Your Full Mirror →
+          <p style="color:#9ba3b2;font-size:0.82rem;line-height:1.6;margin:0 0 20px;">
+            No judgement — just the numbers from your statement. Open your dashboard to see frequency patterns, merchant clusters, and where the small stuff adds up.
+          </p>
+
+          <a href="${appUrl}/dashboard?tab=overview"
+             style="display:block;background:#6c63ff;color:#fff;text-align:center;padding:14px;border-radius:10px;font-weight:700;text-decoration:none;">
+            Open Your Mirror →
           </a>
 
           <p style="color:#4a5568;font-size:0.72rem;text-align:center;margin-top:20px;">
-            Your data is private and never shared. <a href="${process.env.NEXT_PUBLIC_APP_URL ?? 'https://moneymirror.in'}/unsubscribe" style="color:#6c63ff;">Unsubscribe</a>
+            Your data is private and never shared. <a href="${appUrl}/unsubscribe" style="color:#6c63ff;">Unsubscribe</a>
           </p>
         </div>
       `,

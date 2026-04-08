@@ -198,3 +198,18 @@ system improvement:
 - Before failing the deploy gate on monitoring keys (e.g. `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT`), read `project-state.md` Decisions Log and the deploy-check artifact for a documented PM exception. If the exception lists optional keys, do not block on those empty values.
 - For finance dashboards, architecture must require full-scope SQL aggregates for headline numbers and advisory inputs; plans must tie user-facing money/time phrases to scope shape (single month vs multi-month).
 - Frontend: URL-canonical scope must rehydrate modal/editor local state on change; scope-driven fetches need AbortController to prevent stale UI.
+
+---
+
+## 2026-04-07 — issue-012: MoneyMirror Gen Z clarity loop
+
+issue: Late-cycle semantic correctness fixes required three review passes (ownership checks on optional IDs, aggregate drill-through fidelity, non-2xx completion handling) and metric naming drift risked telemetry ambiguity.
+root cause: Execute-plan and review prompts lacked an explicit pre-review acceptance sweep for semantic correctness, and metric-plan outputs were not forced to reconcile canonical event IDs against implementation names.
+system improvement:
+
+- Add an "Acceptance Sweep" prompt at the end of execute-plan:
+  - "For each new endpoint/component, verify ownership enforcement, aggregate-to-detail fidelity, and non-2xx unhappy-path behavior with at least one targeted test."
+- Add a review prompt check:
+  - "If a UI drill-through starts from an aggregate row, verify downstream filters preserve the full aggregate scope; first-item fallback is a high-severity defect."
+- Add a metric-plan completion prompt:
+  - "Output a Canonical Event Dictionary: metric -> canonical event name -> single emission source -> primary properties; reject intent labels that do not match implemented event IDs."

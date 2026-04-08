@@ -151,6 +151,12 @@ For every API route that writes a parent record followed by child records:
 
 # Added: 2026-04-05 — MoneyMirror Phase 3 (issue-010)
 
+**Aggregate-to-detail integrity**: For any UI/API drill-through launched from an aggregate row (cluster/category/rollup), verify the downstream filter semantics preserve the full aggregate scope. If implementation maps aggregate navigation to a single representative row, flag as **HIGH**.
+
+**Completion on non-2xx guard**: For any user flow that displays a completion/success state after a mutation request, verify success is gated on explicit HTTP success (`response.ok` or equivalent). If non-2xx can still show success, flag as **HIGH**.
+
+# Added: 2026-04-07 — MoneyMirror issue-012
+
 ---
 
 ## 5 Performance Risks

@@ -1,0 +1,103 @@
+{
+  "issue_number": "011",
+  "issue_title": "MoneyMirror Phase 4 — Merchant-native visibility, proactive coaching, and growth readiness",
+  "issue_type": "Enhancement",
+  "team_id": "70aea0d1-a706-481f-a0b7-3e636709ba77",
+  "team_name": "Vijaypmworkspace",
+  "project_id": "69fcb02f-fd81-47a1-9997-16939b49c590",
+  "project_name": "issue-011 — MoneyMirror Phase 4 — merchant visibility & growth",
+  "project_url": "https://linear.app/vijaypmworkspace/project/issue-011-moneymirror-phase-4-merchant-visibility-and-growth-b1e333759570",
+  "root_issue_id": "VIJ-43",
+  "root_issue_identifier": "VIJ-43",
+  "root_issue_url": "https://linear.app/vijaypmworkspace/issue/VIJ-43/issue-011-moneymirror-phase-4-merchant-native-visibility-proactive",
+  "labels": {
+    "discovery": "b05592c1-47a6-4fdd-9a08-7a6287d4f1f8",
+    "improvement": "24fb89fb-dd24-4e23-9741-bf5def3dce29"
+  },
+  "tasks": {
+    "P4-A": "VIJ-44",
+    "P4-E": "VIJ-45",
+    "P4-G": "VIJ-46",
+    "P4-F": "VIJ-47",
+    "P4-D": "VIJ-48",
+    "P4-B": "VIJ-49",
+    "P4-C": "VIJ-51",
+    "P4-H": "VIJ-50"
+  },
+  "related_issues": {
+    "prior_phase3_root": "VIJ-37 — issue-010 closed",
+    "prior_icp_research": "VIJ-11 — issue-009",
+    "production_readiness_mirror": "VIJ-42 — Done (post–VIJ-37)"
+  },
+  "documents": {
+    "plan_snapshot": "https://linear.app/vijaypmworkspace/document/issue-011-plan-snapshot-f8ddb7ff33ef"
+  },
+  "prior_status_sync_metric_plan": {
+    "last_sync_timestamp": "2026-04-07T21:34:00.000Z",
+    "last_sync_comment_id": "af87af97-eadc-4cd1-abe9-aaaefa2ac70a"
+  },
+  "review_passes_logged": 2,
+  "review_gate": "APPROVED",
+  "peer_review_artifact": "experiments/results/peer-review-011.md",
+  "peer_review_gate": "APPROVED",
+  "qa_runs": [
+    {
+      "run": 1,
+      "date": "2026-04-07",
+      "model": "Claude Sonnet 4.6",
+      "model_id": "claude-sonnet-4-6",
+      "command": "/qa-test",
+      "verdict": "PASS",
+      "artifact": "experiments/results/qa-test-011.md",
+      "tests_passed": "109/109",
+      "test_files": 23
+    },
+    {
+      "run": 2,
+      "date": "2026-04-07",
+      "model": "Codex / GPT-5",
+      "model_id": "gpt-5",
+      "command": "/qa-test",
+      "verdict": "PASS",
+      "artifact": "experiments/results/qa-test-011.md",
+      "tests_passed": "109/109",
+      "test_files": 23
+    }
+  ],
+  "qa_gate": "PASS",
+  "metric_plan_artifact": "experiments/results/metric-plan-011.md",
+  "metric_plan_gate": "PASS",
+  "deploy_check_artifact": "experiments/results/deploy-check-011.md",
+  "deploy_check_gate": "APPROVE",
+  "postmortem_artifact": "experiments/results/postmortem-011.md",
+  "postmortem_gate": "PASS",
+  "repo_stage_after_sync": "learning",
+  "child_epics_marked_done": ["VIJ-44", "VIJ-45", "VIJ-46", "VIJ-47", "VIJ-48", "VIJ-49", "VIJ-51", "VIJ-50"],
+  "release_sync": {
+    "last_sync_timestamp": "2026-04-07T12:00:00.000Z",
+    "links_attached": [
+      {
+        "title": "MoneyMirror — production deployment (Vercel)",
+        "url": "https://money-mirror-rho.vercel.app",
+        "attachment_id": "1badb9a4-1b5d-44ac-8013-34b4c908ebb3"
+      },
+      {
+        "title": "Vercel project — money-mirror",
+        "url": "https://vercel.com/vijay-sehgals-projects/money-mirror",
+        "attachment_id": "c9aada4f-cbd0-4983-a4c0-b77f901c4932"
+      }
+    ],
+    "pr_url": null,
+    "release_comment_id": "6452a8fc-cbd6-4e3f-a9bd-c875b298e409"
+  },
+  "status_sync_postmortem": {
+    "last_sync_timestamp": "2026-04-06T22:18:56.299Z",
+    "last_sync_comment_id": "9df64615-be78-47ef-b650-36e6bb921c6e"
+  },
+  "last_sync_mode": "status",
+  "last_sync_timestamp": "2026-04-06T22:18:56.299Z",
+  "last_sync_comment_id": "9df64615-be78-47ef-b650-36e6bb921c6e",
+  "linear_sync_status": "success",
+  "review_artifact": "experiments/results/review-011.md",
+  "source_plan": ".cursor/plans/moneymirror_phase_4_issue_93cc59db.plan.md"
+}

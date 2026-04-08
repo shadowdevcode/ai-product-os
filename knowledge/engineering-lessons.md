@@ -472,3 +472,25 @@ rule: For authenticated heavy-read endpoints, the architecture must document pag
 improvement: backend-architect-agent.md Mandatory Pre-Approval Checklist: heavy read strategy. Peer review cross-checks that the stated strategy exists or is waived explicitly.
 
 ---
+
+---
+
+date: 2026-04-07
+project: MoneyMirror Gen Z clarity loop (issue-012)
+issue: Aggregate drill-through showed a subset view (single merchant) instead of the tapped cluster scope
+root_cause: Frontend implementation optimized for quick navigation but did not preserve aggregate semantics from summary row to downstream filter contract.
+rule: Any drill-through launched from an aggregate UI element (cluster/category/rollup) must pass the full aggregate filter set end-to-end (UI params -> API query -> rendered list). Substituting one representative row is a correctness bug.
+improvement: frontend-engineer-agent must require aggregate-preserving drill-through contracts; code-review-agent must add an explicit aggregate-to-detail integrity check.
+
+---
+
+---
+
+date: 2026-04-07
+project: MoneyMirror Gen Z clarity loop (issue-012)
+issue: Guided review could display success UI on non-2xx API responses
+root_cause: UI completion state was tied to promise resolution rather than HTTP success contract (`response.ok`), so failure responses were treated as completed actions.
+rule: Completion UIs for mutating actions must transition to success only on explicit success criteria (`response.ok` or equivalent). Non-2xx responses must keep the user in-flow with retryable error messaging.
+improvement: frontend-engineer-agent must enforce non-2xx handling in completion flows; code-review-agent/qa-agent should include this as a mandatory unhappy-path check.
+
+---

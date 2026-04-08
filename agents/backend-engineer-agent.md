@@ -109,6 +109,8 @@ database errors
 
 Explain how errors are handled.
 
+**Privacy / consent flag enforcement (server-authoritative):** When a route accepts a privacy or consent flag (for example `dismissed`, `opt_in`, `save_preference`) alongside optional free text, the server must enforce the contract itself by nullifying or rejecting the text whenever the flag says it should not be stored. Never rely on the client payload to preserve privacy boundaries — derive the persisted value from the flag on the server, then use that derived value in both the DB write and any telemetry properties.
+
 ---
 
 ## 6 Security Considerations
@@ -179,3 +181,7 @@ Experiment Integrity & Telemetry: Ensure cryptographic salts for A/B testing are
 Infra gaps discovered at `/deploy-check` are Backend Engineer failures. Ship infra, not just code.
 
 # Added: 2026-04-03 — Shift-left infra validation (issue-009 postmortem pattern)
+
+**Optional foreign IDs on write routes**: For any write endpoint that accepts an optional entity ID (`statement_id`, `order_id`, `session_id`, etc.), validate shape and verify authenticated ownership before any insert/update. If the ID is not owned by the caller, fail closed (`404` or `403`). Add at least one negative test proving cross-user IDs are rejected.
+
+# Added: 2026-04-07 — MoneyMirror issue-012

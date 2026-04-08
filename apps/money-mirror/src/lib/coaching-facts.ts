@@ -142,6 +142,39 @@ export function buildLayerAFacts(dashboard: DashboardData): LayerAFacts {
     display_inr: inr(signals.subscription_paisa),
   });
 
+  push({
+    id: 'micro_upi_debit_paisa',
+    label: 'Small UPI debits (≤₹500, VPA set)',
+    value_paisa: signals.micro_upi_debit_paisa,
+    display_inr: inr(signals.micro_upi_debit_paisa),
+    detail: `${signals.micro_upi_debit_count} debit transactions`,
+  });
+
+  if (signals.repeat_merchant_key) {
+    push({
+      id: 'repeat_merchant_noise_paisa',
+      label: `Repeat debits (${signals.repeat_merchant_key})`,
+      value_paisa: signals.repeat_merchant_debit_paisa,
+      display_inr: inr(signals.repeat_merchant_debit_paisa),
+      detail: `${signals.repeat_merchant_debit_count} debits in scope`,
+    });
+  }
+
+  if (
+    signals.has_credit_card_statement &&
+    income > 0 &&
+    signals.cc_minimum_due_effective_paisa !== null &&
+    signals.cc_minimum_due_effective_paisa > 0
+  ) {
+    const minDue = signals.cc_minimum_due_effective_paisa;
+    push({
+      id: 'cc_minimum_due_income_ratio',
+      label: 'Credit card minimum due vs income',
+      display_inr: pct(minDue, income),
+      detail: `${inr(minDue)} min due vs ${inr(income)} income`,
+    });
+  }
+
   const discretionary = s.wants_paisa + s.other_paisa;
   push({
     id: 'discretionary_paisa',

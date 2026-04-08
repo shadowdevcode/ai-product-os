@@ -60,8 +60,8 @@ export function UploadPanel({
           Upload your statement
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: '8px 0 0' }}>
-          Upload a password-free PDF from your bank account or credit card. We&apos;ll add it to
-          your dashboard so you can switch between statements anytime.
+          Drop a password-free bank or card PDF — we&apos;ll show you where it all went, no
+          judgement. Upload more statements over time to see the full picture.
         </p>
       </div>
 
@@ -174,9 +174,21 @@ export function UploadPanel({
             padding: '12px 16px',
             borderRadius: '12px',
             fontSize: '0.85rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px',
+            alignItems: 'center',
           }}
         >
-          {error}
+          <span>{error}</span>
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={() => fileRef.current?.click()}
+            style={{ width: '100%', maxWidth: '220px' }}
+          >
+            Retry upload
+          </button>
         </div>
       )}
 
