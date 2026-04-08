@@ -7,22 +7,29 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 
+const mockExtractPdfText = vi.fn().mockResolvedValue({
+  text: '01/03/2026 SWIGGY 450.00 Dr\n02/03/2026 SALARY 50000.00 Cr',
+  pageCount: 1,
+});
+
+class MockPdfExtractionError extends Error {
+  code: string;
+
+  constructor(message: string, code: string) {
+    super(message);
+    this.code = code;
+  }
+}
+
 vi.mock('@/lib/pdf-parser', () => ({
-  extractPdfText: vi.fn().mockResolvedValue({
-    text: '01/03/2026 SWIGGY 450.00 Dr\n02/03/2026 SALARY 50000.00 Cr',
-    pageCount: 1,
-  }),
-  PdfExtractionError: class PdfExtractionError extends Error {
-    code: string;
-    constructor(message: string, code: string) {
-      super(message);
-      this.code = code;
-    }
-  },
+  extractPdfText: mockExtractPdfText,
+  PdfExtractionError: MockPdfExtractionError,
 }));
 
+const mockCaptureServerEvent = vi.fn().mockResolvedValue(undefined);
+
 vi.mock('@/lib/posthog', () => ({
-  captureServerEvent: vi.fn().mockResolvedValue(undefined),
+  captureServerEvent: mockCaptureServerEvent,
 }));
 
 const mockGetSessionUser = vi.fn();
@@ -90,6 +97,10 @@ describe('POST /api/statement/parse', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
+    mockExtractPdfText.mockResolvedValue({
+      text: '01/03/2026 SWIGGY 450.00 Dr\n02/03/2026 SALARY 50000.00 Cr',
+      pageCount: 1,
+    });
     mockGetSessionUser.mockResolvedValue({
       id: 'user-123',
       email: 'vijay@example.com',
@@ -244,5 +255,35 @@ describe('POST /api/statement/parse', () => {
       minimum_due_paisa: 120000,
       credit_limit_paisa: 15000000,
     });
+  });
+
+  it('returns 422 for parser failures and emits parser diagnostics', async () => {
+    mockExtractPdfText.mockRejectedValueOnce(
+      new MockPdfExtractionError(
+        'Failed to parse PDF: DOMMatrix is not defined in server runtime',
+        'PARSE_FAILED'
+      )
+    );
+
+    const POST = await getRoute();
+    const res = await POST(makeRequest(makePdfFile('statement.pdf', 1024)));
+    const body = await res.json();
+
+    expect(res.status).toBe(422);
+    expect(body).toMatchObject({
+      error: 'Failed to read the PDF. Please ensure it is a valid bank statement.',
+    });
+    expect(mockCaptureServerEvent).toHaveBeenCalledWith(
+      'user-123',
+      'statement_parse_failed',
+      expect.objectContaining({
+        error_type: 'PARSE_FAILED',
+        file_name: expect.any(String),
+        statement_type: 'bank_account',
+        parser_stage: 'pdf_text_extraction',
+        parser_detail: 'Failed to parse PDF: DOMMatrix is not defined in server runtime',
+      })
+    );
+    expect(mockGenerateContent).not.toHaveBeenCalled();
   });
 });

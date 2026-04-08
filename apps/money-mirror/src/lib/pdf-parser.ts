@@ -9,8 +9,6 @@
  * eligible for GC. See /api/statement/parse/route.ts.
  */
 
-import { PDFParse } from 'pdf-parse';
-
 export interface PdfExtractionResult {
   text: string;
   pageCount: number;
@@ -24,6 +22,105 @@ export class PdfExtractionError extends Error {
     super(message);
     this.name = 'PdfExtractionError';
   }
+}
+
+interface PdfParseModule {
+  PDFParse: new (opts: { data: Uint8Array; verbosity: number }) => {
+    getText: () => Promise<{ text?: string; total?: number }>;
+    destroy: () => Promise<void>;
+  };
+}
+
+interface DomMatrixLike {
+  a: number;
+  b: number;
+  c: number;
+  d: number;
+  e: number;
+  f: number;
+}
+
+class MinimalDOMMatrix implements DomMatrixLike {
+  a: number;
+  b: number;
+  c: number;
+  d: number;
+  e: number;
+  f: number;
+
+  constructor(init?: Iterable<number> | ArrayLike<number>) {
+    const values = init ? Array.from(init).slice(0, 6) : [];
+    this.a = values[0] ?? 1;
+    this.b = values[1] ?? 0;
+    this.c = values[2] ?? 0;
+    this.d = values[3] ?? 1;
+    this.e = values[4] ?? 0;
+    this.f = values[5] ?? 0;
+  }
+
+  multiplySelf(): MinimalDOMMatrix {
+    return this;
+  }
+
+  preMultiplySelf(): MinimalDOMMatrix {
+    return this;
+  }
+
+  translate(tx?: number, ty?: number): MinimalDOMMatrix {
+    this.e += tx ?? 0;
+    this.f += ty ?? 0;
+    return this;
+  }
+
+  scale(scaleX?: number, scaleY?: number): MinimalDOMMatrix {
+    this.a *= scaleX ?? 1;
+    this.d *= scaleY ?? scaleX ?? 1;
+    return this;
+  }
+
+  invertSelf(): MinimalDOMMatrix {
+    return this;
+  }
+}
+
+class MinimalImageData {
+  data: Uint8ClampedArray;
+  width: number;
+  height: number;
+
+  constructor(data: Uint8ClampedArray, width: number, height: number) {
+    this.data = data;
+    this.width = width;
+    this.height = height;
+  }
+}
+
+class MinimalPath2D {
+  addPath(): void {}
+}
+
+let pdfParseModulePromise: Promise<PdfParseModule> | null = null;
+
+function ensurePdfJsServerPolyfills(): void {
+  const globalRecord = globalThis as Record<string, unknown>;
+
+  if (!globalRecord.DOMMatrix) {
+    globalRecord.DOMMatrix = MinimalDOMMatrix;
+  }
+  if (!globalRecord.ImageData) {
+    globalRecord.ImageData = MinimalImageData;
+  }
+  if (!globalRecord.Path2D) {
+    globalRecord.Path2D = MinimalPath2D;
+  }
+}
+
+async function loadPdfParseModule(): Promise<PdfParseModule> {
+  if (!pdfParseModulePromise) {
+    ensurePdfJsServerPolyfills();
+    pdfParseModulePromise = import('pdf-parse') as Promise<PdfParseModule>;
+  }
+  return pdfParseModulePromise;
 }
 
 /**
@@ -42,6 +139,7 @@ export async function extractPdfText(buffer: Buffer): Promise<PdfExtractionResul
   let pageCount: number;
 
   try {
+    const { PDFParse } = await loadPdfParseModule();
     const parser = new PDFParse({ data: buffer, verbosity: 0 });
     const result = await parser.getText();
     text = result.text ?? '';

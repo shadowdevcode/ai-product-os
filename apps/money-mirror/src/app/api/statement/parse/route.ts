@@ -125,9 +125,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     fileBuffer = null;
 
     const code = err instanceof PdfExtractionError ? err.code : 'PARSE_FAILED';
+    const parserDetail =
+      err instanceof Error ? err.message.slice(0, 200) : String(err).slice(0, 200);
     captureServerEvent(userId, 'statement_parse_failed', {
       error_type: code,
       file_name: fileName,
+      statement_type: statementType,
+      parser_stage: 'pdf_text_extraction',
+      parser_detail: parserDetail,
     }).catch(() => {});
     const errorMessage =
       code === 'EMPTY_TEXT'
