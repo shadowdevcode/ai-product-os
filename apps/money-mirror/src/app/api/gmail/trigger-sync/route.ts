@@ -3,15 +3,16 @@
  *
  * Manual "Sync now" endpoint called from the dashboard SyncPanel.
  * Uses the session user's stored Gmail OAuth token to fetch transaction
- * emails, then delegates to /api/gmail/sync for parsing + persistence.
+ * emails, then runs the shared Gmail sync pipeline (no HTTP loopback).
  *
- * Auth: session cookie only (no secret header).
+ * Auth: session cookie only.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/auth/session';
 import { markGmailSyncAt } from '@/lib/db-oauth';
 import { getValidAccessToken, fetchGmailTransactionEmails } from '@/lib/gmail-oauth';
+import { runGmailSync } from '@/lib/gmail/run-sync';
 
 export async function POST(_req: NextRequest): Promise<NextResponse> {
   const session = await getSessionUser();
@@ -19,7 +20,6 @@ export async function POST(_req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Get a valid OAuth access token (auto-refreshes if near expiry)
   const accessToken = await getValidAccessToken(session.id);
   if (!accessToken) {
     return NextResponse.json(
@@ -28,7 +28,6 @@ export async function POST(_req: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // Fetch last 30 days of transaction emails (broad window; dedup handles overlap)
   let emails: Awaited<ReturnType<typeof fetchGmailTransactionEmails>>;
   try {
     emails = await fetchGmailTransactionEmails(accessToken, 30, 100);
@@ -47,27 +46,14 @@ export async function POST(_req: NextRequest): Promise<NextResponse> {
     });
   }
 
-  // Delegate to the existing sync endpoint (handles Gemini parse + DB write + advisories)
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
-  const syncRes = await fetch(`${appUrl}/api/gmail/sync`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-sync-secret': process.env.GMAIL_SYNC_SECRET!,
-    },
-    body: JSON.stringify({
-      emails,
-      triggerMode: 'manual_ui',
-      userId: session.id,
-    }),
+  const res = await runGmailSync(session.id, {
+    emails,
+    triggerMode: 'manual_ui',
   });
 
-  const data = (await syncRes.json().catch(() => ({}))) as Record<string, unknown>;
-
-  // Mark last sync time regardless of sync outcome
   await markGmailSyncAt(session.id).catch((e) =>
     console.error('[trigger-sync] markGmailSyncAt failed:', e)
   );
 
-  return NextResponse.json(data, { status: syncRes.status });
+  return res;
 }

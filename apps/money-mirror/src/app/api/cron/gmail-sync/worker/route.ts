@@ -6,7 +6,7 @@
  * Flow:
  *   1. Get user's OAuth token (auto-refresh if near expiry)
  *   2. Fetch last 2 days of transaction emails from Gmail
- *   3. Delegate to /api/gmail/sync for parsing + DB write + advisories
+ *   3. Run shared Gmail sync pipeline (parse + DB write + advisories)
  *   4. Mark last_sync_at and fire telemetry
  *
  * Skips gracefully if no valid token (revoked / refresh failed).
@@ -22,6 +22,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { markGmailSyncAt } from '@/lib/db-oauth';
 import { getValidAccessToken, fetchGmailTransactionEmails } from '@/lib/gmail-oauth';
 import { captureServerEvent } from '@/lib/posthog';
+import { runGmailSync } from '@/lib/gmail/run-sync';
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const cronSecret = req.headers.get('x-cron-secret');
@@ -36,7 +37,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   const { userId } = body as { userId: string };
 
-  // ── Step 1: Get valid access token ─────────────────────────────────────────
   const accessToken = await getValidAccessToken(userId);
   if (!accessToken) {
     captureServerEvent(userId, 'gmail_cron_worker_skipped', { reason: 'no_valid_token' }).catch(
@@ -45,7 +45,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ ok: true, skipped: true, reason: 'no_valid_token' });
   }
 
-  // ── Step 2: Fetch Gmail messages (last 2 days, 24h overlap for safety) ──────
   let emails: Awaited<ReturnType<typeof fetchGmailTransactionEmails>>;
   try {
     emails = await fetchGmailTransactionEmails(accessToken, 2, 100);
@@ -69,19 +68,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     });
   }
 
-  // ── Step 3: Delegate to sync endpoint ──────────────────────────────────────
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
-  const syncRes = await fetch(`${appUrl}/api/gmail/sync`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-sync-secret': process.env.GMAIL_SYNC_SECRET!,
-    },
-    body: JSON.stringify({
-      emails,
-      triggerMode: 'cron',
-      userId,
-    }),
+  const syncRes = await runGmailSync(userId, {
+    emails,
+    triggerMode: 'cron',
   });
 
   const data = (await syncRes.json().catch(() => ({}))) as {
@@ -91,7 +80,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     skipped_count?: number;
   };
 
-  // ── Step 4: Mark sync time + telemetry ──────────────────────────────────────
   await markGmailSyncAt(userId).catch(() => {});
 
   captureServerEvent(userId, 'gmail_cron_worker_completed', {
@@ -101,5 +89,5 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     skipped_count: data.skipped_count ?? 0,
   }).catch(() => {});
 
-  return NextResponse.json({ ok: syncRes.ok, ...data });
+  return NextResponse.json({ ok: syncRes.ok, ...data }, { status: syncRes.status });
 }
