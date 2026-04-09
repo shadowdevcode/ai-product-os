@@ -10,6 +10,7 @@
 import { randomBytes } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/auth/session';
+import { getGoogleClientId, getOAuthAppUrl } from '@/lib/google-oauth-env';
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const session = await getSessionUser();
@@ -17,7 +18,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     return NextResponse.redirect(new URL('/login', req.url));
   }
 
-  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientId = getGoogleClientId();
   if (!clientId) {
     return NextResponse.json(
       { error: 'Google OAuth is not configured (GOOGLE_CLIENT_ID missing)' },
@@ -25,7 +26,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? `http://localhost:3000`;
+  const appUrl = getOAuthAppUrl();
   const redirectUri = `${appUrl}/api/oauth/google/callback`;
   const state = randomBytes(16).toString('hex');
 

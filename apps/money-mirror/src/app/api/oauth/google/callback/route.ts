@@ -11,6 +11,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/auth/session';
 import { upsertOAuthToken } from '@/lib/db-oauth';
+import { getGoogleClientId, getGoogleClientSecret, getOAuthAppUrl } from '@/lib/google-oauth-env';
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const session = await getSessionUser();
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     return NextResponse.redirect(dashboardError);
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const appUrl = getOAuthAppUrl();
   const redirectUri = `${appUrl}/api/oauth/google/callback`;
 
   // Exchange code for tokens
@@ -46,8 +47,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       code,
-      client_id: process.env.GOOGLE_CLIENT_ID!,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+      client_id: getGoogleClientId(),
+      client_secret: getGoogleClientSecret(),
       redirect_uri: redirectUri,
       grant_type: 'authorization_code',
     }),

@@ -4,6 +4,7 @@
  */
 
 import { getOAuthTokenRow, upsertOAuthToken, updateOAuthTokenStatus } from '@/lib/db-oauth';
+import { getGoogleClientId, getGoogleClientSecret } from '@/lib/google-oauth-env';
 
 export interface GmailEmail {
   id: string; // Gmail message ID
@@ -43,8 +44,8 @@ async function refreshToken(userId: string, refreshToken: string): Promise<strin
       body: new URLSearchParams({
         grant_type: 'refresh_token',
         refresh_token: refreshToken,
-        client_id: process.env.GOOGLE_CLIENT_ID!,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+        client_id: getGoogleClientId(),
+        client_secret: getGoogleClientSecret(),
       }),
     });
 
