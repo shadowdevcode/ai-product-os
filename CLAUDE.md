@@ -41,6 +41,7 @@ The system operates through sequential slash commands that activate specialized 
 - `/linear-sync` - Mirror repo artifacts into Linear; accepts a mode: `issue` (brief), `plan` (PRD + child tasks), `status` (gate updates), `release` (deploy links)
 - `/linear-brief` - Read-only summary of the current Linear issue/project state; use before standup or planning reviews
 - `/linear-close` - Finalize and archive the Linear project after `/learning` completes
+- `/gmail-sync` - Fetch Gmail transaction emails via MCP and POST to Money Mirror's `/api/gmail/sync` endpoint; prints scanned/inserted/skipped summary
 
 ### Quality Gate System
 
