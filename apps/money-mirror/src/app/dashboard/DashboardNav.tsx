@@ -1,6 +1,6 @@
 'use client';
 
-export type DashboardTab = 'overview' | 'insights' | 'transactions' | 'upload';
+export type DashboardTab = 'overview' | 'insights' | 'transactions' | 'sync';
 
 interface DashboardNavProps {
   active: DashboardTab;
@@ -11,7 +11,7 @@ const TABS: { id: DashboardTab; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'insights', label: 'Insights' },
   { id: 'transactions', label: 'Transactions' },
-  { id: 'upload', label: 'Upload' },
+  { id: 'sync', label: 'Sync' },
 ];
 
 export function DashboardNav({ active, onChange }: DashboardNavProps) {

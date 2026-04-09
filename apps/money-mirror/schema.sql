@@ -137,3 +137,63 @@ CREATE TABLE IF NOT EXISTS public.guided_review_outcomes (
 
 CREATE INDEX IF NOT EXISTS idx_guided_review_outcomes_user_created
     ON public.guided_review_outcomes(user_id, created_at DESC);
+
+-- ──────────────────────────────────────────────────────────────────────────────
+-- Gmail Sync additions (apply before using /gmail-sync command or endpoint)
+-- ──────────────────────────────────────────────────────────────────────────────
+
+-- 1. Extend statement_type to allow gmail-sourced synthetic statements
+ALTER TABLE public.statements DROP CONSTRAINT IF EXISTS statements_statement_type_check;
+ALTER TABLE public.statements ADD CONSTRAINT statements_statement_type_check
+    CHECK (statement_type IN ('bank_account', 'credit_card', 'gmail_sync'));
+
+-- 2. Track ingestion source on statements
+ALTER TABLE public.statements
+    ADD COLUMN IF NOT EXISTS ingestion_source TEXT
+    CHECK (ingestion_source IN ('pdf_upload', 'gmail_command', 'gmail_manual_ui', 'gmail_cron'))
+    DEFAULT 'pdf_upload';
+
+-- 3. Dedup hash on transactions — prevents duplicate inserts across sync runs
+--    Formula: md5(user_id + (date-epoch_days)::text + amount_paisa + description)
+--    Uses integer day-offset (date - '1970-01-01') to keep expression immutable in Postgres.
+ALTER TABLE public.transactions
+    ADD COLUMN IF NOT EXISTS dedup_hash TEXT
+    GENERATED ALWAYS AS (
+        md5(user_id || (date - '1970-01-01'::date)::text || amount_paisa::text || description)
+    ) STORED;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_dedup
+    ON public.transactions(user_id, dedup_hash);
+
+-- 4. OAuth token storage per user (Phase 2 — Google OAuth for multi-user sync)
+CREATE TABLE IF NOT EXISTS public.user_oauth_tokens (
+    user_id       TEXT NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    provider      TEXT NOT NULL DEFAULT 'google',
+    access_token  TEXT NOT NULL,
+    refresh_token TEXT,
+    expires_at    TIMESTAMPTZ NOT NULL,
+    scope         TEXT,
+    status        TEXT NOT NULL DEFAULT 'active'
+                  CHECK (status IN ('active', 'revoked', 'refresh_failed')),
+    last_sync_at  TIMESTAMPTZ,
+    last_error    TEXT,
+    updated_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (user_id, provider)
+);
+
+-- 5. Durable sync run history for debugging and status display
+CREATE TABLE IF NOT EXISTS public.gmail_sync_runs (
+    id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id        TEXT NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    trigger_mode   TEXT NOT NULL CHECK (trigger_mode IN ('command', 'manual_ui', 'cron')),
+    status         TEXT NOT NULL CHECK (status IN ('ok', 'partial', 'failed')),
+    emails_scanned INT NOT NULL DEFAULT 0,
+    parsed_count   INT NOT NULL DEFAULT 0,
+    inserted_count INT NOT NULL DEFAULT 0,
+    skipped_count  INT NOT NULL DEFAULT 0,
+    error_summary  TEXT,
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now())
+);
+
+CREATE INDEX IF NOT EXISTS idx_gmail_sync_runs_user_created
+    ON public.gmail_sync_runs(user_id, created_at DESC);

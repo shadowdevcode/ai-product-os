@@ -55,7 +55,7 @@ export function useDashboardInitialLoadEffect(opts: {
       const q = new URLSearchParams();
       q.set('statement_id', valid);
       const t = tabParam;
-      if (t && (t === 'insights' || t === 'upload' || t === 'transactions')) {
+      if (t && (t === 'insights' || t === 'sync' || t === 'transactions')) {
         q.set('tab', t);
       }
       router.replace(`/dashboard?${q.toString()}`, { scroll: false });

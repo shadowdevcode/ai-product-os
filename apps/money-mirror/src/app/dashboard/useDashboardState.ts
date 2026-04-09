@@ -272,5 +272,7 @@ export function useDashboardState() {
     applyUnified,
     applyLegacy,
     handleUpload,
+    loadStatements,
+    loadDashboard,
   };
 }

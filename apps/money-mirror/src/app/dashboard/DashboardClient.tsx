@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScopeBar } from '@/components/ScopeBar';
-import { UploadPanel } from './UploadPanel';
 import { ParsingPanel } from './ParsingPanel';
 import { ResultsPanel } from './ResultsPanel';
 import { InsightsPanel } from './InsightsPanel';
@@ -11,6 +10,7 @@ import { StatementFilters } from './StatementFilters';
 import { DashboardLoadingSkeleton } from './DashboardLoadingSkeleton';
 import { DashboardBrandBar } from './DashboardBrandBar';
 import { TransactionsPanel } from './TransactionsPanel';
+import { SyncPanel } from './SyncPanel';
 import { GuidedReviewSheet } from '@/components/GuidedReviewSheet';
 import { normalizeUserPlan } from '@/lib/user-plan';
 import {
@@ -51,6 +51,8 @@ export function DashboardClient() {
     applyUnified,
     applyLegacy,
     handleUpload,
+    loadStatements,
+    loadDashboard,
   } = useDashboardState();
 
   const tab = useMemo(() => tabFromSearchParams(searchParams), [searchParams]);
@@ -98,9 +100,14 @@ export function DashboardClient() {
     []
   );
 
+  const handleSyncComplete = useCallback(async () => {
+    await loadStatements();
+    loadDashboard().catch(() => {});
+  }, [loadStatements, loadDashboard]);
+
   const hasStatements = Boolean(statements && statements.length > 0);
   const showTabs = hasStatements && !isLoadingDashboard;
-  const showEmptyUpload =
+  const showEmptySync =
     !isLoadingDashboard && statements !== null && statements.length === 0 && !isParsing;
 
   const scopeAndFilters =
@@ -138,7 +145,7 @@ export function DashboardClient() {
             const q = new URLSearchParams(searchParams.toString());
             q.set('tab', t);
             router.replace(`/dashboard?${q.toString()}`, { scroll: false });
-            if (t !== 'upload') {
+            if (t !== 'sync') {
               setError(null);
             }
           }}
@@ -149,21 +156,23 @@ export function DashboardClient() {
 
       {isParsing && <ParsingPanel />}
 
-      {showEmptyUpload && (
-        <UploadPanel
-          error={error}
+      {showEmptySync && (
+        <SyncPanel
+          uploadError={error}
           statementType={statementType}
           onStatementTypeChange={setStatementType}
           onUpload={handleUpload}
+          onSyncComplete={handleSyncComplete}
         />
       )}
 
-      {hasStatements && tab === 'upload' && !isLoadingDashboard && !isParsing && (
-        <UploadPanel
-          error={error}
+      {hasStatements && tab === 'sync' && !isLoadingDashboard && !isParsing && (
+        <SyncPanel
+          uploadError={error}
           statementType={statementType}
           onStatementTypeChange={setStatementType}
           onUpload={handleUpload}
+          onSyncComplete={handleSyncComplete}
         />
       )}
 

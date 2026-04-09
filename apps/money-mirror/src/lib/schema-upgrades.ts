@@ -87,4 +87,54 @@ export async function applyIdempotentSchemaUpgrades(
     CREATE INDEX IF NOT EXISTS idx_guided_review_outcomes_user_created
       ON public.guided_review_outcomes(user_id, created_at DESC)
   `;
+
+  // Phase 5: Gmail sync tables
+  await sql`
+    CREATE TABLE IF NOT EXISTS public.user_oauth_tokens (
+      user_id       TEXT NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+      provider      TEXT NOT NULL DEFAULT 'google',
+      access_token  TEXT NOT NULL,
+      refresh_token TEXT,
+      expires_at    TIMESTAMPTZ NOT NULL,
+      scope         TEXT,
+      status        TEXT NOT NULL DEFAULT 'active'
+                    CHECK (status IN ('active', 'revoked', 'refresh_failed')),
+      last_sync_at  TIMESTAMPTZ,
+      last_error    TEXT,
+      updated_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+      PRIMARY KEY (user_id, provider)
+    )
+  `;
+  await sql`
+    ALTER TABLE public.transactions
+      ADD COLUMN IF NOT EXISTS dedup_hash TEXT
+  `;
+  await sql`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_dedup
+      ON public.transactions(user_id, dedup_hash)
+      WHERE dedup_hash IS NOT NULL
+  `;
+  await sql`
+    ALTER TABLE public.statements
+      ADD COLUMN IF NOT EXISTS ingestion_source TEXT
+      DEFAULT 'pdf_upload'
+  `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS public.gmail_sync_runs (
+      id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id        TEXT NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+      trigger_mode   TEXT NOT NULL CHECK (trigger_mode IN ('command', 'manual_ui', 'cron')),
+      status         TEXT NOT NULL CHECK (status IN ('ok', 'partial', 'failed')),
+      emails_scanned INT NOT NULL DEFAULT 0,
+      parsed_count   INT NOT NULL DEFAULT 0,
+      inserted_count INT NOT NULL DEFAULT 0,
+      skipped_count  INT NOT NULL DEFAULT 0,
+      error_summary  TEXT,
+      created_at     TIMESTAMPTZ NOT NULL DEFAULT timezone('utc', now())
+    )
+  `;
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_gmail_sync_runs_user_created
+      ON public.gmail_sync_runs(user_id, created_at DESC)
+  `;
 }

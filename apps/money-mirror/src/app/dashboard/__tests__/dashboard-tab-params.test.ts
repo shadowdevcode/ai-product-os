@@ -13,7 +13,7 @@ describe('tabFromSearchParams', () => {
   it('returns the tab when valid', () => {
     expect(tabFromSearchParams(makeSearchParams('tab=insights'))).toBe('insights');
     expect(tabFromSearchParams(makeSearchParams('tab=transactions'))).toBe('transactions');
-    expect(tabFromSearchParams(makeSearchParams('tab=upload'))).toBe('upload');
+    expect(tabFromSearchParams(makeSearchParams('tab=sync'))).toBe('sync');
     expect(tabFromSearchParams(makeSearchParams('tab=overview'))).toBe('overview');
   });
 
