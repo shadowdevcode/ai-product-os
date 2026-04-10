@@ -48,6 +48,7 @@ export async function fetchDashboardLegacy(
         LEFT JOIN profiles p ON p.id = s.user_id
         WHERE s.user_id = ${userId}
           AND s.status = 'processed'
+          AND s.statement_type != 'gmail_sync'
         ORDER BY s.period_end DESC NULLS LAST, s.created_at DESC
         LIMIT 1
       `) as {

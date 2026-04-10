@@ -170,7 +170,7 @@ export async function runGmailSync(
   await logSyncRun(
     userId,
     triggerMode,
-    insertedCount > 0 ? 'ok' : 'ok',
+    insertedCount > 0 ? 'ok' : 'partial',
     batch.length,
     parsed.length,
     insertedCount,

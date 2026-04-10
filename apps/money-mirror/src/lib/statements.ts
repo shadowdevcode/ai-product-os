@@ -1,4 +1,4 @@
-export type StatementType = 'bank_account' | 'credit_card';
+export type StatementType = 'bank_account' | 'credit_card' | 'gmail_sync';
 
 export type CreditCardEntryKind =
   | 'purchase'

@@ -137,4 +137,7 @@ export async function applyIdempotentSchemaUpgrades(
     CREATE INDEX IF NOT EXISTS idx_gmail_sync_runs_user_created
       ON public.gmail_sync_runs(user_id, created_at DESC)
   `;
+  // Ensure statement_type CHECK constraint includes 'gmail_sync' for new deployments
+  await sql`ALTER TABLE public.statements DROP CONSTRAINT IF EXISTS statements_statement_type_check`;
+  await sql`ALTER TABLE public.statements ADD CONSTRAINT statements_statement_type_check CHECK (statement_type IN ('bank_account', 'credit_card', 'gmail_sync'))`;
 }

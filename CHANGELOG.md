@@ -1,5 +1,43 @@
 # Changelog
 
+## 2026-04-10 — MoneyMirror Hotfix: Dashboard 500 on Gmail Sync users (RCA + 5-fix patch)
+
+Post-cycle hotfix — production HTTP 500 on `GET /api/dashboard` triggered by Gmail sync introducing a `gmail_sync` statement type that Zod schema validation did not accept.
+
+**Root cause:** `layerAFactsSchema` in `coaching-facts.ts` used `z.enum(['bank_account', 'credit_card'])` — `'gmail_sync'` was absent. After a Gmail sync run, `fetchDashboardLegacy` (no `statement_type` filter) would pick the most-recently-created `gmail_sync` statement. `buildLayerAFacts` then called `layerAFactsSchema.parse({ statement_type: 'gmail_sync' })`, throwing a `ZodError` caught by the route's `try/catch` and returned as HTTP 500.
+
+**Fixes applied:**
+1. **`coaching-facts.ts:31`** — Added `'gmail_sync'` to `layerAFactsSchema` `statement_type` enum. (crash fix)
+2. **`statements.ts:1`** — Added `'gmail_sync'` to the `StatementType` TypeScript union. (type correctness)
+3. **`dashboard-legacy.ts:50`** — Added `AND s.statement_type != 'gmail_sync'` to the `statementId=null` WHERE clause so the legacy path never selects Gmail synthetic statements. (behavior fix)
+4. **`schema-upgrades.ts`** — Added DROP/ADD of `statements_statement_type_check` constraint to include `'gmail_sync'` for new DB deployments. (schema hygiene)
+5. **`gmail/run-sync.ts:173`** — Fixed `insertedCount > 0 ? 'ok' : 'ok'` copy-paste bug to `'ok' : 'partial'` so all-skip sync runs are logged correctly. (observability fix)
+
+---
+
+## 2026-04-10 — MoneyMirror Gmail Sync Phase 2 (OAuth, Sync tab, cron fan-out)
+
+Post-cycle ship (outside issue-012 pipeline) — Gmail is now the primary ingestion path.
+
+- **Google OAuth flow:** [`/api/oauth/google/start`](apps/money-mirror/src/app/api/oauth/google/start/route.ts) initiates OAuth with `gmail.readonly` scope; [`/api/oauth/google/callback`](apps/money-mirror/src/app/api/oauth/google/callback/route.ts) exchanges code and stores tokens via `upsertOAuthToken`.
+- **Token storage:** new `user_oauth_tokens` table (Neon). OAuth DB ops extracted to [`src/lib/db-oauth.ts`](apps/money-mirror/src/lib/db-oauth.ts) to keep `db.ts` under 300 lines. Refresh logic + `status` field (`active` / `revoked` / `refresh_failed`) in [`src/lib/gmail-oauth.ts`](apps/money-mirror/src/lib/gmail-oauth.ts).
+- **Sync engine:** [`/api/gmail/sync`](apps/money-mirror/src/app/api/gmail/sync/route.ts) — fetches Gmail transaction alerts, parses with Gemini Flash ([`gemini-email-parse.ts`](apps/money-mirror/src/app/api/gmail/sync/gemini-email-parse.ts)), deduplicates via `transactions.dedup_hash` GENERATED ALWAYS column, inserts, re-triggers advisory pipeline.
+- **Cron fan-out:** [`/api/cron/gmail-sync`](apps/money-mirror/src/app/api/cron/gmail-sync/route.ts) (master, 01:30 UTC daily) fans out to per-user [`worker`](apps/money-mirror/src/app/api/cron/gmail-sync/worker/route.ts). Pattern mirrors `weekly-recap` fan-out exactly.
+- **Sync status API:** [`/api/gmail/sync/status`](apps/money-mirror/src/app/api/gmail/sync/status/route.ts) returns last sync run counts + errors; `logSyncRun` extracted to [`log-sync-run.ts`](apps/money-mirror/src/app/api/gmail/sync/log-sync-run.ts).
+- **Dashboard Sync tab:** [`SyncPanel.tsx`](apps/money-mirror/src/app/dashboard/SyncPanel.tsx) replaces `UploadPanel` as the primary tab. Sub-components (`SyncResultCard`, `SyncRunHistoryList`) extracted to [`SyncPanelParts.tsx`](apps/money-mirror/src/app/dashboard/SyncPanelParts.tsx). PDF upload fallback toggle preserved inside `SyncPanel`.
+- **Schema additions:** `user_oauth_tokens`, `gmail_sync_runs`, `transactions.dedup_hash` (GENERATED ALWAYS), `statements.ingestion_source`, extended `statement_type` CHECK to include `gmail_sync`. Applied via [`schema-upgrades.ts`](apps/money-mirror/src/lib/schema-upgrades.ts).
+- **`vercel.json`:** added `{ "path": "/api/cron/gmail-sync", "schedule": "30 1 * * *" }` to crons array.
+- **Deploy:** commit `5690212` on `main` → production `https://money-mirror-rho.vercel.app`.
+
+---
+
+## 2026-04-10 — MoneyMirror Gmail Sync Phase 1 (`/gmail-sync` slash command)
+
+- **`commands/gmail-sync.md`:** new utility command — fetches Gmail transaction emails via Claude Code's Gmail MCP tools, parses each with Gemini Flash, POSTs to Money Mirror's `/api/gmail/sync`, prints scanned/inserted/skipped summary.
+- **`CLAUDE.md`:** registered `/gmail-sync` in the Utility Commands list.
+
+---
+
 ## 2026-04-09 — MoneyMirror deploy contract fix + landing isolation
 
 - **MoneyMirror Vercel reconnect:** the existing `money-mirror` Vercel project was reconnected to `shadowdevcode/ai-product-os` after confirming the project had `createDeployments = "enabled"` but no active Git link. Production branch is now explicitly `main`, rooted at [`apps/money-mirror`](apps/money-mirror/).

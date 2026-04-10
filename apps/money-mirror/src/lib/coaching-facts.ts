@@ -28,7 +28,7 @@ export const layerAFactsSchema = z.object({
     date_to: z.string().nullable(),
     included_statement_ids: z.array(z.string()),
   }),
-  statement_type: z.enum(['bank_account', 'credit_card']),
+  statement_type: z.enum(['bank_account', 'credit_card', 'gmail_sync']),
   facts: z.array(coachingFactRowSchema),
 });
 
