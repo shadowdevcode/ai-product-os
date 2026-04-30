@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-// Minimal drift checker: ensures all files in commands/ exist in .claude/commands/
+// Drift checker: ensures commands/ and .claude/commands/ are in sync
 const srcDir = 'commands';
 const destDir = '.claude/commands';
 
@@ -11,11 +11,22 @@ if (!fs.existsSync(srcDir) || !fs.existsSync(destDir)) {
 }
 
 const srcFiles = fs.readdirSync(srcDir).filter(f => f.endsWith('.md'));
+const destFiles = fs.readdirSync(destDir).filter(f => f.endsWith('.md'));
+
 let driftFound = false;
 
+// Check src -> dest
 for (const file of srcFiles) {
   if (!fs.existsSync(path.join(destDir, file))) {
     console.error(`DRIFT ERROR: ${file} exists in ${srcDir} but not in ${destDir}`);
+    driftFound = true;
+  }
+}
+
+// Check dest -> src
+for (const file of destFiles) {
+  if (!fs.existsSync(path.join(srcDir, file))) {
+    console.error(`DRIFT ERROR: ${file} exists in ${destDir} but not in ${srcDir}`);
     driftFound = true;
   }
 }
