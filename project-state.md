@@ -6,8 +6,8 @@
 - repo_path: apps/clarity
 - owner: Vijay Sehgal
 - started_on: 2026-03-11
-- goal (1 sentence): Build a minimal, high-performance task engine for Product Managers that uses AI to categorize raw thoughts into actionable tasks, providing emotional clarity and immediate focus.
-- active_cycle: **issue-014** — Codex Best Practices Integration — [`docs/codex-best-practices-audit.md`](docs/codex-best-practices-audit.md)
+- goal (1 sentence): Build a minimal, high-performance task engine for Product Managers that uses AI to categorize raw thoughts into actionable tasks, powered by **Neon and Neon Prisma** for robust persistence and immediate focus.
+- active_cycle: **issue-014** — Codex Best Practices & Neon Pivot — [`docs/codex-best-practices-audit.md`](docs/codex-best-practices-audit.md)
 - prior_cycle: **issue-013** — PM Research Copilot (chat-first planning + orchestrated evidence) — [`experiments/ideas/issue-013.md`](experiments/ideas/issue-013.md)
 
 ## Current Stage
@@ -15,7 +15,7 @@
 - stage: learning
 - last_command_run: /learning — issue-014 (2026-04-30)
 - status: completed
-- active_issue: issue-014 — Codex Best Practices Integration (Hardening); Enforceable automation, CI, and rule unification.
+- active_issue: issue-014 — Codex Best Practices Integration & Neon/Prisma Pivot; Enforceable automation, CI, and authoritative technology stack alignment.
 
 ## Active Work
 

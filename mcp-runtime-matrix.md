@@ -5,7 +5,7 @@ This matrix defines the authoritative state of MCP integrations across the AI Pr
 | Integration     | Codex | Claude | Cursor | VS Code | Scope          |
 | --------------- | ----- | ------ | ------ | ------- | -------------- |
 | Linear          | Read  | Full   | Read   | View    | Project Sync   |
-| Neon            | -     | Full   | -      | Read    | Database Ops   |
+| Neon            | Full  | Full   | Full   | Full    | Database Ops   |
 | Vercel          | -     | Full   | -      | View    | Deployments    |
 | Codebase-Memory | Full  | Full   | Full   | Full    | Search & Graph |
 | Playwright      | -     | Full   | -      | -       | E2E Testing    |

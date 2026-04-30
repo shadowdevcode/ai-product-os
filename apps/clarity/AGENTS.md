@@ -14,7 +14,7 @@
 
 ## Architecture Highlights
 
-- Uses **Supabase** for persistence.
+- Uses **Neon** (Postgres) with **Prisma** for persistence.
 - Uses **Google Gemini 2.5 Flash** for categorization.
 - Uses **PostHog** for telemetry (Server-side events MUST be fire-and-forget).
 
