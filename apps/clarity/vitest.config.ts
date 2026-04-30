@@ -1,4 +1,3 @@
-/// <reference types="vitest/config" />
 import { defineConfig, mergeConfig } from 'vitest/config';
 import baseConfig from '../../libs/shared/vitest.config';
 

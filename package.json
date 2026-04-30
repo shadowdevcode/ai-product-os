@@ -5,17 +5,22 @@
   "description": "AI Product Operating System — command-driven development framework with specialized AI agents",
   "scripts": {
     "prepare": "husky",
-    "check:secrets": "node scripts/lib/check-secrets.js",
-    "check:file-sizes": "node scripts/lib/check-file-sizes.js",
-    "check:env-files": "node scripts/lib/check-env-files.js",
-    "check:function-sizes": "node scripts/lib/check-function-sizes.js",
-    "validate:docs": "node scripts/lib/validate-docs.js",
-    "check:all": "npm run check:secrets && npm run check:file-sizes && npm run check:env-files"
+    "lint": "bun run --cwd apps/clarity lint",
+    "typecheck": "bun run --cwd apps/clarity typecheck",
+    "test": "bun run --cwd apps/clarity test",
+    "validate": "bun run lint && bun run typecheck && bun run test && bun run check:all && bun run validate:docs",
+    "check:secrets": "bun run scripts/lib/check-secrets.js",
+    "check:file-sizes": "bun run scripts/lib/check-file-sizes.js",
+    "check:env-files": "bun run scripts/lib/check-env-files.js",
+    "check:function-sizes": "bun run scripts/lib/check-function-sizes.js",
+    "validate:docs": "bun run scripts/lib/validate-docs.js",
+    "check:all": "bun run check:secrets && bun run check:file-sizes && bun run check:env-files"
   },
   "devDependencies": {
     "husky": "^9.1.0",
     "lint-staged": "^15.2.0",
-    "prettier": "^3.4.0"
+    "prettier": "^3.4.0",
+    "vitest": "^4.1.5"
   },
   "dependencies": {
     "chalk": "^5.6.2"

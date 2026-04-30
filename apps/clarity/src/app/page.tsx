@@ -1,16 +1,14 @@
-import TaskBoard from "@/components/TaskBoard";
-import { Sparkles, BrainCircuit } from "lucide-react";
+import TaskBoard from '@/components/TaskBoard';
+import { BrainCircuit } from 'lucide-react';
 
 export default function Home() {
   return (
     <main className="min-h-screen relative overflow-hidden bg-neutral-950 font-sans text-neutral-200 selection:bg-indigo-500/30">
-
       {/* Background ambient lighting */}
       <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-600/20 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] rounded-full bg-violet-600/10 blur-[100px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
-
         {/* Header */}
         <header className="flex items-center justify-between mb-12">
           <div className="flex items-center gap-3">
@@ -31,7 +29,6 @@ export default function Home() {
 
         {/* The interactive board spanning the rest of page */}
         <TaskBoard />
-
       </div>
     </main>
   );
