@@ -38,3 +38,13 @@ Each agent has a dedicated definition file in `/agents/` with full role instruct
 ## Agent Activation Rule
 
 Agents are activated by their corresponding command. Never activate an agent outside its designated pipeline stage. See [CLAUDE.md](CLAUDE.md) for the command-to-agent mapping.
+
+---
+
+## Codex Portability & MCP Usage
+
+The AI Product OS is designed for native portability across AI-assisted engineering tools. To maintain system integrity, follow the [MCP Runtime Matrix](mcp-runtime-matrix.md) when configuring tool-specific integrations.
+
+- **Durable Context**: Always prefer repo-local context (AGENTS.md, CLAUDE.md, project-state.md) over tool-specific memory.
+- **Executable Validation**: Use Bun for all script execution. Enforce standards via `bun run validate` before accepting agent work.
+- **Bounded Exploration**: Use specialized subagents for high-volume or speculative tasks to preserve the main session context.
