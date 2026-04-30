@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "description": "AI Product Operating System — command-driven development framework with specialized AI agents",
+  "workspaces": [
+    "apps/clarity",
+    "apps/research-copilot"
+  ],
   "scripts": {
     "prepare": "husky",
     "lint": "bun run --cwd apps/clarity lint",

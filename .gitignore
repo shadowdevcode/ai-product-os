@@ -80,6 +80,7 @@ posthog/
 # Secrets (paranoid mode - never commit these)
 *secret*
 *SECRET*
+!scripts/lib/check-secrets.js
 *credentials*
 *CREDENTIALS*
 *.key

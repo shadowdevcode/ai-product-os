@@ -111,14 +111,14 @@ export default function TaskBoard() {
     }
   };
 
-  const markDone = async (task: Task) => {
+  const markDone = async (task: Task, completedAtMs: number) => {
     // Optimistic UI
     setTasks((prev) => prev.filter((t) => t.id !== task.id));
 
     posthog?.capture('task_completed', {
       task_id: task.id,
       category: task.category,
-      time_since_creation: Date.now() - new Date(task.created_at).getTime(),
+      time_since_creation: completedAtMs - new Date(task.created_at).getTime(),
     });
 
     try {
@@ -235,7 +235,7 @@ export default function TaskBoard() {
                         >
                           <div className="flex gap-3">
                             <button
-                              onClick={() => markDone(task)}
+                              onClick={() => markDone(task, Date.now())}
                               className="mt-0.5 text-neutral-600 hover:text-emerald-400 transition-colors flex-shrink-0"
                             >
                               <CheckCircle2 className="w-5 h-5" />

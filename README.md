@@ -133,7 +133,7 @@ If Linear is unavailable, the Linear utility command should fail explicitly. The
 3. **Run commands sequentially** — pass the command file from [`commands/`](commands/) to Claude Code (e.g., paste `commands/create-issue.md` content and follow it)
 4. **Read the knowledge base first** — every command in the pipeline reads all files in [`knowledge/`](knowledge/) before generating output to avoid repeating past mistakes
 5. **Track gates, not just progress** — check `project-state.md` after each command; blocked = do not proceed
-6. **Validate repo changes** — run `bun run validate` from the repo root before accepting agent work
+6. **Validate repo changes** — run `bun install` and `bun run validate` from the repo root before accepting agent work
 
 **Default tech stack** (used across all apps):
 
@@ -146,9 +146,9 @@ If Linear is unavailable, the Linear utility command should fail explicitly. The
 **Environment setup per app:**
 
 ```bash
+bun install
 cd apps/[project-name]
 cp .env.local.example .env.local   # fill in your keys
-bun install
 bun run dev
 ```
 
