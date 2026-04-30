@@ -18,6 +18,11 @@ return NextResponse.json({ success: true });
 // GOOD - Await all async operations
 await sendNotification(userId, message);
 return NextResponse.json({ success: true });
+
+// EXCEPTION - Telemetry/Analytics flushes MUST be fire-and-forget
+// to prevent external latency from affecting performance.
+posthog.captureServerEvent('event_name').catch(() => {});
+return NextResponse.json({ success: true });
 ```
 
 ## 2. Cron Job Architecture (Fan-Out Pattern)
