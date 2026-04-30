@@ -2,36 +2,40 @@
 
 ## Active Project
 
-- name: MoneyMirror — AI-Powered Personal Finance Coach
-- repo_path: apps/money-mirror
+- name: Clarity — AI Task Engine for PMs
+- repo_path: apps/clarity
 - owner: Vijay Sehgal
-- started_on: 2026-04-01
-- goal (1 sentence): Build a mobile-first PWA AI financial coach that reads Indian bank statements, reveals the "perception gap" (perceived vs actual spend) via a Mirror moment, and delivers consequence-first nudges to help Gen Z Indians (₹20K–₹80K/month) reduce wasteful spend by ≥30% and initiate their first SIP within 60 days.
-- active_cycle: **issue-012** — Gen Z clarity loop (emotional UX, frequency-first insights, perf SLAs) — [`experiments/ideas/issue-012.md`](experiments/ideas/issue-012.md); Linear **VIJ-52**
-- phase_4_closed_in_repo: Merchant/UPI-native visibility, bad patterns, compare, chat, proactive, hardening — see `experiments/plans/plan-011.md`; Linear **VIJ-43** + **VIJ-44–VIJ-51** (complete **`/learning`** + **`/linear-close`** for VIJ-43 when ready)
+- started_on: 2026-03-11
+- goal (1 sentence): Build a minimal, high-performance task engine for Product Managers that uses AI to categorize raw thoughts into actionable tasks, providing emotional clarity and immediate focus.
+- active_cycle: **issue-014** — Codex Best Practices Integration — [`docs/codex-best-practices-audit.md`](docs/codex-best-practices-audit.md)
+- prior_cycle: **issue-013** — PM Research Copilot (chat-first planning + orchestrated evidence) — [`experiments/ideas/issue-013.md`](experiments/ideas/issue-013.md)
 
 ## Current Stage
 
 - stage: learning
-- last_command_run: /debug-hotfix — money-mirror dashboard 500 post-gmail-sync (2026-04-10)
+- last_command_run: /learning — issue-014 (2026-04-30)
 - status: completed
-- active_issue: issue-012 — Gen Z clarity loop (Enhancement); Linear root [**VIJ-52**](https://linear.app/vijaypmworkspace/issue/VIJ-52/issue-012-gen-z-clarity-loop-emotional-ux-frequency-perf-slas); prior umbrella **issue-011** / **VIJ-43** still in **learning** until **`/learning`** + **`/linear-close`**
+- active_issue: issue-014 — Codex Best Practices Integration (Hardening); Enforceable automation, CI, and rule unification.
 
 ## Active Work
 
-- active_branch: main (push feature branches for new work)
-- last_commit: adca1a1 (fix(money-mirror): hotfix dashboard 500 — ZodError on gmail_sync statement type)
-- open_pr_link: open a new PR when pushing MoneyMirror hardening / perf follow-ups
-- environments: local, production (`https://money-mirror-rho.vercel.app`)
-- implementation_focus: **issue-012** — Learning completed: knowledge files, prompt library, agent prompts, deploy-check command, and `apps/money-mirror/CODEBASE-CONTEXT.md` updated from `postmortem-012.md`. Post-closeout deploy hardening completed on 2026-04-09: MoneyMirror Vercel Git reconnect, main-only production deploy guard, proof deployment from `main`, and landing deploy isolation via path-scoped ignore rule. **Post-cycle Gmail sync ship (2026-04-09/10):** Phase 1 `/gmail-sync` slash command + Phase 2 full Gmail OAuth/sync/cron shipped to production outside the issue-012 pipeline. Gmail is now the primary ingestion path; PDF upload retained as fallback. New routes: `/api/oauth/google/*`, `/api/gmail/sync`, `/api/gmail/sync/status`, `/api/gmail/trigger-sync`, `/api/cron/gmail-sync/*`. New schema tables: `user_oauth_tokens`, `gmail_sync_runs`; new column `transactions.dedup_hash`. Dashboard Sync tab (`SyncPanel.tsx`) replaces Upload tab. Commit `5690212` deployed to production. **Post-cycle hotfix (2026-04-10):** 5-fix patch for dashboard HTTP 500 triggered by Gmail sync — root cause: `layerAFactsSchema` Zod enum missing `'gmail_sync'`; secondary: legacy dashboard query selected Gmail synthetic statements as most-recent. Files changed: `coaching-facts.ts`, `statements.ts`, `dashboard-legacy.ts`, `schema-upgrades.ts`, `gmail/run-sync.ts`.
-- linear_ops_note: **VIJ-42** (Done) — production-readiness mirror issue; comment **2026-04-06** on **VIJ-37** links VIJ-42 + post-close summary (`docs/PERFORMANCE-REVIEW.md`, `production-launch-checklist-010.md`, `SCHEMA-DRIFT.md`).
-- linear_last_sync: 2026-04-07T15:43:41Z
-- linear_sync_status: success — `/linear-close` for issue-012 finalized Linear closure. Project **issue-012** remains **Completed**; root **VIJ-52** remains **Done** with labels **Improvement + Completed**; closeout snapshot document `issue-012 Closeout Snapshot` and final closeout comment `55b267c0` created.
+- active_branch: main
+- last_commit: 495c44a (docs: expand Codex portability, MCP matrix, and secure environment templates)
+- open_pr_link: none
+- environments: local, production
+- implementation_focus: **issue-014** — Full integration of Codex best practices: Bun-based validation, instruction drift detection, unified knowledge loading, and CI validation.
+- linear_ops_note: none
+- linear_last_sync: 2026-04-30T22:00:00Z
+- linear_sync_status: success
 
 ## Quality Gates
 
+- learning (issue-014): done — Fully incorporated OpenAI Codex best practices. (1) Removed legacy `money-mirror` app; (2) Hardened root validation scripts using **Bun**; (3) Implemented bidirectional **instruction drift detection**; (4) Created enforceable **GitHub Actions CI** pipeline; (5) Resolved **telemetry fire-and-forget** rule conflicts; (6) Unified **knowledge-loading** instructions; (7) Established **MCP Runtime Matrix** and expanded **AGENTS.md** for multi-tool portability. **Pipeline cycle for issue-014 complete.**
+- create_plan (issue-013): done — `experiments/plans/plan-013.md` + `experiments/plans/manifest-013.json` (AC, **T0–T2**, PostHog list, Neon schema). UX: **centered chat** empty state; **left** projects/sessions rail **after first message**; **right** artifact panel. Resolved PRD open questions (Reddit-only v3, presets, model split). **Next:** `/execute-plan` from **phase-t0**; **`/linear-sync plan`** for VIJ-65.
+- explore (issue-013): done — **Build** recommendation. Problem validated for discovery-heavy PM workflows; market crowded but gap on **chat-native plan/approve/steer/export** vs dashboard-first CI or one-shot answer engines. MVP: bounded plan object, async run w/ progress, steering primitives, citation-backed export; defer full store coverage / enterprise. Saved to [`experiments/exploration/exploration-013.md`](experiments/exploration/exploration-013.md). **Checkpoint:** `/linear-sync issue` before `/create-plan` if mirroring explore to Linear. **Next:** `/create-plan` issue-013 (complete).
+- create_issue: done — **issue-013** created 2026-04-12. **Feature:** PM Research Copilot — chat-first planning, specialized sub-agent orchestration, mid-run steering, evidence-backed export. `experiments/ideas/issue-013.md`. Linear: project [**issue-013 — PM Research Copilot…**](https://linear.app/vijaypmworkspace/project/issue-013-pm-research-copilot-chat-first-planning-orchestrated-a5e43bf29c24) + root [**VIJ-65**](https://linear.app/vijaypmworkspace/issue/VIJ-65/issue-013-pm-research-copilot-chat-first-planning-orchestrated) (labels Discovery + Feature). `experiments/linear-sync/issue-013.json` (`last_sync_mode`: bind). **Next:** `/explore` issue-013 (complete).
 - create_issue: done — **issue-012** created 2026-04-07. **Enhancement:** Gen Z clarity loop — emotional UX, frequency-first insights, performance-to-insight SLAs, guided review, high-signal proactive copy. Source: `.cursor/plans/money_mirror_10x_issue_34a61725.plan.md`. `experiments/ideas/issue-012.md`. Linear: project [**issue-012 — Gen Z clarity loop (emotional UX, frequency, perf SLAs)**](https://linear.app/vijaypmworkspace/project/issue-012-gen-z-clarity-loop-emotional-ux-frequency-perf-slas-1bbe50903d79) + root [**VIJ-52**](https://linear.app/vijaypmworkspace/issue/VIJ-52/issue-012-gen-z-clarity-loop-emotional-ux-frequency-perf-slas) (labels Discovery + Improvement). `experiments/linear-sync/issue-012.json` (`last_sync_mode`: bind). **Next:** `/explore` issue-012.
-- explore (issue-012): done — **Build** recommendation. Real wedge is not another tracker; it is statement-truth plus fast frequency/cluster storytelling for UPI-heavy Gen Z users. Market proof exists across UPI scale, quick-commerce frequency, and SMS/card-led competitors, but none combine cross-bank statement truth with shame-safe review loops. Priority order: **T0 perf + emotional UX -> T1 frequency/cluster insights -> T2 guided review/proactive copy**. Saved to `experiments/exploration/exploration-012.md`. **Checkpoint:** `/linear-sync issue` recorded before `/create-plan`.
+- explore (issue-012): done — **Build** recommendation. Real wedge is not another tracker; it is statement-truth plus fast frequency/cluster storytelling for UPI-heavy Gen Z users. Market proof exists across UPI scale, quick-commerce frequency, and SMS/card-led competitors, but none combine cross-bank statement truth with shame-safe review loops. Priority order: **T0 perf + emotional UX -> T1 frequency/cluster insights -> T2 guided review/proactive copy**. Saved to `experiments/exploration/exploration-012.md`. **Checkpoint:** `/linear-sync issue` recorded before `/create-plan`. **Rerun (2026-04-10):** recommendation reconfirmed; no scope/order changes.
 - create_plan (issue-012): done — `experiments/plans/plan-012.md` + `experiments/plans/manifest-012.json` (AC + phased tasks **T0–T2**, PostHog list, `guided_review_outcomes` schema). **Next:** `/execute-plan` from **phase-t0**; **`/linear-sync plan`** ✅ 2026-04-07 (VIJ-53–VIJ-64, Plan Snapshot document).
 - execute_plan (issue-012): done — **T0** (VIJ-53–VIJ-56): perf marks (`dashboard_ready_ms`, `time_to_first_advisory_ms`), skeleton-first dashboard, progressive disclosure, shame-safe copy, COACHING-TONE Gen Z subsection. **T1** (VIJ-57–VIJ-60): `merchant-clusters.ts` (5 clusters: quick_commerce, food_delivery, entertainment, transport, shopping), `GET /api/insights/frequency-clusters`, FrequencyClusterSection + cluster drill-through, `frequency_insight_opened` / `merchant_cluster_clicked`. **T2** (VIJ-61–VIJ-64): `guided_review_outcomes` schema + schema-upgrades, `POST /api/guided-review/outcome`, `GuidedReviewSheet` (3-step), `guided_review_started` / `guided_review_completed` / `commitment_saved`, fact-specific recap email. Validation: `npm test` 144/144, `npm run lint` 0 errors, `npm run build` clean. No new env vars.
 - deslop (issue-012): done — Type consolidation for frequency UI (`FrequencyClusterSection` + `InsightsPanel` import shared `FrequencyMerchantRow` / `ClusterRollup`); removed dead `sheetRef` on guided review sheet container. Tests 144/144. **Ready for Review: Yes.** **Next:** `/review`.
@@ -139,6 +143,12 @@ All items sit in Linear project **issue-009 — MoneyMirror**. Feature work for 
 
 ## Decisions Log (append-only)
 
+- 2026-04-12 (rev b): **`plan-013.md` PM workflow alignment** — **Clarify → plan as options (chips) → Approve → spawn sub-agents**; execution tools **server-gated** on `plan_approved_at`; **Stop/Skip**, **mid-run steer**, **Co-work/Emergent-style** canvas; **OpenRouter** + **SERPAPI/TavILY** envs; sub-agent **markdown** prompts; parallel user chat during runs. [`manifest-013.json`](experiments/plans/manifest-013.json) updated (T0.4b confirm/stop, `ResearchPlanOptions`, `ArtifactCanvas`, events).
+- 2026-04-12 (rev): **`plan-013.md` architecture alignment** — Locked **Vercel AI SDK** (`streamText`, `tools`, multi-step / `maxSteps`), **Vercel AI Gateway** model routing, **agentic tool calling** from chat start (no mandatory approve-before-run), **interleaved** user messages + tool steps + streaming, optional high-cost **Proceed** gate; primary API **`POST .../chat`**; `research_plans.approved_at` nullable. Manifest [`manifest-013.json`](experiments/plans/manifest-013.json) updated (T0/T1 tasks, env vars, telemetry).
+- 2026-04-12: **`/create-plan` issue-013** — Delivered [`experiments/plans/plan-013.md`](experiments/plans/plan-013.md) (Product/Design/Backend/DB: v3 PRD merged, Perplexity-like **center-first** layout + **left rail** on session start, right artifact, plan/approve/steer, sub-agent registry) and [`experiments/plans/manifest-013.json`](experiments/plans/manifest-013.json) (phases **phase-t0** → **phase-t1** → **phase-t2**, tasks **T0.1–T2.4**, `posthog_events`, `schema_tables`). Target app: **`apps/research-copilot`**. Pipeline stage → **`execute-plan` / `ready`**. **Next:** `/execute-plan`; **`/linear-sync plan`** optional for Linear task breakdown.
+- 2026-04-12: **`/explore` issue-013** — Research Agent protocol (`commands/explore.md`); required knowledge: product-principles, product-lessons, architecture-guide. Gate: `create_issue` for issue-013 satisfied. Artifact [`experiments/exploration/exploration-013.md`](experiments/exploration/exploration-013.md). **Recommendation: Build** — narrow MVP focused on plan approval, run transparency, steering, citation-backed export; risks: ToS/scraping, trust/differentiation, serverless long-run design. Pipeline stage → **`create-plan` / `ready`**. **Next:** `/create-plan` issue-013.
+- 2026-04-12: **`/create-issue` issue-013** — Structured **Feature** from PM brief: conversational research agent for PMs (agent-as-interface vs fixed pipeline); planning + approval loop; sub-agents for stores, forums, web, analysis; exportable PM-ready artifacts. Artifact [`experiments/ideas/issue-013.md`](experiments/ideas/issue-013.md). **`/linear-bind`:** Linear project [**issue-013 — PM Research Copilot: chat-first planning + orchestrated evidence**](https://linear.app/vijaypmworkspace/project/issue-013-pm-research-copilot-chat-first-planning-orchestrated-a5e43bf29c24); root [**VIJ-65**](https://linear.app/vijaypmworkspace/issue/VIJ-65/issue-013-pm-research-copilot-chat-first-planning-orchestrated) **Backlog** (Feature + Discovery). Sync map [`experiments/linear-sync/issue-013.json`](experiments/linear-sync/issue-013.json). `project-state.md` active issue → **issue-013**; stage **`explore` / `in-progress`**. CHANGELOG **2026-04-12**. **Next:** `/explore` issue-013.
+- 2026-04-10: **`/explore` issue-012 validation rerun** — Re-executed explore protocol (`commands/explore.md`) with required knowledge (`product-principles`, `product-lessons`, `architecture-guide`) and Research Agent constraints. Stage prerequisite check passed (`create_issue` for issue-012 already done). Updated `experiments/exploration/exploration-012.md` with rerun note and reconfirmed **Build** recommendation plus priority order **T0 -> T1 -> T2**. Pipeline stage intentionally kept at **`learning` / `completed`** (no stage reset).
 - 2026-04-10: **[hotfix] Dashboard 500 post-Gmail-sync** — Root cause confirmed via systematic RCA: `ZodError` in `layerAFactsSchema` (`coaching-facts.ts:31`) — `'gmail_sync'` not in enum. PM decisions: (1) fix the Zod enum to accept `gmail_sync`; (2) exclude `gmail_sync` statements from legacy dashboard auto-select so Gmail synthetic statements never displace PDF uploads as the primary dashboard view; (3) update `schema-upgrades.ts` constraint for new deployments; (4) fix `run-sync.ts` copy-paste observability bug. `?state=` URL param confirmed red herring. All 5 fixes applied as post-cycle hotfix outside the pipeline. Commit `adca1a1`.
 - 2026-04-07: **`/linear-close` issue-012** — Finalized Linear closure for [**VIJ-52**](https://linear.app/vijaypmworkspace/issue/VIJ-52/issue-012-gen-z-clarity-loop-emotional-ux-frequency-perf-slas): project [**issue-012**](https://linear.app/vijaypmworkspace/project/issue-012-gen-z-clarity-loop-emotional-ux-frequency-perf-slas-1bbe50903d79) confirmed **Completed**, root issue confirmed **Done** with labels **Improvement + Completed**, closeout document [**issue-012 Closeout Snapshot**](https://linear.app/vijaypmworkspace/document/issue-012-closeout-snapshot-5be4662b77c9) created, and final closeout comment `55b267c0-2010-489e-b6b3-fbc317159d16` posted. Updated `experiments/linear-sync/issue-012.json` (`last_sync_mode`: close) and repo Linear sync metadata.
 - 2026-04-07: **`/linear-sync status` issue-012 (learning complete)** — Synced final repo stage to Linear: project [**issue-012**](https://linear.app/vijaypmworkspace/project/issue-012-gen-z-clarity-loop-emotional-ux-frequency-perf-slas-1bbe50903d79) set to **Completed** (summary/description refreshed with postmortem + learning artifacts), root [**VIJ-52**](https://linear.app/vijaypmworkspace/issue/VIJ-52/issue-012-gen-z-clarity-loop-emotional-ux-frequency-perf-slas) set to **Done** with labels **Improvement** + **Completed** (replacing Review/Release-Ready stage labels due Linear label-group exclusivity). Posted status comment `e3058150-8cd0-46ee-8b06-bed15234a44f`. Sync map `experiments/linear-sync/issue-012.json` updated (`last_sync_mode`: status, `repo_stage`: learning, `repo_status`: completed). Repo pipeline stage unchanged.
@@ -304,20 +314,20 @@ All items sit in Linear project **issue-009 — MoneyMirror**. Feature work for 
 - linear_enabled: true <!-- set to true by /linear-bind; false = Linear layer inactive -->
 - linear_team_id: 70aea0d1-a706-481f-a0b7-3e636709ba77 <!-- immutable after bind -->
 - linear_team: Vijaypmworkspace
-- linear_project_id: 99de1d5b-2c49-4fa3-a9ed-6756a746eb44
-- linear_project: issue-012 — Gen Z clarity loop (emotional UX, frequency, perf SLAs)
-- linear_project_url: https://linear.app/vijaypmworkspace/project/issue-012-gen-z-clarity-loop-emotional-ux-frequency-perf-slas-1bbe50903d79
-- linear_root_issue_id: VIJ-52 <!-- active issue-012 parent -->
-- linear_root_issue_identifier: VIJ-52
+- linear_project_id: 8bd9f91b-8c48-434e-85bf-608df060715b
+- linear_project: issue-013 — PM Research Copilot: chat-first planning + orchestrated evidence
+- linear_project_url: https://linear.app/vijaypmworkspace/project/issue-013-pm-research-copilot-chat-first-planning-orchestrated-a5e43bf29c24
+- linear_root_issue_id: VIJ-65 <!-- active issue-013 parent -->
+- linear_root_issue_identifier: VIJ-65
 - linear_cycle: <!-- Linear cycle/sprint, if assigned -->
-- linear_sync_map_path: experiments/linear-sync/issue-012.json
-- linear_last_sync: 2026-04-07T00:00:00Z <!-- `/linear-sync plan` issue-012: project Planned; plan document + VIJ-53–VIJ-64 child tasks -->
-- linear_sync_status: success — [VIJ-52](https://linear.app/vijaypmworkspace/issue/VIJ-52/issue-012-gen-z-clarity-loop-emotional-ux-frequency-perf-slas) Todo; Planning + Feature + Improvement; [issue-012 Plan Snapshot](https://linear.app/vijaypmworkspace/document/issue-012-plan-snapshot-7032c79bc5b0); children **VIJ-53–VIJ-64**. **Next:** `/execute-plan` from **T0.1 / VIJ-53**
-- linear_follow_up_issue_identifier: VIJ-52
-- linear_follow_up_issue_url: https://linear.app/vijaypmworkspace/issue/VIJ-52/issue-012-gen-z-clarity-loop-emotional-ux-frequency-perf-slas
+- linear_sync_map_path: experiments/linear-sync/issue-013.json
+- linear_last_sync: 2026-04-12T12:00:00Z <!-- `/linear-bind` issue-013: project Backlog; root VIJ-65 Backlog -->
+- linear_sync_status: success — [VIJ-65](https://linear.app/vijaypmworkspace/issue/VIJ-65/issue-013-pm-research-copilot-chat-first-planning-orchestrated) Backlog; Feature + Discovery. **Next:** `/explore` issue-013
+- linear_follow_up_issue_identifier: VIJ-65
+- linear_follow_up_issue_url: https://linear.app/vijaypmworkspace/issue/VIJ-65/issue-013-pm-research-copilot-chat-first-planning-orchestrated
 - linear_prior_cycle_map: experiments/linear-sync/issue-011.json (VIJ-43 — issue-011 learning/closeout pending); experiments/linear-sync/issue-010.json (VIJ-37 Done); experiments/linear-sync/issue-009.json (VIJ-11)
 - linear_prior_closed_root: VIJ-37 — [issue-010 Closeout Snapshot](https://linear.app/vijaypmworkspace/document/issue-010-closeout-snapshot-5ef07c9db6ee); issue-011 VIJ-43 — [Phase 4 umbrella](https://linear.app/vijaypmworkspace/issue/VIJ-43/issue-011-moneymirror-phase-4-merchant-native-visibility-proactive) until `/linear-close`
-- docs_home: experiments/ideas/issue-012.md
+- docs_home: experiments/plans/plan-013.md
 - demo:
 - analytics_dashboard:
 - data: apps/ozi-insights/data/freshdesk-synthetic.json
