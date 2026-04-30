@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-04-30 — Archived MoneyMirror Vercel auto-deploy disabled
+
+- **Root cause:** the archived Vercel project `money-mirror` was still linked to `shadowdevcode/ai-product-os` with production branch `main`, `rootDirectory = apps/money-mirror`, and Git deployments enabled after issue-014 removed the legacy `apps/money-mirror` code from the monorepo.
+- **Fix:** updated the live Vercel project setting `gitProviderOptions.createDeployments` from `enabled` to `disabled` for project `prj_r8HFSILozYdcOiK9u2PiaE83fp40`. This keeps the archived project from creating failed production deployments on unrelated `main` pushes.
+- **Current deploy contract:** `ai-product-os-493e` remains the active landing deployment. Do not repoint the archived `money-mirror` Vercel project to another app unless a MoneyMirror successor is intentionally restored.
+
 ## 2026-04-12 — Issue Created: issue-013
 
 - **Type**: Feature
