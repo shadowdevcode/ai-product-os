@@ -1,0 +1,36 @@
+{
+  "issue_number": "013",
+  "issue_title": "PM Research Copilot: chat-first planning + orchestrated evidence",
+  "issue_type": "Feature",
+  "team_id": "70aea0d1-a706-481f-a0b7-3e636709ba77",
+  "team_name": "Vijaypmworkspace",
+  "project_id": "8bd9f91b-8c48-434e-85bf-608df060715b",
+  "project_name": "issue-013 — PM Research Copilot: chat-first planning + orchestrated evidence",
+  "project_url": "https://linear.app/vijaypmworkspace/project/issue-013-pm-research-copilot-chat-first-planning-orchestrated-a5e43bf29c24",
+  "root_issue_id": "VIJ-65",
+  "root_issue_identifier": "VIJ-65",
+  "root_issue_url": "https://linear.app/vijaypmworkspace/issue/VIJ-65/issue-013-pm-research-copilot-chat-first-planning-orchestrated",
+  "labels": {
+    "discovery": "b05592c1-47a6-4fdd-9a08-7a6287d4f1f8",
+    "feature": "70095fc1-871c-427e-bc1f-2c29b8d87aa8",
+    "planning": "c115a797-9a9a-4474-aec9-977473efa69a",
+    "execution": "7c533cde-cb79-4377-a158-9807bc567ebc"
+  },
+  "tasks": {},
+  "phases_linear": {},
+  "related_issues": {},
+  "documents": {},
+  "issue_sync": {
+    "last_sync_timestamp": "2026-04-12T12:00:00.000Z",
+    "root_issue_status": "Backlog",
+    "artifacts": [
+      "experiments/ideas/issue-013.md",
+      "experiments/exploration/exploration-013.md",
+      "experiments/plans/plan-013.md",
+      "experiments/plans/manifest-013.json"
+    ]
+  },
+  "last_sync_mode": "bind",
+  "last_sync_timestamp": "2026-04-12T12:00:00.000Z",
+  "linear_sync_status": "success"
+}

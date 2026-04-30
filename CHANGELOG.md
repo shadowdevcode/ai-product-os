@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-04-12 — Issue Created: issue-013
+
+- **Type**: Feature
+- **Title**: PM Research Copilot — chat-first planning, orchestrated evidence, exportable insights
+- **App**: TBD (portfolio-level product direction; implementation path after `/explore`)
+- **Status**: Discovery
+- **Linear**: Root [**VIJ-65**](https://linear.app/vijaypmworkspace/issue/VIJ-65/issue-013-pm-research-copilot-chat-first-planning-orchestrated) · Project [**issue-013 — PM Research Copilot…**](https://linear.app/vijaypmworkspace/project/issue-013-pm-research-copilot-chat-first-planning-orchestrated-a5e43bf29c24)
+
 ## 2026-04-10 — MoneyMirror Hotfix: Dashboard 500 on Gmail Sync users (RCA + 5-fix patch)
 
 Post-cycle hotfix — production HTTP 500 on `GET /api/dashboard` triggered by Gmail sync introducing a `gmail_sync` statement type that Zod schema validation did not accept.
@@ -7,6 +15,7 @@ Post-cycle hotfix — production HTTP 500 on `GET /api/dashboard` triggered by G
 **Root cause:** `layerAFactsSchema` in `coaching-facts.ts` used `z.enum(['bank_account', 'credit_card'])` — `'gmail_sync'` was absent. After a Gmail sync run, `fetchDashboardLegacy` (no `statement_type` filter) would pick the most-recently-created `gmail_sync` statement. `buildLayerAFacts` then called `layerAFactsSchema.parse({ statement_type: 'gmail_sync' })`, throwing a `ZodError` caught by the route's `try/catch` and returned as HTTP 500.
 
 **Fixes applied:**
+
 1. **`coaching-facts.ts:31`** — Added `'gmail_sync'` to `layerAFactsSchema` `statement_type` enum. (crash fix)
 2. **`statements.ts:1`** — Added `'gmail_sync'` to the `StatementType` TypeScript union. (type correctness)
 3. **`dashboard-legacy.ts:50`** — Added `AND s.statement_type != 'gmail_sync'` to the `statementId=null` WHERE clause so the legacy path never selects Gmail synthetic statements. (behavior fix)

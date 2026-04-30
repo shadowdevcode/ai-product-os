@@ -6,7 +6,7 @@ A simulated, end-to-end product development organization where specialized AI ag
 
 > **Live:** [ai-product-os-493e.vercel.app](https://ai-product-os-493e.vercel.app/) | Built and operated with [Claude Code](https://claude.ai/code). You need Claude Code to run the slash commands.
 >
-> Deploy note: `ai-product-os-493e` and `money-mirror` are separate Vercel projects. MoneyMirror production deploys from `main`; the landing app is path-gated so it should only build when `apps/landing` changes.
+> Deploy note: `ai-product-os-493e` is the current landing Vercel project. MoneyMirror was a separate Vercel project in earlier cycles; its legacy app code has been removed from this monorepo.
 
 ---
 
@@ -40,7 +40,8 @@ A simulated, end-to-end product development organization where specialized AI ag
 | 006   | [ozi-reorder](apps/ozi-reorder/)                     | Reorder reminder experiment for dark-store baby essentials (50/50 test vs. control, 7 PostHog events)                                             | Next.js, Neon, PostHog                                   | Complete |
 | 007   | [ozi-insights](apps/ozi-insights/)                   | Synthetic Freshdesk support data for order reliability research (30 tickets, grounded in Play Store)                                              | Data workspace                                           | Explored |
 | 008   | [nykaa-personalisation](apps/nykaa-personalisation/) | Hyper-personalized discovery feed (affinity + intent scoring, 10 PostHog events, 5 API routes)                                                    | Next.js, Neon, PostHog                                   | Archived |
-| 009   | [money-mirror](apps/money-mirror/)                   | AI personal finance coach — parses Indian bank + credit card PDFs, reveals perception gap, delivers consequence-first nudges. Weekly recap email. | Next.js 16, Neon Auth, Neon DB, Gemini 2.5 Flash, Resend | Live     |
+| 009   | money-mirror                                         | AI personal finance coach — parses Indian bank + credit card PDFs, reveals perception gap, delivers consequence-first nudges. Weekly recap email. | Next.js 16, Neon Auth, Neon DB, Gemini 2.5 Flash, Resend | Archived |
+| 013   | [research-copilot](apps/research-copilot/)           | Chat-first PM research workspace with plan approval, visible tool orchestration, cited findings, and Markdown export.                             | Next.js 16, Neon Postgres, OpenRouter, PostHog           | T0       |
 | —     | [landing](apps/landing/)                             | Framework landing page showcasing pipeline, agents, and shipped products                                                                          | Next.js, Tailwind CSS                                    | Live     |
 
 Each issue number maps directly across all folders: `experiments/ideas/issue-NNN.md`, `experiments/exploration/exploration-NNN.md`, `experiments/plans/plan-NNN.md`, and `experiments/results/*-NNN.md`.
@@ -132,6 +133,7 @@ If Linear is unavailable, the Linear utility command should fail explicitly. The
 3. **Run commands sequentially** — pass the command file from [`commands/`](commands/) to Claude Code (e.g., paste `commands/create-issue.md` content and follow it)
 4. **Read the knowledge base first** — every command in the pipeline reads all files in [`knowledge/`](knowledge/) before generating output to avoid repeating past mistakes
 5. **Track gates, not just progress** — check `project-state.md` after each command; blocked = do not proceed
+6. **Validate repo changes** — run `bun run validate` from the repo root before accepting agent work
 
 **Default tech stack** (used across all apps):
 
@@ -146,8 +148,8 @@ If Linear is unavailable, the Linear utility command should fail explicitly. The
 ```bash
 cd apps/[project-name]
 cp .env.local.example .env.local   # fill in your keys
-npm install
-npm run dev
+bun install
+bun run dev
 ```
 
 Each app includes a `schema.sql` (idempotent) that must be applied in your database editor before first run.

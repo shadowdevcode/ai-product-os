@@ -1,12 +1,24 @@
 ---
 issue: issue-012
 command: /explore
-date: 2026-04-07
+date: 2026-04-10
 agent: Research Agent
 recommendation: Build
 ---
 
 # Exploration: MoneyMirror - Gen Z clarity loop
+
+---
+
+## Rerun Note (2026-04-10)
+
+This `/explore` rerun reconfirms the original **Build** recommendation with no change in direction:
+
+- Problem remains real and frequent for the target ICP (UPI-heavy, micro-spend opacity, avoidance-driven review behavior)
+- Market gap remains in combining statement-truth + frequency/cluster storytelling + shame-safe habit loop
+- MVP order remains **T0 -> T1 -> T2** (performance/emotional UX -> frequency/cluster -> guided review/proactive copy)
+
+Pipeline completion for issue-012 remains unchanged; this is a validation rerun, not a stage reset.
 
 ---
 

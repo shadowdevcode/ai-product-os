@@ -3,9 +3,17 @@
 #
 # Trust this repository in Codex so this file is loaded (project MCP is for trusted projects only).
 #
-# Neon: set NEON_API_KEY in your environment (Neon Console → API keys). Never paste tokens here.
-# Same variable name works across machines; pair with a gitignored .mcp.json for Cursor/Claude Code if you use Bearer there.
-
-[mcp_servers.neon]
-url = "https://mcp.neon.tech/mcp"
-bearer_token_env_var = "NEON_API_KEY"
+# Keep external MCPs opt-in here. Active project-scoped MCP entries are initialized when
+# Codex starts in this trusted repo, so a missing secret creates startup warnings even when
+# the tool is not needed.
+#
+# Neon is intentionally disabled by default. When a task actually needs Neon MCP access:
+# 1. Export NEON_API_KEY in the shell or app environment that launches Codex.
+# 2. Uncomment the block below for that session.
+# 3. Restart Codex so the project MCP config is reloaded.
+#
+# Never paste tokens in this file.
+#
+# [mcp_servers.neon]
+# url = "https://mcp.neon.tech/mcp"
+# bearer_token_env_var = "NEON_API_KEY"

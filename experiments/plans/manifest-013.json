@@ -1,0 +1,275 @@
+{
+  "issue": "issue-013",
+  "project": "research-copilot",
+  "project_path": "apps/research-copilot",
+  "linear": {
+    "parent": "VIJ-65",
+    "project_url": "https://linear.app/vijaypmworkspace/project/issue-013-pm-research-copilot-chat-first-planning-orchestrated-a5e43bf29c24",
+    "plan_document_title": "issue-013 Plan Snapshot",
+    "tasks": {}
+  },
+  "phases": [
+    {
+      "id": "phase-t0",
+      "name": "T0 — Shell + planning/execution tool gate + OpenRouter + confirm/stop + canvas + Markdown",
+      "parallel": false,
+      "depends_on": [],
+      "tasks": [
+        {
+          "id": "T0.1",
+          "name": "Scaffold apps/research-copilot + deps: ai, @ai-sdk/openai (OpenRouter baseURL), Vitest, schema.sql (sessions.phase, plan_approved_at)",
+          "agent": "frontend-engineer",
+          "files_to_create": [
+            "apps/research-copilot/package.json",
+            "apps/research-copilot/schema.sql"
+          ],
+          "files_to_modify": [],
+          "verification": "cd apps/research-copilot && npm run build",
+          "test_file": null
+        },
+        {
+          "id": "T0.2",
+          "name": "DB: research_projects, research_sessions, research_messages, research_plans + Neon migrations pattern",
+          "agent": "backend-engineer",
+          "files_to_create": [
+            "apps/research-copilot/src/lib/db.ts"
+          ],
+          "files_to_modify": ["apps/research-copilot/schema.sql"],
+          "verification": "cd apps/research-copilot && npm run lint",
+          "test_file": null
+        },
+        {
+          "id": "T0.3",
+          "name": "UX: centered empty composer + left project rail reveal after first message (desktop + mobile drawer)",
+          "agent": "frontend-engineer",
+          "files_to_create": [
+            "apps/research-copilot/src/components/ResearchShell.tsx",
+            "apps/research-copilot/src/components/CenteredComposer.tsx",
+            "apps/research-copilot/src/components/ProjectRail.tsx"
+          ],
+          "files_to_modify": [],
+          "verification": "cd apps/research-copilot && npm run build",
+          "test_file": null
+        },
+        {
+          "id": "T0.4",
+          "name": "API: chat route — streamText + planning tools + execution tools stubbed; execute() rejects until DB plan_approved_at; OpenRouter env; research-tools.ts",
+          "agent": "backend-engineer",
+          "files_to_create": [
+            "apps/research-copilot/src/app/api/research/sessions/route.ts",
+            "apps/research-copilot/src/app/api/research/sessions/[id]/chat/route.ts",
+            "apps/research-copilot/src/lib/ai/research-tools.ts",
+            "apps/research-copilot/src/lib/agents/prompts/README.md"
+          ],
+          "files_to_modify": [],
+          "verification": "cd apps/research-copilot && npm run build",
+          "test_file": null
+        },
+        {
+          "id": "T0.4b",
+          "name": "API: POST plan/confirm + POST stop (+ optional skip) — sets plan_approved_at / stopped",
+          "agent": "backend-engineer",
+          "files_to_create": [
+            "apps/research-copilot/src/app/api/research/sessions/[id]/plan/confirm/route.ts",
+            "apps/research-copilot/src/app/api/research/sessions/[id]/stop/route.ts"
+          ],
+          "files_to_modify": [],
+          "verification": "cd apps/research-copilot && npm run build",
+          "test_file": null
+        },
+        {
+          "id": "T0.5",
+          "name": "UI: ResearchChat + ResearchPlanOptions (chips) + Approve + ToolStepRow + ArtifactCanvas (slide) + Stop/Skip stubs",
+          "agent": "frontend-engineer",
+          "files_to_create": [
+            "apps/research-copilot/src/components/ResearchChat.tsx",
+            "apps/research-copilot/src/components/ResearchPlanOptions.tsx",
+            "apps/research-copilot/src/components/ToolStepRow.tsx",
+            "apps/research-copilot/src/components/ResearchPlanCard.tsx",
+            "apps/research-copilot/src/components/ArtifactCanvas.tsx"
+          ],
+          "files_to_modify": [],
+          "verification": "cd apps/research-copilot && npm run build",
+          "test_file": null
+        },
+        {
+          "id": "T0.6",
+          "name": "Instrumentation: PostHog + tool_call events + session/first_message/first_cited_finding/export",
+          "agent": "frontend-engineer",
+          "files_to_create": ["apps/research-copilot/src/lib/analytics.ts"],
+          "files_to_modify": [],
+          "verification": "cd apps/research-copilot && npm run lint",
+          "test_file": null
+        },
+        {
+          "id": "T0.7",
+          "name": "Export: Markdown download/copy for Findings + Brief",
+          "agent": "frontend-engineer",
+          "files_to_create": ["apps/research-copilot/src/app/api/research/sessions/[id]/export/route.ts"],
+          "files_to_modify": [],
+          "verification": "cd apps/research-copilot && npm run build",
+          "test_file": null
+        }
+      ]
+    },
+    {
+      "id": "phase-t1",
+      "name": "T1 — Real sub-agents (prompt .md + OpenRouter) + SERP + evidence + steer/stop",
+      "parallel": false,
+      "depends_on": ["phase-t0"],
+      "tasks": [
+        {
+          "id": "T1.1",
+          "name": "Persist UIMessage tool parts + evidence_snippets + optional research_runs audit; wire real execute() in research-tools.ts (SDK remains source of orchestration)",
+          "agent": "backend-engineer",
+          "files_to_create": ["apps/research-copilot/src/lib/ai/persist-messages.ts"],
+          "files_to_modify": ["apps/research-copilot/schema.sql"],
+          "verification": "cd apps/research-copilot && npm run build",
+          "test_file": null
+        },
+        {
+          "id": "T1.2",
+          "name": "Sub-agent: app_reviews (App Store / Play normalize)",
+          "agent": "backend-engineer",
+          "files_to_create": ["apps/research-copilot/src/lib/agents/app-reviews.ts"],
+          "files_to_modify": [],
+          "verification": "cd apps/research-copilot && npm test",
+          "test_file": null
+        },
+        {
+          "id": "T1.3",
+          "name": "Sub-agent: social_reddit + configurable subreddits / thread URL",
+          "agent": "backend-engineer",
+          "files_to_create": ["apps/research-copilot/src/lib/agents/social-reddit.ts"],
+          "files_to_modify": [],
+          "verification": "cd apps/research-copilot && npm test",
+          "test_file": null
+        },
+        {
+          "id": "T1.4",
+          "name": "Sub-agent: web_serp (SerpAPI or Tavily abstraction + fetch)",
+          "agent": "backend-engineer",
+          "files_to_create": [
+            "apps/research-copilot/src/lib/agents/web-discovery.ts",
+            "apps/research-copilot/src/lib/agents/prompts/web-agent.md"
+          ],
+          "files_to_modify": [],
+          "verification": "cd apps/research-copilot && npm run build",
+          "test_file": null
+        },
+        {
+          "id": "T1.5",
+          "name": "Sub-agent: nlp_analysis (structured sentiment, clusters, pain/JTBD)",
+          "agent": "backend-engineer",
+          "files_to_create": ["apps/research-copilot/src/lib/agents/nlp-analysis.ts"],
+          "files_to_modify": [],
+          "verification": "cd apps/research-copilot && npm test",
+          "test_file": null
+        },
+        {
+          "id": "T1.6",
+          "name": "Optional API: POST steer shortcut + plan JSON version bump (primary path = chat)",
+          "agent": "backend-engineer",
+          "files_to_create": ["apps/research-copilot/src/app/api/research/sessions/[id]/steer/route.ts"],
+          "files_to_modify": [],
+          "verification": "cd apps/research-copilot && npm run build",
+          "test_file": null
+        },
+        {
+          "id": "T1.7",
+          "name": "UI: citation rendering in ArtifactPanel + evidence drawer",
+          "agent": "frontend-engineer",
+          "files_to_create": ["apps/research-copilot/src/components/CitationBlock.tsx"],
+          "files_to_modify": ["apps/research-copilot/src/components/ArtifactPanel.tsx"],
+          "verification": "cd apps/research-copilot && npm run build",
+          "test_file": null
+        }
+      ]
+    },
+    {
+      "id": "phase-t2",
+      "name": "T2 — Google Docs export + coverage/confidence UX + optional hypothesis attach + survey",
+      "parallel": false,
+      "depends_on": ["phase-t1"],
+      "tasks": [
+        {
+          "id": "T2.1",
+          "name": "Google Docs OAuth + export pipeline",
+          "agent": "backend-engineer",
+          "files_to_create": ["apps/research-copilot/src/app/api/research/sessions/[id]/export/gdoc/route.ts"],
+          "files_to_modify": [],
+          "verification": "cd apps/research-copilot && npm run build",
+          "test_file": null
+        },
+        {
+          "id": "T2.2",
+          "name": "UI: coverage/confidence badges + gaps section in Findings",
+          "agent": "frontend-engineer",
+          "files_to_create": ["apps/research-copilot/src/components/CoverageBar.tsx"],
+          "files_to_modify": [],
+          "verification": "cd apps/research-copilot && npm run build",
+          "test_file": null
+        },
+        {
+          "id": "T2.3",
+          "name": "Optional: hypothesis file attach + parse stub (defer deep diff to v3.1)",
+          "agent": "backend-engineer",
+          "files_to_create": ["apps/research-copilot/src/app/api/research/sessions/[id]/hypothesis/route.ts"],
+          "files_to_modify": [],
+          "verification": "cd apps/research-copilot && npm run build",
+          "test_file": null
+        },
+        {
+          "id": "T2.4",
+          "name": "Post-session micro-survey (control score) + PostHog",
+          "agent": "frontend-engineer",
+          "files_to_create": ["apps/research-copilot/src/components/SessionSurvey.tsx"],
+          "files_to_modify": [],
+          "verification": "cd apps/research-copilot && npm run build",
+          "test_file": null
+        }
+      ]
+    }
+  ],
+  "env_vars": [
+    "DATABASE_URL",
+    "OPENROUTER_API_KEY",
+    "OPENROUTER_BASE_URL",
+    "SERPAPI_API_KEY",
+    "TAVILY_API_KEY",
+    "NEXT_PUBLIC_POSTHOG_KEY",
+    "NEXT_PUBLIC_POSTHOG_HOST",
+    "REDDIT_CLIENT_ID",
+    "REDDIT_CLIENT_SECRET",
+    "GOOGLE_DOCS_OAUTH_CLIENT_ID",
+    "GOOGLE_DOCS_OAUTH_CLIENT_SECRET"
+  ],
+  "schema_tables": [
+    "research_projects",
+    "research_sessions",
+    "research_messages",
+    "research_plans",
+    "research_runs",
+    "evidence_snippets",
+    "exports"
+  ],
+  "posthog_events": [
+    "research_session_started",
+    "center_composer_first_message_sent",
+    "project_rail_revealed",
+    "research_plan_proposed",
+    "research_plan_edited",
+    "research_plan_approved",
+    "research_run_started",
+    "ai_tool_call_started",
+    "ai_tool_call_completed",
+    "research_run_step_completed",
+    "first_cited_finding_rendered",
+    "research_steer_issued",
+    "research_run_stopped",
+    "research_source_skipped",
+    "artifact_exported_markdown",
+    "artifact_exported_gdoc",
+    "post_session_survey_submitted"
+  ]
+}
