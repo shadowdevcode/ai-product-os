@@ -6,7 +6,7 @@ A simulated, end-to-end product development organization where specialized AI ag
 
 > **Live:** [ai-product-os-493e.vercel.app](https://ai-product-os-493e.vercel.app/) | Built and operated with [Claude Code](https://claude.ai/code). You need Claude Code to run the slash commands.
 >
-> Deploy note: `ai-product-os-493e` is the current landing Vercel project. MoneyMirror was a separate Vercel project in earlier cycles; its legacy app code has been removed from this monorepo and its archived Vercel project no longer auto-deploys from `main`.
+> Deploy note: `ai-product-os-493e` is the current landing Vercel project. MoneyMirror was a separate Vercel project in earlier cycles; its legacy app code has been removed from this monorepo and its archived Vercel project is no longer linked to this GitHub repo.
 
 ---
 
