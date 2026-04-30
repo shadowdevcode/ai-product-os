@@ -326,17 +326,7 @@ experiments/plans/plan-<issue_number>.md
 Step 4
 Load knowledge base.
 
-All agents must read:
-
-knowledge/product-principles.md
-knowledge/coding-standards.md
-knowledge/architecture-guide.md
-knowledge/ui-standards.md
-knowledge/analytics-framework.md
-knowledge/prompt-library.md
-knowledge/engineering-lessons.md
-knowledge/product-lessons.md
-knowledge/ai-model-guide.md
+Agents MUST ONLY load the files listed in the command's ## Required Knowledge section. Do not load all knowledge files for every command to prevent context overload.
 
 For engineering commands (execute-plan, deslop, review, peer-review, qa-test, docs), also load if available:
 

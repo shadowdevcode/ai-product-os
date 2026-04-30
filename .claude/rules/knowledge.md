@@ -27,4 +27,4 @@ Knowledge files are updated ONLY during the `/learning` command by the Learning 
 
 ## Consumption Rule
 
-All agents must re-read these files at the start of every command execution to avoid repeating past mistakes.
+Agents MUST ONLY load the files listed in the command's ## Required Knowledge section. Do not load all knowledge files for every command to prevent context overload.
